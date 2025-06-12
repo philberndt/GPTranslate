@@ -1,6 +1,8 @@
 # ![GPTranslate](img/logo_app.svg) GPTranslate
 
-A fast, modern **AI powered** desktop translation application built with Rust and Tauri that provides instant translation between multiple languages with global hotkey support, system tray integration, and a beautiful user interface. Using either OpenAI or Azure OpenAI, it delivers high-quality translations with minimal latency and cost.
+A fast, modern **AI powered** desktop translation application built with Rust and Tauri that provides instant translation between multiple languages with global hotkey support, system tray integration, and a beautiful user interface. Supports OpenAI, Azure OpenAI, and Ollama APIs for high-quality translations with minimal latency and cost.
+
+**Completely FREE** when used with Ollama for local AI-powered translations - no API costs, no internet required, and complete privacy!
 
 **Note:** This project has been tested on Windows 11 only. It may work on other platforms, but is not guaranteed. If you would like to help with testing on macOS or Linux, please open an issue.
 
@@ -32,7 +34,8 @@ A fast, modern **AI powered** desktop translation application built with Rust an
 - **Intelligent Language Detection**: Automatically detects the source language from most supported languages
 - **Multi-language Translation**: Seamless translation between dozens of languages with configurable target language
 - **Real-time Translation**: Debounced translation as you type (500ms delay)
-- **Multiple AI Providers**: Support for both OpenAI and Azure OpenAI APIs
+- **Multiple AI Providers**: Support for OpenAI, Azure OpenAI, and Ollama (local) APIs
+- **Free Local Translation**: Use Ollama for completely free, offline translations with local AI models
 - **Custom Prompts**: Configurable translation prompts with variable support
 - **Alternative Target Language**: Fallback when source equals target language
 
@@ -71,15 +74,24 @@ A fast, modern **AI powered** desktop translation application built with Rust an
 
 ## Planned Features
 
-- Integration with **Ollama** for local AI translation support
-- Integration with **Anthropic** for Anthropic LLM models
-- Integration with **DeepSeek** for advanced search-based translation
+- Model management, allowing users to select and switch between different models.
+- Better history management, including search and filtering.
 
 ## 💰 Cost Analysis
 
-GPTranslate is designed to be extremely cost-effective with the recommended `gpt-4.1-nano` model:
+GPTranslate offers flexible pricing options from completely **FREE** with Ollama to extremely cost-effective with OpenAI's `gpt-4.1-nano` model:
 
-### Translation Costs (per request)
+### FREE Option: Ollama
+
+**Complete cost breakdown**: **$0.00** - Forever!
+
+- ✅ **No API costs** - Run completely offline
+- ✅ **No internet required** - Perfect for private/secure environments  
+- ✅ **Complete privacy** - Your data never leaves your machine
+- ✅ **Unlimited usage** - Translate as much as you want
+- ✅ **Professional quality** - Modern AI models like Llama, Mistral, etc.
+
+### Cloud-based Translation Costs (per request)
 
 | Model                          | Input Cost      | Output Cost      | Total per Paragraph\* |
 | ------------------------------ | --------------- | ---------------- | --------------------- |
@@ -93,9 +105,17 @@ GPTranslate is designed to be extremely cost-effective with the recommended `gpt
 
 #### Azure Models and Prices
 
-Azure OpenAI should offer comparable pricing, though I don’t have access to the exact cost details—only the models themselves—so I can’t provide specific figures. That said, the `gpt-4.1-nano` model is a great choice due to its balance of low cost and high quality. You might also consider using the `model-router`, which automatically picks the most suitable model for your request. However, keep in mind that it won’t always choose the cheapest option. For translation tasks specifically, specialised models like `mistral-small` or `mistral-small-2503` are worth exploring, as they are likely to deliver exceptional results.
+Azure OpenAI offers comparable pricing, which you can check in detail on the [official Azure AI Foundry pricing page](https://azure.microsoft.com/en-us/pricing/details/ai-foundry/). The `gpt-4.1-nano` model is a great choice due to its balance of low cost and high quality. You might also consider using the `model-router`, which automatically picks the most suitable model for your request. However, keep in mind that it won't always choose the cheapest option. For translation tasks specifically, specialised models like `mistral-small` or `mistral-small-2503` are worth exploring, as they are likely to deliver exceptional results.
 
 ### Real-World Usage Examples
+
+#### With Ollama (FREE)
+
+- **Any amount of translation**: $0.00 forever
+- **No limits**: Translate entire books, documents, websites
+- **Private & secure**: Perfect for sensitive content
+
+#### With Cloud APIs
 
 - **Single paragraph**: Less than $0.0001 with gpt-4.1-nano
 - **100 translations/day**: ~$0.005 ($1.50/month)
@@ -148,18 +168,20 @@ Settings are automatically created in `~/.gptranslate/config.json`:
 
 ```json
 {
-  "provider": "openai",
-  "api_key": "your-api-key-here",
+  "api_provider": "openai",
+  "openai_api_key": "your-api-key-here",
   "model": "gpt-4.1-nano",
   "azure_endpoint": "https://your-resource.openai.azure.com/",
+  "azure_api_key": "your-azure-key",
   "azure_deployment_name": "gpt-4.1-nano",
+  "ollama_url": "http://localhost:11434",
   "target_language": "Norwegian",
   "alternative_target_language": "English",
   "custom_prompt": "Translate accurately while preserving meaning and tone...",
   "theme": "auto",
-  "hotkey": "Crtl+Alt+C",
+  "hotkey": "Ctrl+Alt+C",
   "auto_start": true,
-  "close_to_tray": true
+  "minimize_to_tray": true
 }
 ```
 
@@ -179,6 +201,23 @@ Settings are automatically created in `~/.gptranslate/config.json`:
 2. Deploy a model (recommend `gpt-4.1-nano`), as it is super cheap and fast.
 3. In Settings, select "Azure OpenAI" as provider
 4. Enter your endpoint and API key
+
+#### Ollama (FREE)
+
+1. **Install Ollama**: Download from [ollama.ai](https://ollama.ai)
+2. **Pull a model**: Run `ollama pull llama3.2:latest` (or any preferred model)
+3. **Start Ollama**: The service should start automatically
+4. **Configure GPTranslate**:
+   - In Settings, select "Ollama" as provider
+   - Set the server URL (default: `http://localhost:11434`)
+   - Choose your downloaded model name
+
+**Popular Ollama Models for Translation:**
+
+- `llama3.2:latest` - Great general-purpose model
+- `mistral:latest` - Excellent for European languages  
+- `codellama:latest` - Good for technical content
+- `dolphin-mistral:latest` - Optimized for instruction following
 
 ## 🎯 Usage
 

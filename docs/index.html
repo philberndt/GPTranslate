@@ -185,6 +185,10 @@
                 color: #C0C0C0;
             }
 
+            body.dark .feature-icon img {
+                filter: invert(0.75) !important;
+            }
+
             .feature-card h3 {
                 margin-bottom: 1rem;
                 font-size: 1.6rem;
@@ -309,6 +313,9 @@
                     <p>A fast, modern AI powered desktop translation application built with Rust and Tauri. Instant
                         translation between multiple languages with global hotkey support, system tray integration, and
                         a beautiful user interface.</p>
+                    <p>
+                        <strong>Completely FREE</strong> when used with Ollama - no API costs, unlimited usage!
+                    </p>
                     <div style="margin-bottom: 2rem;">
                         <a href="https://github.com/philberndt/GPTranslate/releases" class="download-btn"
                             target="_blank">
@@ -354,8 +361,18 @@
                     <div class="feature-card">
                         <i class="bi bi-robot feature-icon"></i>
                         <h3>AI Powered</h3>
-                        <p>Leverages OpenAI and Azure OpenAI APIs for high-quality translations with custom prompts and
+                        <p>Leverages OpenAI, Azure OpenAI, and Ollama APIs for high-quality translations with custom
+                            prompts and
                             variable support.</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <img src="assets/ollama_logo.svg" alt="Ollama"
+                                style="width: 4rem; height: 4rem; filter: invert(0.2);">
+                        </div>
+                        <h3>Ollama Support</h3>
+                        <p><strong>Completely FREE!</strong> Run translations completely offline with Ollama. Perfect
+                            for privacy-conscious users, unlimited usage, and zero API costs.</p>
                     </div>
                     <div class="feature-card">
                         <i class="bi bi-keyboard feature-icon"></i>

@@ -4,12 +4,13 @@ use std::path::PathBuf;
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct Config {
-    pub api_provider: String, // "openai" or "azure_openai"
+    pub api_provider: String, // "openai", "azure_openai", or "ollama"
     pub openai_api_key: String,
     pub azure_endpoint: String,
     pub azure_api_key: String,
     pub azure_api_version: String,
     pub azure_deployment_name: String,
+    pub ollama_url: Option<String>, // URL for Ollama server, defaults to http://localhost:11434
     pub model: String,
     pub target_language: String, // User-specified target language (e.g., "Spanish", "French", "German")
     pub alternative_target_language: String, // Used when detected language is same as target language
@@ -29,6 +30,7 @@ impl Default for Config {
             azure_api_key: "".to_string(),
             azure_api_version: "2025-01-01-preview".to_string(),
             azure_deployment_name: "gpt-4.1-nano".to_string(),
+            ollama_url: Some("http://localhost:11434".to_string()),
             model: "gpt-4.1-nano".to_string(), // Updated default for OpenAI
             target_language: "English".to_string(), // Default target language
             alternative_target_language: "Norwegian".to_string(), // Default alternative target language
@@ -74,12 +76,16 @@ impl Config {
                             value["custom_prompt"] = serde_json::Value::String(
                                 "Translate the given text from {detected_language} to {target_language} accurately while preserving the meaning, tone, and nuance of the original content.\n\n# Additional Details\n- Ensure the translation retains the context, cultural meaning, tone, formal/informal style, and any idiomatic expressions.\n- Do **not** alter names, technical terms, or specific formatting unless required for grammatical correctness in the target language.\n- If the detected language is the same as the target language, choose the most appropriate alternative language for translation.\n\n# Output Format\nThe translation output should be provided as valid JSON containing 'detected_language' and 'translated_text' fields.\n\n# Notes\n- Ensure punctuation and capitalization match the norms of the target language.\n- When encountering idiomatic expressions, adapt them to equivalent phrases in the target language rather than direct word-for-word translation.\n- For ambiguous content, aim for the most contextually appropriate meaning.\n- Take into consideration the whole text and what it is about.".to_string()
                             );
-                        }
-
-                        // Add alternative_target_language if missing
+                        }                        // Add alternative_target_language if missing
                         if !value.get("alternative_target_language").is_some() {
                             value["alternative_target_language"] =
                                 serde_json::Value::String("Norwegian".to_string());
+                        }
+
+                        // Add ollama_url if missing
+                        if !value.get("ollama_url").is_some() {
+                            value["ollama_url"] =
+                                serde_json::Value::String("http://localhost:11434".to_string());
                         }
 
                         // Update model default to gpt-4.1-nano if it's the old default

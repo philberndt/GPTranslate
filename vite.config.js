@@ -7,7 +7,6 @@ import { dirname } from "path";       // added import
 const __filename = fileURLToPath(import.meta.url); // define __filename
 const __dirname = dirname(__filename);           // define __dirname
 
-// @ts-expect-error process is a nodejs global
 const host = process.env.TAURI_DEV_HOST;
 
 // https://vitejs.dev/config/

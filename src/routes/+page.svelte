@@ -13,7 +13,7 @@
   let showHistory = $state(false);
   let currentTheme = $state("auto");
   // Debouncing variables
-  let debounceTimer: number | null = null;
+  let debounceTimer: ReturnType<typeof setTimeout> | null = null;
   const DEBOUNCE_DELAY = 500; // Reduced to 500ms for better responsiveness
 
   // Function to apply theme based on configuration

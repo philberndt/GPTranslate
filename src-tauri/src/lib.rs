@@ -5,18 +5,21 @@ use tauri_plugin_clipboard_manager::ClipboardExt;
 use tokio::sync::Mutex;
 
 #[cfg(target_os = "windows")]
-use winapi::um::winuser::{GetSysColor, COLOR_WINDOW};
+use winapi::um::winuser::{COLOR_WINDOW, GetSysColor};
 
 mod config;
 mod history;
 pub mod theme;
+mod trans_azure;
+mod trans_ollama;
+mod trans_openai;
 mod translation;
 mod tray;
 
 use config::Config;
 use history::{
-    add_translation_to_history, clear_translation_history, get_translation_history,
-    TranslationHistory,
+    TranslationHistory, add_translation_to_history, clear_translation_history,
+    get_translation_history,
 };
 use translation::{TranslationResult, TranslationService};
 
@@ -259,6 +262,22 @@ async fn validate_api_key(
                 Ok(response.status().is_success())
             } else {
                 Err("Azure endpoint is required".to_string())
+            }
+        }
+        "ollama" => {
+            if let Some(ollama_url) = endpoint {
+                // Test connection to Ollama server by checking if it's running
+                let url = format!("{}/api/tags", ollama_url.trim_end_matches('/'));
+
+                let response = client
+                    .get(&url)
+                    .send()
+                    .await
+                    .map_err(|e| format!("Ollama server connection failed: {}", e))?;
+
+                Ok(response.status().is_success())
+            } else {
+                Err("Ollama URL is required".to_string())
             }
         }
         _ => Err("Unsupported API provider".to_string()),
