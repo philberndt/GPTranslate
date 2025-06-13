@@ -1,10 +1,34 @@
-# ![GPTranslate](img/logo_app.svg) GPTranslate
+# <img src="img/logo_app.svg" alt="GPTranslate" width="32" height="32"> GPTranslate
 
 A fast, modern **AI powered** desktop translation application built with Rust and Tauri that provides instant translation between multiple languages with global hotkey support, system tray integration, and a beautiful user interface. Supports OpenAI, Azure OpenAI, and Ollama APIs for high-quality translations with minimal latency and cost.
 
 **Completely FREE** when used with Ollama for local AI-powered translations - no API costs, no internet required, and complete privacy!
 
 **Note:** This project has been tested on Windows 11 only. It may work on other platforms, but is not guaranteed. If you would like to help with testing on macOS or Linux, please open an issue.
+
+## 📋 Table of Contents
+
+### For End Users
+
+- [📸 Screenshots](#-screenshots)
+- [✨ Features](#-features)
+- [💰 Cost Analysis](#-cost-analysis)
+- [⬇️ Installation](#️-installation)
+- [🚀 Quick Start Guide](#-quick-start-guide)
+- [🎯 Usage](#-usage)
+
+### For Developers
+
+- [🔨 Development Commands](#-development-commands)
+- [📦 Building for Distribution](#-building-for-distribution)
+
+### General
+
+- [📄 License](#-license)
+- [🙏 Acknowledgments](#-acknowledgments)
+- [📧 Support](#-support)
+
+---
 
 ## 📸 Screenshots
 
@@ -64,14 +88,6 @@ A fast, modern **AI powered** desktop translation application built with Rust an
 - **Configuration**: JSON-based settings in `~/.gptranslate/config.json`
 - **Settings GUI**: User-friendly configuration interface
 
-### Developer Features
-
-- **Hot Reload**: Fast development with Vite and Tauri dev server
-- **Error Handling**: Comprehensive error handling throughout
-- **Logging**: Detailed console logging for debugging
-- **Duplicate Prevention**: Smart request deduplication
-- **Performance**: Optimized with debouncing and efficient state management
-
 ## Planned Features
 
 - Model management, allowing users to select and switch between different models.
@@ -79,9 +95,9 @@ A fast, modern **AI powered** desktop translation application built with Rust an
 
 ## 💰 Cost Analysis
 
-GPTranslate offers flexible pricing options from completely **FREE** with Ollama to extremely cost-effective with OpenAI's `gpt-4.1-nano` model:
+GPTranslate offers flexible pricing options from completely **FREE¹** with Ollama to extremely cost-effective with OpenAI's `gpt-4.1-nano` model:
 
-### FREE Option: Ollama
+### Free Option: Ollama¹
 
 **Complete cost breakdown**: **$0.00** - Forever!
 
@@ -109,7 +125,7 @@ Azure OpenAI offers comparable pricing, which you can check in detail on the [of
 
 ### Real-World Usage Examples
 
-#### With Ollama (FREE)
+#### With Ollama (Free¹)
 
 - **Any amount of translation**: $0.00 forever
 - **No limits**: Translate entire books, documents, websites
@@ -121,13 +137,116 @@ Azure OpenAI offers comparable pricing, which you can check in detail on the [of
 - **100 translations/day**: ~$0.005 ($1.50/month)
 - **1000 translations/day**: ~$0.05 ($15/month)
 
+---
+¹ Requires expensive GPU for optimal performance 😒
+
 The `gpt-4.1-nano` model provides excellent translation quality at virtually no cost for typical usage patterns, making GPTranslate highly economical for both personal and professional use.
 
-## ⬇️ Download Windows Installer
+## ⬇️ Installation
+
+### Download Windows Installer
 
 You can download the latest Windows installer from the [Releases](https://github.com/philberndt/GPTranslate/releases) page.
 
-## 🚀 Quick Start
+### Install with WinGet
+
+```bash
+winget install PhilBerndt.GPTranslate
+```
+
+## 🚀 Quick Start Guide
+
+### Prerequisites for API Usage
+
+You'll need an API key from one of these providers:
+
+- **Ollama**: [Ollama](https://ollama.ai) for local, offline translation (no API key required)
+- **OpenAI**: Get API key from [OpenAI Platform](https://platform.openai.com/api-keys)
+- **Azure OpenAI**: Create resource in [Azure Portal](https://portal.azure.com/)
+
+### Getting Started
+
+1. **Install GPTranslate** using one of the methods above
+2. **Launch the application** from Start Menu or desktop shortcut
+3. **Configure your API**:
+   - Click the Settings button (gear icon)
+   - Select your preferred provider (Ollama for local, OpenAI or Azure OpenAI for cloud)
+   - Enter your API credentials
+4. **Start translating**:
+   - Type text in the left panel
+   - Translation appears automatically in the right panel
+   - Use `Ctrl+Alt+C` globally to translate clipboard content
+
+⚠️ **Note:** The API Keys and Endpoint are stored in plain text. Ensure your system is secure.
+
+### API Setup
+
+#### OpenAI
+
+1. Get an API key from [OpenAI Platform](https://platform.openai.com/api-keys)
+2. In Settings, select "OpenAI" as provider
+3. Enter your API key and preferred model
+
+#### Azure OpenAI
+
+1. Create an Azure OpenAI resource
+2. Deploy a model (recommend `gpt-4.1-nano`), as it is super cheap and fast.
+3. In Settings, select "Azure OpenAI" as provider
+4. Enter your endpoint and API key
+
+#### Ollama
+
+1. **Install Ollama**: Download from [ollama.ai](https://ollama.ai) or use `winget install ollama.ollama`
+   - **Note**: Requires a GPU for optimal performance
+2. **Pull a model**: Run `ollama pull mistral-small` (or any preferred model)
+3. **Start Ollama**: The service should start automatically
+4. **Configure GPTranslate**:
+   - In Settings, select "Ollama" as provider
+   - Set the server URL (default: `http://localhost:11434`)
+   - Choose your downloaded model name
+
+## 🎯 Usage
+
+### Basic Translation
+
+1. **Launch**: Click the system tray icon or use the global hotkey
+2. **Type or Paste**: Enter text in the left panel
+3. **Auto-translate**: Translation appears in the right panel
+4. **Copy**: Click Copy button or press `Ctrl+C` when app is focused
+
+### Global Hotkey Workflow
+
+1. **Copy text anywhere** with `Ctrl+C`
+2. **Press global hotkey** (`Ctrl+Alt+C`)
+3. **View translation** in app window
+4. **Copy result** `Ctrl+C` or `Copy` button to copy to clipboard
+
+### Keyboard Shortcuts
+
+- **Configurable Global Hotkey** (default `Ctrl+Alt+C`):
+  - **Always**: Reset detected language first
+  - When app is **not focused**: Also capture clipboard and translate
+  - When app **is focused**: Only reset detected language
+- `Ctrl+C`: Copy translated text (when app focused)
+- `Esc`: Close settings/history dialogs
+
+### Custom Translation Prompts
+
+Use these variables in your prompts:
+
+- `{detected_language}`: Source language
+- `{target_language}`: Target language
+
+Example:
+
+```text
+Translate from {detected_language} to {target_language}.
+Preserve the original tone and cultural context.
+```
+
+---
+
+## 👨‍💻 For Developers
 
 ### Prerequisites
 
@@ -162,91 +281,7 @@ You can download the latest Windows installer from the [Releases](https://github
    npm run tauri dev
    ```
 
-## 🔧 Configuration
-
-Settings are automatically created in `~/.gptranslate/config.json`:
-
-```json
-{
-  "api_provider": "openai",
-  "openai_api_key": "your-api-key-here",
-  "model": "gpt-4.1-nano",
-  "azure_endpoint": "https://your-resource.openai.azure.com/",
-  "azure_api_key": "your-azure-key",
-  "azure_deployment_name": "gpt-4.1-nano",
-  "ollama_url": "http://localhost:11434",
-  "target_language": "Norwegian",
-  "alternative_target_language": "English",
-  "custom_prompt": "Translate accurately while preserving meaning and tone...",
-  "theme": "auto",
-  "hotkey": "Ctrl+Alt+C",
-  "auto_start": true,
-  "minimize_to_tray": true
-}
-```
-
-⚠️ **Note:** The API Keys and Endpoint are stored in plain text. Ensure your system is secure.
-
-### API Setup
-
-#### OpenAI
-
-1. Get an API key from [OpenAI Platform](https://platform.openai.com/api-keys)
-2. In Settings, select "OpenAI" as provider
-3. Enter your API key and preferred model
-
-#### Azure OpenAI
-
-1. Create an Azure OpenAI resource
-2. Deploy a model (recommend `gpt-4.1-nano`), as it is super cheap and fast.
-3. In Settings, select "Azure OpenAI" as provider
-4. Enter your endpoint and API key
-
-#### Ollama (FREE)
-
-1. **Install Ollama**: Download from [ollama.ai](https://ollama.ai)
-2. **Pull a model**: Run `ollama pull llama3.2:latest` (or any preferred model)
-3. **Start Ollama**: The service should start automatically
-4. **Configure GPTranslate**:
-   - In Settings, select "Ollama" as provider
-   - Set the server URL (default: `http://localhost:11434`)
-   - Choose your downloaded model name
-
-**Popular Ollama Models for Translation:**
-
-- `llama3.2:latest` - Great general-purpose model
-- `mistral:latest` - Excellent for European languages  
-- `codellama:latest` - Good for technical content
-- `dolphin-mistral:latest` - Optimized for instruction following
-
-## 🎯 Usage
-
-### Basic Translation
-
-1. **Launch**: Click the system tray icon or use the global hotkey
-2. **Type or Paste**: Enter text in the left panel
-3. **Auto-translate**: Translation appears in the right panel
-4. **Copy**: Click Copy button or press `Ctrl+C` when app is focused
-
-### Global Hotkey Workflow
-
-1. **Copy text anywhere** with `Ctrl+C`
-2. **Press global hotkey** (`Ctrl+Alt+C`)
-3. **View translation** in app window
-4. **Copy result** automatically to clipboard
-
-### Keyboard Shortcuts
-
-- **Configurable Global Hotkey** (default `Ctrl+Alt+C`):
-  - **Always**: Reset detected language first
-  - When app is **not focused**: Also capture clipboard and translate
-  - When app **is focused**: Only reset detected language
-- `Ctrl+C`: Copy translated text (when app focused)
-- `Esc`: Close settings/history dialogs
-
-## 🔨 Development
-
-### Build Commands
+## 🔨 Development Commands
 
 ```bash
 # Development server with hot reload
@@ -265,81 +300,16 @@ npm run check
 npm run lint
 ```
 
-### Project Structure
-
-```text
-src/
-├── lib/                    # Svelte components
-│   ├── AppIcon.svelte     # Application icon
-│   ├── Settings.svelte    # Settings dialog
-│   └── History.svelte     # Translation history
-├── routes/
-│   ├── +layout.ts         # Layout configuration
-│   └── +page.svelte       # Main application
-├── app.html               # HTML template
-src-tauri/
-├── src/
-│   ├── main.rs           # Application entry
-│   ├── lib.rs            # Core library
-│   ├── config.rs         # Configuration management
-│   ├── translation.rs    # Translation service
-│   ├── history.rs        # History management
-│   └── tray.rs           # System tray
-├── icons/                # Application icons
-└── capabilities/         # Tauri permissions
-```
-
-## 🎨 Customization
-
-### Custom Translation Prompts
-
-Use variables in your prompts:
-
-- `{detected_language}`: Source language
-- `{target_language}`: Target language
-
-Example:
-
-```text
-Translate from {detected_language} to {target_language}.
-Preserve the original tone and cultural context.
-```
-
-### Hotkey Customization
-
-Modify the global hotkey in Settings. Supports:
-
-- Modifiers: `Ctrl`, `Alt`, `Shift`, `Cmd` (macOS)
-- Keys: Letters, numbers, function keys
-- Combinations: `Ctrl+Alt+T`, `Shift+F1`, etc.
-
 ## 📦 Building for Distribution
 
 ### Windows Installer
 
 ```bash
-# Build MSI installer
+# Build MSI and NSIS installers
 npm run tauri build
-
-# Build NSIS installer
-npm run tauri build -- --target nsis
 ```
 
 Installers are created in `src-tauri/target/release/bundle/`
-
-## 🤝 Contributing
-
-1. Fork the repository
-2. Create a feature branch: `git checkout -b feature-name`
-3. Make your changes and test thoroughly
-4. Commit with clear messages: `git commit -m "Add: feature description"`
-5. Push and create a Pull Request
-
-### Code Style
-
-- **Rust**: Use `cargo fmt` and `cargo clippy`
-- **TypeScript/Svelte**: Use `npm run lint`
-- **Commits**: Follow conventional commits format
 
 ## 📄 License
 
@@ -348,7 +318,6 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ## 🙏 Acknowledgments
 
 - **Icons**: [Bootstrap Icons](https://icons.getbootstrap.com/)
-- **Translation**: Powered by OpenAI and Azure OpenAI
 - **Framework**: Built with [Tauri](https://tauri.app/) and [SvelteKit](https://kit.svelte.dev/)
 
 ## 📧 Support

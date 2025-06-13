@@ -40,6 +40,31 @@
                 --border-color: #404040;
                 --shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
                 --shadow-hover: 0 4px 16px rgba(0, 0, 0, 0.4);
+
+                /* Override Chota CSS framework variables for dark mode */
+                --bg-secondary-color: #2d2d2d;
+                --font-color: #f5f5f5;
+            }
+
+            /* Dark theme specific adjustments for WinGet card */
+            body.dark .winget-command-container {
+                background: #0d1117 !important;
+                border: 1px solid #21262d !important;
+                box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.4) !important;
+            }
+
+            body.dark .winget-command {
+                color: #f0f6fc !important;
+            }
+
+            /* Additional dark theme overrides to ensure proper background */
+            body.dark .winget-card {
+                background: #1a1a1a !important;
+            }
+
+            /* Force override for any elements using --bg-secondary in dark mode */
+            body.dark .info-box {
+                background: #2d2d2d !important;
             }
 
             body {
@@ -294,6 +319,180 @@
                 background-color: var(--primary-hover);
                 border-color: var(--primary-hover);
             }
+
+            /* Loading animation */
+            @keyframes spin {
+                from {
+                    transform: rotate(0deg);
+                }
+
+                to {
+                    transform: rotate(360deg);
+                }
+            }
+
+            /* Utility classes for inline style replacements */
+            .mb-2 {
+                margin-bottom: 2rem;
+            }
+
+            .mb-3 {
+                margin-bottom: 3rem;
+            }
+
+            .mb-1-5 {
+                margin-bottom: 1.5rem;
+            }
+
+            .mt-1 {
+                margin-top: 1rem;
+            }
+
+            .mt-3 {
+                margin-top: 3rem;
+            }
+
+            .opacity-07 {
+                opacity: 0.7;
+            }
+
+            .opacity-08 {
+                opacity: 0.8;
+            }
+
+            .text-center {
+                text-align: center;
+            }
+
+            /* WinGet installation card */
+            .winget-card {
+                background: var(--bg-color);
+                border: 2px solid var(--primary-color);
+                border-radius: 16px;
+                padding: 2rem;
+                margin: 2rem auto;
+                max-width: 600px;
+                box-shadow: var(--shadow-hover);
+                -webkit-backdrop-filter: blur(10px);
+                backdrop-filter: blur(10px);
+            }
+
+            .winget-header {
+                margin-bottom: 1.5rem;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                gap: 0.75rem;
+                font-size: 1.4rem;
+                font-weight: 600;
+                color: var(--primary-color);
+            }
+
+            .winget-command-container {
+                background: var(--bg-secondary);
+                border: 1px solid var(--border-color);
+                border-radius: 12px;
+                padding: 1.25rem;
+                margin-bottom: 1.5rem;
+                font-family: 'Courier New', monospace;
+                position: relative;
+                box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
+            }
+
+            .winget-command {
+                font-size: 1.1rem;
+                color: var(--text-color);
+                font-weight: 500;
+            }
+
+            .winget-copy-btn {
+                position: absolute;
+                right: 12px;
+                top: 50%;
+                transform: translateY(-50%);
+                background: var(--primary-color);
+                color: white;
+                border: none;
+                border-radius: 6px;
+                padding: 0.5rem 0.75rem;
+                cursor: pointer;
+                font-size: 0.9rem;
+                transition: all 0.2s ease;
+                box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            }
+
+            .winget-copy-btn:hover {
+                background: var(--primary-hover);
+                transform: translateY(-50%) scale(1.05);
+            }
+
+            .release-info {
+                opacity: 0.9;
+                font-size: 1rem;
+                text-align: center;
+            }
+
+            .release-loading {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                gap: 0.75rem;
+                font-size: 1rem;
+                color: var(--text-color);
+            }
+
+            .release-details {
+                display: none;
+                font-size: 1rem;
+                color: var(--text-color);
+            }
+
+            .loading-spinner {
+                animation: spin 1s linear infinite;
+            }
+
+            /* Ollama logo styling */
+            .ollama-logo {
+                width: 4rem;
+                height: 4rem;
+                filter: invert(0.2);
+            }
+
+            /* Feature card max width */
+            .feature-card-centered {
+                max-width: 800px;
+                margin: 0 auto;
+            }
+
+            /* API provider headings */
+            .api-provider-heading {
+                color: var(--primary-color);
+                margin-bottom: 0.5rem;
+            }
+
+            /* API provider text */
+            .api-provider-text {
+                font-size: 0.9rem;
+                margin-bottom: 0.5rem;
+            }
+
+            /* API provider links */
+            .api-provider-link {
+                color: var(--primary-color);
+                text-decoration: none;
+            }
+
+            /* Info box */
+            .info-box {
+                background: var(--bg-secondary);
+                padding: 1rem;
+                border-radius: 8px;
+                font-size: 1.1rem;
+            }
+
+            .info-icon {
+                color: var(--primary-color);
+            }
         </style>
     </head>
 
@@ -316,15 +515,40 @@
                     <p>
                         <strong>Completely FREE</strong> when used with Ollama - no API costs, unlimited usage!
                     </p>
-                    <div style="margin-bottom: 2rem;">
-                        <a href="https://github.com/philberndt/GPTranslate/releases" class="download-btn"
-                            target="_blank">
+                    <div class="mb-2"> <a href="https://github.com/philberndt/GPTranslate/releases" class="download-btn"
+                            target="_blank" rel="noopener">
                             <i class="bi bi-download"></i>
                             Download for Windows
                         </a>
-                        <a href="https://github.com/philberndt/GPTranslate" class="github-btn" target="_blank">
+                        <a href="https://github.com/philberndt/GPTranslate" class="github-btn" target="_blank"
+                            rel="noopener">
                             <i class="bi bi-github"></i> GitHub
                         </a>
+                    </div> <!-- WinGet Installation in Hero -->
+                    <div class="winget-card">
+                        <h4 class="winget-header">
+                            <i class="bi bi-terminal"></i>
+                            Or install with WinGet
+                        </h4>
+                        <div class="winget-command-container">
+                            <code id="hero-winget-command"
+                                class="winget-command">winget install PhilBerndt.GPTranslate</code>
+                            <button id="hero-copy-winget" title="Copy WinGet command" class="winget-copy-btn">
+                                <i class="bi bi-clipboard"></i>
+                            </button>
+                        </div>
+
+                        <!-- Latest Release Info in Hero -->
+                        <div id="hero-release-info" class="release-info">
+                            <div id="hero-release-loading" class="release-loading">
+                                <i class="bi bi-arrow-clockwise loading-spinner"></i>
+                                Loading latest version...
+                            </div>
+                            <div id="hero-release-details" class="release-details">
+                                Latest: <strong id="hero-release-version">Loading...</strong> •
+                                <span id="hero-release-date">Loading...</span>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -367,8 +591,7 @@
                     </div>
                     <div class="feature-card">
                         <div class="feature-icon">
-                            <img src="assets/ollama_logo.svg" alt="Ollama"
-                                style="width: 4rem; height: 4rem; filter: invert(0.2);">
+                            <img src="assets/ollama_logo.svg" alt="Ollama" class="ollama-logo">
                         </div>
                         <h3>Ollama Support</h3>
                         <p><strong>Completely FREE!</strong> Run translations completely offline with Ollama. Perfect
@@ -434,7 +657,7 @@
                 </div>
 
                 <!-- Additional Screenshots -->
-                <div class="row" style="margin-top: 3rem;">
+                <div class="row mt-3">
                     <div class="col-6">
                         <div class="screenshot-container">
                             <img src="assets/settings.png" alt="GPTranslate Settings" class="screenshot">
@@ -453,36 +676,35 @@
                 <h2>What You Need</h2>
                 <div class="row">
                     <div class="col-12">
-                        <div class="feature-card" style="max-width: 800px; margin: 0 auto;">
+                        <div class="feature-card feature-card-centered">
                             <i class="bi bi-key feature-icon"></i>
                             <h3>API Key Required</h3>
-                            <p style="margin-bottom: 1.5rem;">To use GPTranslate, you'll need an API key from one of
+                            <p class="mb-1-5">To use GPTranslate, you'll need an API key from one of
                                 these providers:</p>
-                            <div class="row" style="margin-bottom: 1.5rem;">
+                            <div class="row mb-1-5">
                                 <div class="col-6">
-                                    <h4 style="color: var(--primary-color); margin-bottom: 0.5rem;">
+                                    <h4 class="api-provider-heading">
                                         <i class="bi bi-openai"></i> OpenAI
                                     </h4>
-                                    <p style="font-size: 0.9rem; margin-bottom: 0.5rem;">Get your API key from:</p>
-                                    <a href="https://platform.openai.com/api-keys" target="_blank"
-                                        style="color: var(--primary-color); text-decoration: none;">
+                                    <p class="api-provider-text">Get your API key from:</p> <a
+                                        href="https://platform.openai.com/api-keys" target="_blank" rel="noopener"
+                                        class="api-provider-link">
                                         platform.openai.com/api-keys <i class="bi bi-arrow-up-right"></i>
                                     </a>
                                 </div>
                                 <div class="col-6">
-                                    <h4 style="color: var(--primary-color); margin-bottom: 0.5rem;">
+                                    <h4 class="api-provider-heading">
                                         <i class="bi bi-microsoft"></i> Azure OpenAI
                                     </h4>
-                                    <p style="font-size: 0.9rem; margin-bottom: 0.5rem;">Get your API key from:</p>
-                                    <a href="https://portal.azure.com/" target="_blank"
-                                        style="color: var(--primary-color); text-decoration: none;">
+                                    <p class="api-provider-text">Get your API key from:</p>
+                                    <a href="https://portal.azure.com/" target="_blank" rel="noopener"
+                                        class="api-provider-link">
                                         Azure Portal <i class="bi bi-arrow-up-right"></i>
                                     </a>
                                 </div>
                             </div>
-                            <div
-                                style="background: var(--bg-secondary); padding: 1rem; border-radius: 8px; font-size: 1.1rem;">
-                                <i class="bi bi-info-circle" style="color: var(--primary-color);"></i>
+                            <div class="info-box">
+                                <i class="bi bi-info-circle info-icon"></i>
                                 <strong>Note:</strong> The recommended <code>gpt-4.1-nano</code> model costs ~$0.00005
                                 per translation.
                             </div>
@@ -494,13 +716,23 @@
         <section class="section section-alt">
             <div class="container text-center">
                 <h2>Get Started Today</h2>
-                <p style="margin-bottom: 3rem;">Download GPTranslate and experience fast, AI-powered translation with
+                <p class="mb-3">Download GPTranslate and experience fast, AI-powered translation with
                     beautiful design.</p>
-                <a href="https://github.com/philberndt/GPTranslate/releases" class="download-btn" target="_blank">
-                    <i class="bi bi-download"></i>
-                    Download Windows Installer
-                </a>
-                <p style="margin-top: 1rem; opacity: 0.7;">
+
+                <!-- Download Buttons -->
+                <div class="mb-2">
+                    <a href="https://github.com/philberndt/GPTranslate/releases" class="download-btn" target="_blank"
+                        rel="noopener">
+                        <i class="bi bi-download"></i>
+                        Download Windows Installer
+                    </a>
+                </div>
+
+
+
+
+
+                <p class="mt-1 opacity-07">
                     <small>Free and open source • Available on GitHub</small>
                 </p>
             </div>
@@ -511,9 +743,11 @@
             <div class="container">
                 <p>&copy; 2025 GPTranslate. Built with ❤️ using Rust and Tauri.</p>
                 <p>
-                    <a href="https://github.com/philberndt/GPTranslate" target="_blank">GitHub</a> •
-                    <a href="https://github.com/philberndt/GPTranslate/releases" target="_blank">Releases</a> •
-                    <a href="https://github.com/philberndt/GPTranslate/issues" target="_blank">Support</a>
+                    <a href="https://github.com/philberndt/GPTranslate" target="_blank" rel="noopener">GitHub</a> •
+                    <a href="https://github.com/philberndt/GPTranslate/releases" target="_blank"
+                        rel="noopener">Releases</a> •
+                    <a href="https://github.com/philberndt/GPTranslate/issues" target="_blank"
+                        rel="noopener">Support</a>
                 </p>
             </div>
         </footer>
@@ -588,9 +822,7 @@
                         });
                     }
                 });
-            });
-
-            // Add intersection observer for scroll animations
+            });            // Add intersection observer for scroll animations
             const observerOptions = {
                 threshold: 0.1,
                 rootMargin: '0px 0px -50px 0px'
@@ -611,7 +843,114 @@
                 el.style.transform = 'translateY(20px)';
                 el.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
                 observer.observe(el);
-            });
+            });            // WinGet copy functionality
+            function setupCopyButton(commandId, buttonId) {
+                const button = document.getElementById(buttonId);
+                if (!button) return;
+
+                button.addEventListener('click', async () => {
+                    const command = document.getElementById(commandId).textContent;
+
+                    try {
+                        await navigator.clipboard.writeText(command);
+                        button.innerHTML = '<i class="bi bi-check"></i>';
+                        button.style.background = '#28a745';
+
+                        setTimeout(() => {
+                            button.innerHTML = '<i class="bi bi-clipboard"></i>';
+                            button.style.background = 'var(--primary-color)';
+                        }, 2000);
+                    } catch (err) {
+                        // Fallback for older browsers
+                        const textArea = document.createElement('textarea');
+                        textArea.value = command;
+                        document.body.appendChild(textArea);
+                        textArea.select();
+                        document.execCommand('copy');
+                        document.body.removeChild(textArea);
+
+                        button.innerHTML = '<i class="bi bi-check"></i>';
+                        button.style.background = '#28a745';
+
+                        setTimeout(() => {
+                            button.innerHTML = '<i class="bi bi-clipboard"></i>';
+                            button.style.background = 'var(--primary-color)';
+                        }, 2000);
+                    }
+                });
+            }
+
+            // Setup copy buttons for both hero and download sections
+            setupCopyButton('hero-winget-command', 'hero-copy-winget');
+            setupCopyButton('winget-command', 'copy-winget');
+
+            // Fetch latest release information
+            async function fetchLatestRelease() {
+                try {
+                    const response = await fetch('https://api.github.com/repos/philberndt/GPTranslate/releases/latest');
+                    const release = await response.json();
+
+                    if (release && release.tag_name) {                        // Format date
+                        const publishedDate = new Date(release.published_at);
+                        const formattedDate = publishedDate.toLocaleDateString('en-US', {
+                            year: 'numeric',
+                            month: 'long',
+                            day: 'numeric'
+                        });
+
+                        // Update hero section
+                        const heroVersion = document.getElementById('hero-release-version');
+                        const heroDate = document.getElementById('hero-release-date');
+                        const heroLoading = document.getElementById('hero-release-loading');
+                        const heroDetails = document.getElementById('hero-release-details');
+
+                        if (heroVersion && heroDate && heroLoading && heroDetails) {
+                            heroVersion.textContent = release.tag_name;
+                            heroDate.textContent = formattedDate;
+                            heroLoading.style.display = 'none';
+                            heroDetails.style.display = 'block';
+                        }
+
+                        // Update download section
+                        const releaseVersion = document.getElementById('release-version');
+                        const releaseDateElement = document.getElementById('release-date');
+                        const releaseLoading = document.getElementById('release-loading');
+                        const releaseDetails = document.getElementById('release-details');
+
+                        if (releaseVersion && releaseDateElement && releaseLoading && releaseDetails) {
+                            releaseVersion.textContent = release.tag_name;
+                            releaseDateElement.textContent = formattedDate;
+                            releaseLoading.style.display = 'none';
+                            releaseDetails.style.display = 'block';
+                        }
+                    } else {
+                        throw new Error('Invalid release data');
+                    }
+                } catch (error) {
+                    console.error('Failed to fetch release info:', error);
+
+                    // Handle hero section error
+                    const heroLoading = document.getElementById('hero-release-loading');
+                    const heroDetails = document.getElementById('hero-release-details');
+                    if (heroLoading && heroDetails) {
+                        heroLoading.style.display = 'none';
+                        heroDetails.innerHTML = 'Latest release info unavailable';
+                        heroDetails.style.display = 'block';
+                    }
+
+                    // Handle download section error
+                    const releaseLoading = document.getElementById('release-loading');
+                    const releaseDetails = document.getElementById('release-details');
+                    if (releaseLoading && releaseDetails) {
+                        releaseLoading.style.display = 'none';
+                        releaseDetails.innerHTML = '<small>Latest release information unavailable</small>';
+                        releaseDetails.style.display = 'block';
+                    }
+                }
+            }
+
+            // Fetch release info on page load
+            fetchLatestRelease();
         </script>
     </body>
 
