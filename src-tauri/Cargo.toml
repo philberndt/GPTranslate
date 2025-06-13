@@ -1,6 +1,6 @@
 [package]
 name = "gptranslate"
-version = "1.2.0"
+version = "1.2.1"
 description = "A fast, modern desktop translation application built with Rust and Tauri that provides instant translation between multiple languages with global hotkey support, system tray integration, and a beautiful user interface."
 authors = ["Phil Berndt <phil@berndt.no>"]
 license = "MIT"

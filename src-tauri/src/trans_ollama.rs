@@ -1,15 +1,17 @@
-use crate::translation::{TranslationProvider, TranslationResult, clean_text_for_translation, create_smart_prompt};
 use crate::config::Config;
+use crate::translation::{
+    TranslationProvider, TranslationResult, clean_text_for_translation, create_smart_prompt,
+};
 use anyhow::Result;
 use async_trait::async_trait;
-use serde_json::{json, Value};
 use ollama_rs::{
+    Ollama,
     generation::{
-        completion::{request::GenerationRequest, GenerationResponse},
+        completion::{GenerationResponse, request::GenerationRequest},
         options::GenerationOptions,
     },
-    Ollama,
 };
+use serde_json::{Value, json};
 
 pub struct OllamaTranslationService {
     client: Ollama,
@@ -19,17 +21,24 @@ pub struct OllamaTranslationService {
 impl OllamaTranslationService {
     pub fn new(config: Config) -> Self {
         // Default to localhost:11434 if no ollama_url is configured
-        let ollama_url = config.ollama_url.as_deref().unwrap_or("http://localhost:11434");
-        
+        let ollama_url = config
+            .ollama_url
+            .as_deref()
+            .unwrap_or("http://localhost:11434");
+
         log::info!(
             "Creating OllamaTranslationService with URL: {}, model: {}",
-            ollama_url, 
+            ollama_url,
             config.model
         );
-        
+
         // Parse the URL to extract host and port
         let (host, port) = if let Ok(url) = url::Url::parse(ollama_url) {
-            let host = format!("{}://{}", url.scheme(), url.host_str().unwrap_or("localhost"));
+            let host = format!(
+                "{}://{}",
+                url.scheme(),
+                url.host_str().unwrap_or("localhost")
+            );
             let port = url.port().unwrap_or(11434);
             (host, port)
         } else {
@@ -45,15 +54,12 @@ impl OllamaTranslationService {
                 ("http://localhost".to_string(), 11434)
             }
         };
-        
+
         log::info!("Parsed Ollama host: {}, port: {}", host, port);
-        
+
         let client = Ollama::new(host, port);
-        
-        Self {
-            client,
-            config,
-        }
+
+        Self { client, config }
     }
 
     fn parse_response_content(&self, content: &str) -> Result<TranslationResult> {
@@ -100,7 +106,10 @@ impl OllamaTranslationService {
 
                     if let Some(end_idx) = end_idx {
                         let json_str = &cleaned_content[start_idx..end_idx];
-                        log::info!("Attempting to parse extracted JSON from Ollama: {}", json_str);
+                        log::info!(
+                            "Attempting to parse extracted JSON from Ollama: {}",
+                            json_str
+                        );
 
                         match serde_json::from_str::<Value>(json_str) {
                             Ok(json) => {
@@ -144,13 +153,22 @@ impl OllamaTranslationService {
                 }
             }
         };
-
         let translated_text = match parsed["translated_text"].as_str() {
-            Some(text) => text.to_string(),
+            Some(text) => {
+                // Unescape any escaped newlines that Ollama might have returned
+                text.replace("\\n", "\n")
+                    .replace("/n", "\n") // Also handle the literal /n issue
+                    .replace("\\r\\n", "\n")
+                    .replace("\\r", "\n")
+            }
             None => {
                 // If translated_text field is missing, check if the whole response is just text
                 if parsed.is_string() {
-                    parsed.as_str().unwrap_or("translation failed").to_string()
+                    let text = parsed.as_str().unwrap_or("translation failed");
+                    text.replace("\\n", "\n")
+                        .replace("/n", "\n") // Also handle the literal /n issue
+                        .replace("\\r\\n", "\n")
+                        .replace("\\r", "\n")
                 } else {
                     "translation failed".to_string()
                 }
@@ -205,9 +223,8 @@ impl TranslationProvider for OllamaTranslationService {
 
         let user_prompt = format!("Text to translate: \"{}\"", cleaned_text);
         let smart_prompt = create_smart_prompt(&self.config);
-
         let full_prompt = format!(
-            "{}\n\nAlways respond with valid JSON containing 'detected_language' and 'translated_text' fields. Make sure to properly escape newlines in the translated_text field.\n\n{}",
+            "{}\n\nAlways respond with valid JSON containing 'detected_language' and 'translated_text' fields. Preserve line breaks and formatting in the translated text.\n\n{}",
             smart_prompt, user_prompt
         );
 
@@ -220,10 +237,13 @@ impl TranslationProvider for OllamaTranslationService {
             .top_p(0.9)
             .num_predict(800);
 
-        let request = GenerationRequest::new(self.config.model.clone(), full_prompt)
-            .options(options);
+        let request =
+            GenerationRequest::new(self.config.model.clone(), full_prompt).options(options);
 
-        let response: GenerationResponse = self.client.generate(request).await
+        let response: GenerationResponse = self
+            .client
+            .generate(request)
+            .await
             .map_err(|e| anyhow::anyhow!("Ollama generation failed: {}", e))?;
 
         let content = response.response;

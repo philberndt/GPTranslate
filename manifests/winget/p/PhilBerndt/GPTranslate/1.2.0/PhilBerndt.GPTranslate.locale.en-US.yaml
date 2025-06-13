@@ -46,7 +46,7 @@ ReleaseNotes: |-
   • Added ollama-rs crate integration for robust Ollama communication
   • Improved error handling across all translation providers
   • Enhanced validation system for all API endpoints including Ollama server connectivity
-ReleaseNotesUrl: https://github.com/philberndt/gptranslate/releases/tag/v1.2.0
+ReleaseNotesUrl: https://github.com/philberndt/gptranslate/releases/tag/1.2.0
 PurchaseUrl: https://gptranslate.berndt.no
 Documentations:
 - DocumentLabel: User Guide
