@@ -1,12 +1,12 @@
 use anyhow::Result;
 use tauri::{
+    AppHandle, Manager,
     image::Image,
     menu::{Menu, MenuItem},
     tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent},
-    AppHandle, Manager,
 };
 
-use crate::theme::{get_system_theme, SystemTheme};
+use crate::theme::{SystemTheme, get_system_theme};
 
 fn get_optimal_icon_size() -> u32 {
     // On Windows, try to detect DPI scaling
@@ -65,7 +65,18 @@ fn get_theme_icon() -> Result<Image<'static>> {
         (SystemTheme::Light, _) => include_bytes!("../icons/tray_light_32.png"),
     };
 
-    Image::from_bytes(icon_bytes).map_err(|e| anyhow::anyhow!("Failed to load tray icon: {}", e))
+    // For Tauri v2, we need to use a different approach for loading images
+    // Try using the image bytes directly as a Vec<u8>
+    let icon_bytes = icon_bytes.to_vec();
+
+    // Tauri v2 typically expects raw RGBA data, but since these are PNG files,
+    // we might need to decode them first. For now, let's try creating an image
+    // directly from the PNG bytes by using the image crate
+    let img = image::load_from_memory(icon_bytes.as_slice())
+        .map_err(|e| anyhow::anyhow!("Failed to decode icon image: {}", e))?
+        .to_rgba8();
+    let (width, height) = img.dimensions();
+    Ok(Image::new_owned(img.into_raw(), width, height))
 }
 
 pub fn create_tray(app: &AppHandle) -> Result<()> {
