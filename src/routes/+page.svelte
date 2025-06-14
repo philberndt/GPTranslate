@@ -1,9 +1,11 @@
 <script lang="ts">
+  import "bootstrap-icons/font/bootstrap-icons.css";
   import { invoke } from "@tauri-apps/api/core";
   import { listen } from "@tauri-apps/api/event";
   import { onMount } from "svelte";
   import Settings from "../lib/Settings.svelte";
   import History from "../lib/History.svelte";
+  import ModelSelector from "../lib/ModelSelector.svelte";
   let originalText = $state("");
   let translatedText = $state("");
   let detectedLanguage = $state("");
@@ -30,19 +32,23 @@
       document.documentElement.classList.remove("theme-light");
       document.documentElement.classList.add("theme-dark");
     }
+  } // Function to load/refresh config
+  async function loadConfig() {
+    try {
+      config = await invoke("get_config");
+      // Apply theme from config
+      if (config && config.theme) {
+        applyTheme(config.theme);
+      }
+    } catch (e) {
+      console.error("Failed to load config:", e);
+    }
   }
+
   onMount(() => {
     // Load config
     const initializeApp = async () => {
-      try {
-        config = await invoke("get_config");
-        // Apply theme from config
-        if (config && config.theme) {
-          applyTheme(config.theme);
-        }
-      } catch (e) {
-        console.error("Failed to load config:", e);
-      } // Listen for clipboard text from global shortcut
+      await loadConfig(); // Listen for clipboard text from global shortcut
       await listen("clipboard-text", (event) => {
         originalText = event.payload as string;
         // Use debounced translation to prevent conflicts with input events
@@ -251,8 +257,12 @@
           <i class="bi bi-gear"></i>
         </div>
       </div>
+      <!-- Model selector -->
+      <div class="model-selector-container">
+        <ModelSelector {config} />
+      </div>
 
-      <!-- Action buttons in the center -->
+      <!-- Action buttons on the right -->
       <div class="action-buttons">
         <button
           onclick={translateText}
@@ -277,7 +287,7 @@
 </main>
 
 {#if showSettings}
-  <Settings onClose={closeSettings} />
+  <Settings {config} onClose={closeSettings} onConfigChange={loadConfig} />
 {/if}
 
 {#if showHistory}
@@ -415,6 +425,19 @@
   }
 
   .nav-icons {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+  }
+
+  .model-selector-container {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    margin: 0 16px;
+  }
+
+  .action-buttons {
     display: flex;
     gap: 8px;
     align-items: center;

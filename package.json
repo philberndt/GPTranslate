@@ -48,7 +48,8 @@
     "@tauri-apps/plugin-opener": "^2",
     "@tauri-apps/plugin-os": "^2.2.1",
     "@tauri-apps/plugin-positioner": "^2.2.0",
-    "@tauri-apps/plugin-window-state": "^2.2.2"
+    "@tauri-apps/plugin-window-state": "^2.2.2",
+    "bootstrap-icons": "^1.13.1"
   },
   "devDependencies": {
     "@sveltejs/adapter-static": "^3.0.8",

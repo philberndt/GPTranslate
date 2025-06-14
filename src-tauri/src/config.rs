@@ -1,6 +1,16 @@
 use anyhow::Result;
 use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
 use std::path::PathBuf;
+
+#[derive(Serialize, Deserialize, Clone, Debug)]
+pub struct ModelConfig {
+    pub name: String,
+    pub display_name: String,
+    pub provider: String,
+    pub is_enabled: bool,
+    pub description: Option<String>,
+}
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct Config {
@@ -10,32 +20,41 @@ pub struct Config {
     pub azure_api_key: String,
     pub azure_api_version: String,
     pub azure_deployment_name: String,
-    pub ollama_url: Option<String>, // URL for Ollama server, defaults to http://localhost:11434
-    pub model: String,
+    pub ollama_url: Option<String>,
+    pub model: String, // Current selected model
+    pub available_models: HashMap<String, Vec<ModelConfig>>, // Provider -> Models
     pub target_language: String, // User-specified target language (e.g., "Spanish", "French", "German")
     pub alternative_target_language: String, // Used when detected language is same as target language
     pub auto_start: bool,
     pub hotkey: String,
-    pub theme: String, // "auto", "light", "dark"
+    pub theme: String,
     pub minimize_to_tray: bool,
-    pub custom_prompt: String, // Now supports variables: {detected_language}, {target_language}
+    pub custom_prompt: String,
 }
 
 impl Default for Config {
     fn default() -> Self {
+        let mut available_models = HashMap::new();
+
+        // Start with empty model arrays - users should configure their own models
+        available_models.insert("openai".to_string(), vec![]);
+        available_models.insert("azure_openai".to_string(), vec![]);
+        available_models.insert("ollama".to_string(), vec![]);
+
         Self {
-            api_provider: "openai".to_string(),
+            api_provider: "".to_string(),
             openai_api_key: "".to_string(),
             azure_endpoint: "".to_string(),
             azure_api_key: "".to_string(),
-            azure_api_version: "2025-01-01-preview".to_string(),
-            azure_deployment_name: "gpt-4.1-nano".to_string(),
+            azure_api_version: "".to_string(),
+            azure_deployment_name: "".to_string(),
             ollama_url: Some("http://localhost:11434".to_string()),
-            model: "gpt-4.1-nano".to_string(), // Updated default for OpenAI
-            target_language: "English".to_string(), // Default target language
-            alternative_target_language: "Norwegian".to_string(), // Default alternative target language
+            model: "".to_string(),
+            available_models,
+            target_language: "English".to_string(),
+            alternative_target_language: "Norwegian".to_string(),
             auto_start: true,
-            hotkey: "CommandOrControl+Alt+C".to_string(),
+            hotkey: "Ctrl+Alt+C".to_string(),
             theme: "auto".to_string(),
             minimize_to_tray: true,
             custom_prompt: "Translate the given text from {detected_language} to {target_language} accurately while preserving the meaning, tone, and nuance of the original content.\n\n# Additional Details\n- Ensure the translation retains the context, cultural meaning, tone, formal/informal style, and any idiomatic expressions.\n- Do **not** alter names, technical terms, or specific formatting unless required for grammatical correctness in the target language.\n- If the detected language is the same as the target language, choose the most appropriate alternative language for translation.\n\n# Output Format\nThe translation output should be provided as valid JSON containing 'detected_language' and 'translated_text' fields.\n\n# Notes\n- Ensure punctuation and capitalization match the norms of the target language.\n- When encountering idiomatic expressions, adapt them to equivalent phrases in the target language rather than direct word-for-word translation.\n- For ambiguous content, aim for the most contextually appropriate meaning.\n- Take into consideration the whole text and what it is about.".to_string(),
@@ -76,7 +95,7 @@ impl Config {
                             value["custom_prompt"] = serde_json::Value::String(
                                 "Translate the given text from {detected_language} to {target_language} accurately while preserving the meaning, tone, and nuance of the original content.\n\n# Additional Details\n- Ensure the translation retains the context, cultural meaning, tone, formal/informal style, and any idiomatic expressions.\n- Do **not** alter names, technical terms, or specific formatting unless required for grammatical correctness in the target language.\n- If the detected language is the same as the target language, choose the most appropriate alternative language for translation.\n\n# Output Format\nThe translation output should be provided as valid JSON containing 'detected_language' and 'translated_text' fields.\n\n# Notes\n- Ensure punctuation and capitalization match the norms of the target language.\n- When encountering idiomatic expressions, adapt them to equivalent phrases in the target language rather than direct word-for-word translation.\n- For ambiguous content, aim for the most contextually appropriate meaning.\n- Take into consideration the whole text and what it is about.".to_string()
                             );
-                        }                        // Add alternative_target_language if missing
+                        } // Add alternative_target_language if missing
                         if !value.get("alternative_target_language").is_some() {
                             value["alternative_target_language"] =
                                 serde_json::Value::String("Norwegian".to_string());
@@ -86,16 +105,19 @@ impl Config {
                         if !value.get("ollama_url").is_some() {
                             value["ollama_url"] =
                                 serde_json::Value::String("http://localhost:11434".to_string());
-                        }
-
-                        // Update model default to gpt-4.1-nano if it's the old default
+                        } // Add available_models if missing with empty arrays
+                        if !value.get("available_models").is_some() {
+                            let mut available_models = serde_json::Map::new();
+                            available_models.insert("openai".to_string(), serde_json::json!([]));
+                            available_models
+                                .insert("azure_openai".to_string(), serde_json::json!([]));
+                            available_models.insert("ollama".to_string(), serde_json::json!([]));
+                            value["available_models"] = serde_json::Value::Object(available_models);
+                        } // Set empty model if it was using old defaults
                         if let Some(model) = value.get("model") {
                             if model.as_str() == Some("gpt-4o-mini") {
-                                value["model"] =
-                                    serde_json::Value::String("gpt-4.1-nano".to_string());
+                                value["model"] = serde_json::Value::String("".to_string());
                             }
-                        } else {
-                            value["model"] = serde_json::Value::String("gpt-4.1-nano".to_string());
                         }
 
                         // Remove old source_language field if it exists

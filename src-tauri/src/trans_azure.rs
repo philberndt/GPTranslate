@@ -1,9 +1,11 @@
-use crate::translation::{TranslationProvider, TranslationResult, clean_text_for_translation, create_smart_prompt};
 use crate::config::Config;
+use crate::translation::{
+    TranslationProvider, TranslationResult, clean_text_for_translation, create_smart_prompt,
+};
 use anyhow::Result;
 use async_trait::async_trait;
 use reqwest;
-use serde_json::{json, Value};
+use serde_json::{Value, json};
 
 pub struct AzureOpenAITranslationService {
     client: reqwest::Client,
@@ -227,12 +229,34 @@ impl TranslationProvider for AzureOpenAITranslationService {
 
         let user_prompt = format!("Text to translate: \"{}\"", cleaned_text);
         let smart_prompt = create_smart_prompt(&self.config);
-
         log::info!("Using smart prompt with alternative language logic");
+
+        // Determine which token parameter to use based on model
+        let model_name = if !self.config.azure_deployment_name.is_empty() {
+            &self.config.azure_deployment_name
+        } else {
+            &self.config.model
+        };
+
+        // Check if this is a reasoning model (o1, o3 series)
+        let is_reasoning_model = model_name.starts_with("o1") || model_name.starts_with("o3");
+
+        log::info!(
+            "Model name detected: {}, is_reasoning_model: {}",
+            model_name,
+            is_reasoning_model
+        );
+
+        let system_role = if is_reasoning_model {
+            "developer"
+        } else {
+            "system"
+        };
+
         let mut request_body = json!({
             "messages": [
                 {
-                    "role": "system",
+                    "role": system_role,
                     "content": [
                         {
                             "type": "text",
@@ -244,10 +268,20 @@ impl TranslationProvider for AzureOpenAITranslationService {
                     "role": "user",
                     "content": user_prompt
                 }
-            ],
-            "max_tokens": 800,
-            "temperature": 0.3
+            ]
         });
+
+        // Add temperature only for non-reasoning models
+        if !is_reasoning_model {
+            request_body["temperature"] = json!(0.3);
+        }
+
+        // Use appropriate token parameter based on model type
+        if is_reasoning_model {
+            request_body["max_completion_tokens"] = json!(800);
+        } else {
+            request_body["max_tokens"] = json!(800);
+        }
 
         // For Azure Models API endpoints, we need to include the model parameter
         // For Cognitive Services endpoints, the model is specified in the URL path

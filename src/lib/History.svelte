@@ -38,7 +38,6 @@
             isLoading = false;
         }
     }
-
     async function clearHistory() {
         if (
             confirm("Are you sure you want to clear all translation history?")
@@ -48,6 +47,34 @@
                 await loadHistory();
             } catch (e) {
                 console.error("Failed to clear history:", e);
+                error = e as string;
+            }
+        }
+    }
+
+    async function deduplicateHistory() {
+        if (
+            confirm(
+                "This will remove duplicate and very similar entries from your translation history. Continue?",
+            )
+        ) {
+            try {
+                await invoke("deduplicate_history_cmd");
+                await loadHistory();
+            } catch (e) {
+                console.error("Failed to deduplicate history:", e);
+                error = e as string;
+            }
+        }
+    }
+
+    async function deleteHistoryEntry(entryId: string) {
+        if (confirm("Are you sure you want to delete this history entry?")) {
+            try {
+                await invoke("delete_history_entry_cmd", { entryId });
+                await loadHistory();
+            } catch (e) {
+                console.error("Failed to delete history entry:", e);
                 error = e as string;
             }
         }
@@ -89,6 +116,15 @@
             <h2>Translation History</h2>
             <div class="header-buttons">
                 <button
+                    class="dedupe-btn"
+                    onclick={deduplicateHistory}
+                    disabled={history.entries.length === 0}
+                    title="Remove duplicate entries"
+                >
+                    <i class="bi bi-collection"></i>
+                    Deduplicate
+                </button>
+                <button
                     class="clear-btn"
                     onclick={clearHistory}
                     disabled={history.entries.length === 0}
@@ -129,8 +165,19 @@
                                         >{entry.target_language}</span
                                     >
                                 </div>
-                                <div class="timestamp">
-                                    {formatDate(entry.timestamp)}
+                                <div class="header-right">
+                                    <div class="timestamp">
+                                        {formatDate(entry.timestamp)}
+                                    </div>
+                                    <button
+                                        class="delete-entry-btn"
+                                        onclick={() =>
+                                            deleteHistoryEntry(entry.id)}
+                                        title="Delete this entry"
+                                        aria-label="Delete this entry"
+                                    >
+                                        <i class="bi bi-trash3"></i>
+                                    </button>
                                 </div>
                             </div>
 
@@ -232,7 +279,7 @@
         display: flex;
         gap: 8px;
     }
-
+    .dedupe-btn,
     .clear-btn,
     .close-btn {
         border: 1px solid #ddd;
@@ -246,6 +293,22 @@
         align-items: center;
         gap: 4px;
         font-size: 14px;
+    }
+
+    .dedupe-btn {
+        background: #4a90e2;
+        color: white;
+        border-color: #4a90e2;
+    }
+
+    .dedupe-btn:hover:not(:disabled) {
+        background: #357abd;
+        border-color: #357abd;
+    }
+
+    .dedupe-btn:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
     }
 
     .clear-btn {
@@ -299,12 +362,17 @@
         padding: 16px;
         background: #fafbfc;
     }
-
     .history-item-header {
         display: flex;
         justify-content: space-between;
         align-items: center;
         margin-bottom: 12px;
+    }
+
+    .header-right {
+        display: flex;
+        align-items: center;
+        gap: 8px;
     }
 
     .languages {
@@ -374,6 +442,26 @@
         background: #f8fdff;
     }
 
+    .delete-entry-btn {
+        background: none;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        padding: 4px 6px;
+        color: #666;
+        cursor: pointer;
+        transition: all 0.2s;
+        font-size: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .delete-entry-btn:hover {
+        border-color: #ff6b6b;
+        color: #ff6b6b;
+        background: #fff5f5;
+    }
+
     /* Dark theme styles */
     @media (prefers-color-scheme: dark) {
         :root:not(.theme-light) .history-dialog {
@@ -387,12 +475,18 @@
         :root:not(.theme-light) .history-header h2 {
             color: #f6f6f6;
         }
-
+        :root:not(.theme-light) .dedupe-btn,
         :root:not(.theme-light) .clear-btn,
         :root:not(.theme-light) .close-btn {
             background: #333;
             border-color: #444;
             color: #ccc;
+        }
+
+        :root:not(.theme-light) .dedupe-btn:hover:not(:disabled) {
+            background: #4a90e2;
+            border-color: #4a90e2;
+            color: white;
         }
 
         :root:not(.theme-light) .close-btn:hover {
@@ -429,6 +523,18 @@
             color: #379df1;
         }
 
+        :root:not(.theme-light) .delete-entry-btn {
+            background: #333;
+            border-color: #444;
+            color: #ccc;
+        }
+
+        :root:not(.theme-light) .delete-entry-btn:hover {
+            background: #2a2a2a;
+            border-color: #ff6b6b;
+            color: #ff6b6b;
+        }
+
         :root:not(.theme-light) .timestamp {
             color: #aaa;
         }
@@ -449,12 +555,18 @@
     .history-dialog.theme-dark .history-header h2 {
         color: #f6f6f6;
     }
-
+    .history-dialog.theme-dark .dedupe-btn,
     .history-dialog.theme-dark .clear-btn,
     .history-dialog.theme-dark .close-btn {
         background: #333;
         border-color: #444;
         color: #ccc;
+    }
+
+    .history-dialog.theme-dark .dedupe-btn:hover:not(:disabled) {
+        background: #4a90e2;
+        border-color: #4a90e2;
+        color: white;
     }
     .history-dialog.theme-dark .close-btn:hover {
         border-color: #666;
@@ -489,6 +601,18 @@
         background: #3a3a3a;
         border-color: #379df1;
         color: #379df1;
+    }
+
+    .history-dialog.theme-dark .delete-entry-btn {
+        background: #333;
+        border-color: #444;
+        color: #ccc;
+    }
+
+    .history-dialog.theme-dark .delete-entry-btn:hover {
+        background: #2a2a2a;
+        border-color: #ff6b6b;
+        color: #ff6b6b;
     }
 
     .history-dialog.theme-dark .timestamp {
