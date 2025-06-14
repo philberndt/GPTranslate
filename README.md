@@ -1,6 +1,6 @@
 # <img src="img/logo_app.svg" alt="GPTranslate" width="32" height="32"> GPTranslate
 
-A fast, modern **AI powered** desktop translation application built with Rust and Tauri that provides instant translation between multiple languages with global hotkey support, system tray integration, and a beautiful user interface. Supports OpenAI, Azure OpenAI, and Ollama APIs for high-quality translations with minimal latency and cost.
+A fast and lightweight **AI powered** desktop translation application built with Rust and Tauri that provides instant translation between multiple languages with global hotkey support, system tray integration, and a beautiful user interface. Supports OpenAI, Azure OpenAI, and Ollama APIs for high-quality translations with minimal latency and cost.
 
 **Completely FREE** when used with Ollama for local AI-powered translations - no API costs, no internet required, and complete privacy!
 
