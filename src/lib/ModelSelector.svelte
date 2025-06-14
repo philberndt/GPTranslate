@@ -1,6 +1,6 @@
 <script lang="ts">
     import { invoke } from "@tauri-apps/api/core";
-    import { onMount } from "svelte";
+    // import { onMount } from "svelte"; // TODO: Implement if needed
 
     interface ModelConfig {
         name: string;
@@ -172,7 +172,7 @@
                                             : 'not-configured'}"
                                     >
                                         <span class="provider-icon">
-                                            {@html getProviderIcon(provider)}
+                                            {getProviderIcon(provider)}
                                         </span>
                                         <span class="provider-title"
                                             >{getProviderDisplayName(

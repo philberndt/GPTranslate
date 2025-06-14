@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { invoke } from "@tauri-apps/api/core";
+    // import { invoke } from "@tauri-apps/api/core"; // TODO: Implement API testing
 
     interface Props {
         config: any;
@@ -38,23 +38,21 @@
 
     function updateConfig(field: string, value: any) {
         onConfigChange({ [field]: value });
-    }
-    async function testProvider(provider: ProviderKey) {
-        isTesting[provider] = true;
-        testResults[provider] = null;
+    } // async function testProvider(provider: ProviderKey) {
+    //     isTesting[provider] = true;
+    //     testResults[provider] = null;
 
-        try {
-            // For now, just use the existing validateApiKey function
-            // TODO: Implement proper provider testing
-            await validateApiKey();
-            testResults[provider] = true;
-        } catch (e) {
-            console.error(`Failed to test ${provider}:`, e);
-            testResults[provider] = false;
-        } finally {
-            isTesting[provider] = false;
-        }
-    }
+    //     try {
+    //         // For now, just use the existing validateApiKey function
+    //         // TODO: Implement proper provider testing    //         await validateApiKey();
+    //         testResults[provider] = true;
+    //     } catch (e) {
+    //         console.error(`Failed to test ${provider}:`, e);
+    //         testResults[provider] = false;
+    //     } finally {
+    //         isTesting[provider] = false;
+    //     }
+    // }
 </script>
 
 <!-- API Configuration Section -->

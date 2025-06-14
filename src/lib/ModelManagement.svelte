@@ -14,11 +14,10 @@
         onModelRemove: (provider: string, modelIndex: number) => void;
         onModelToggle: (provider: string, modelIndex: number) => void;
     }
-
     let {
-        config,
+        // config,
         availableModels,
-        onConfigChange,
+        // onConfigChange,
         onModelAdd,
         onModelRemove,
         onModelToggle,
