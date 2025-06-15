@@ -229,3 +229,40 @@ pub fn delete_history_entry(entry_id: String) -> Result<()> {
     save_history(&history)?;
     Ok(())
 }
+
+pub fn fix_target_language_in_history() -> Result<()> {
+    let mut history = load_history()?;
+
+    for entry in &mut history.entries {
+        // If the target language is "English" but the translated text appears to be Norwegian,
+        // update the target language to "Norwegian"
+        if entry.target_language == "English" && entry.detected_language == "English" {
+            // Simple heuristic: check if translated text contains Norwegian characters or common Norwegian words
+            let norwegian_indicators = [
+                "å", "æ", "ø", "Å", "Æ", "Ø", // Norwegian letters
+                " og ", " av ", " på ", " med ", " til ", " for ", " ikke ", " kan ", " det ",
+                " er ", // Common Norwegian words
+            ];
+
+            let has_norwegian_indicators = norwegian_indicators
+                .iter()
+                .any(|&indicator| entry.translated_text.contains(indicator));
+
+            // Also check for Norwegian sentence patterns (words ending in common Norwegian suffixes)
+            let norwegian_suffixes = ["ene", "ing", "het", "else"];
+            let has_norwegian_suffixes = norwegian_suffixes.iter().any(|&suffix| {
+                entry
+                    .translated_text
+                    .split_whitespace()
+                    .any(|word| word.to_lowercase().ends_with(suffix))
+            });
+
+            if has_norwegian_indicators || has_norwegian_suffixes {
+                entry.target_language = "Norwegian".to_string();
+            }
+        }
+    }
+
+    save_history(&history)?;
+    Ok(())
+}

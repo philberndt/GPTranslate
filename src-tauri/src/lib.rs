@@ -19,7 +19,7 @@ mod tray;
 use config::Config;
 use history::{
     TranslationHistory, add_translation_to_history, clear_translation_history, deduplicate_history,
-    delete_history_entry, get_translation_history,
+    delete_history_entry, fix_target_language_in_history, get_translation_history,
 };
 use translation::{TranslationResult, TranslationService};
 
@@ -302,6 +302,12 @@ async fn deduplicate_history_cmd() -> Result<(), String> {
 #[tauri::command]
 async fn delete_history_entry_cmd(entry_id: String) -> Result<(), String> {
     delete_history_entry(entry_id).map_err(|e| format!("Failed to delete history entry: {}", e))
+}
+
+#[tauri::command]
+async fn fix_target_language_in_history_cmd() -> Result<(), String> {
+    fix_target_language_in_history()
+        .map_err(|e| format!("Failed to fix target language in history: {}", e))
 }
 
 #[tauri::command]
@@ -625,6 +631,7 @@ pub fn run() {
             clear_translation_history_cmd,
             deduplicate_history_cmd,
             delete_history_entry_cmd,
+            fix_target_language_in_history_cmd,
             reset_detected_language
         ])
         .run(tauri::generate_context!())

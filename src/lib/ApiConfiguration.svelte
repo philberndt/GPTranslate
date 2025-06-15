@@ -22,20 +22,6 @@
         onAzureEndpointChange,
         validateApiKey,
     }: Props = $props();
-
-    type ProviderKey = "openai" | "azure_openai" | "ollama";
-
-    let testResults = $state<Record<ProviderKey, boolean | null>>({
-        openai: null,
-        azure_openai: null,
-        ollama: null,
-    });
-    let isTesting = $state<Record<ProviderKey, boolean>>({
-        openai: false,
-        azure_openai: false,
-        ollama: false,
-    });
-
     function updateConfig(field: string, value: any) {
         onConfigChange({ [field]: value });
     } // async function testProvider(provider: ProviderKey) {

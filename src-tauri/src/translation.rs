@@ -1,7 +1,7 @@
 use crate::config::Config;
-use crate::trans_openai::OpenAITranslationService;
 use crate::trans_azure::AzureOpenAITranslationService;
 use crate::trans_ollama::OllamaTranslationService;
+use crate::trans_openai::OpenAITranslationService;
 use anyhow::Result;
 use async_trait::async_trait;
 use lazy_static::lazy_static;
@@ -62,15 +62,19 @@ pub struct TranslationService {
 
 impl TranslationService {
     pub fn new(config: Config) -> Self {
-        let provider: Box<dyn TranslationProvider + Send + Sync> = match config.api_provider.as_str() {
-            "openai" => Box::new(OpenAITranslationService::new(config)),
-            "azure_openai" => Box::new(AzureOpenAITranslationService::new(config)),
-            "ollama" => Box::new(OllamaTranslationService::new(config)),
-            _ => {
-                log::warn!("Unknown API provider '{}', defaulting to OpenAI", config.api_provider);
-                Box::new(OpenAITranslationService::new(config))
-            }
-        };
+        let provider: Box<dyn TranslationProvider + Send + Sync> =
+            match config.api_provider.as_str() {
+                "openai" => Box::new(OpenAITranslationService::new(config)),
+                "azure_openai" => Box::new(AzureOpenAITranslationService::new(config)),
+                "ollama" => Box::new(OllamaTranslationService::new(config)),
+                _ => {
+                    log::warn!(
+                        "Unknown API provider '{}', defaulting to OpenAI",
+                        config.api_provider
+                    );
+                    Box::new(OpenAITranslationService::new(config))
+                }
+            };
 
         Self { provider }
     }
@@ -121,8 +125,7 @@ impl TranslationService {
 pub fn clean_text_for_translation(text: &str) -> String {
     // Improve text cleaning to preserve paragraph structure
     // Instead of filtering out empty lines, preserve them as paragraph breaks
-    text
-        .lines()
+    text.lines()
         .map(|line| line.trim())
         .collect::<Vec<_>>()
         .join("\n")
@@ -131,9 +134,7 @@ pub fn clean_text_for_translation(text: &str) -> String {
 pub fn create_smart_prompt(config: &Config) -> String {
     format!(
         "{}\n\n# Alternative Language Logic\n- Primary target language: {}\n- Alternative target language: {}\n- If the detected language matches the primary target language, translate to the alternative target language instead.\n- If the detected language is different from the primary target language, translate to the primary target language.",
-        config.custom_prompt,
-        config.target_language,
-        config.alternative_target_language
+        config.custom_prompt, config.target_language, config.alternative_target_language
     )
 }
 
@@ -155,14 +156,22 @@ pub async fn translate_text(
     let service = TranslationService::new(config_clone.clone());
     match service.detect_and_translate(&text).await {
         Ok(result) => {
-            // Use the configured target language from config
-            let target_language = config_clone.target_language.clone();
+            // Determine the actual target language that was used for translation
+            let actual_target_language = if result.detected_language.to_lowercase()
+                == config_clone.target_language.to_lowercase()
+            {
+                // If detected language matches target language, we used the alternative
+                config_clone.alternative_target_language.clone()
+            } else {
+                // Otherwise, we used the configured target language
+                config_clone.target_language.clone()
+            };
 
             Ok(TranslationResponse {
                 original_text: text,
                 translated_text: result.translated_text,
                 detected_language: result.detected_language,
-                target_language,
+                target_language: actual_target_language,
             })
         }
         Err(e) => {
