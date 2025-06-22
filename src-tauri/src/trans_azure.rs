@@ -168,13 +168,22 @@ impl AzureOpenAITranslationService {
                 }
             }
         };
-
         let translated_text = match parsed["translated_text"].as_str() {
-            Some(text) => text.to_string(),
+            Some(text) => {
+                // Properly handle escaped newlines that Azure might return
+                text.replace("\\n", "\n")
+                    .replace("\\r\\n", "\n")
+                    .replace("\\r", "\n")
+                    .replace("\\t", "\t")
+            }
             None => {
                 // If translated_text field is missing, check if the whole response is just text
                 if parsed.is_string() {
-                    parsed.as_str().unwrap_or("translation failed").to_string()
+                    let text = parsed.as_str().unwrap_or("translation failed");
+                    text.replace("\\n", "\n")
+                        .replace("\\r\\n", "\n")
+                        .replace("\\r", "\n")
+                        .replace("\\t", "\t")
                 } else {
                     "translation failed".to_string()
                 }
@@ -186,25 +195,32 @@ impl AzureOpenAITranslationService {
         log::info!(
             "Alternative target language: {}",
             self.config.alternative_target_language
+        ); // Log if alternative language logic should have been applied
+        let detected_lower = detected_language.to_lowercase();
+        let target_lower = self.config.target_language.to_lowercase();
+
+        log::info!(
+            "Azure - Language analysis: detected='{}', target='{}', alternative='{}'",
+            detected_language,
+            self.config.target_language,
+            self.config.alternative_target_language
         );
 
-        // Log if alternative language logic should have been applied
-        if detected_language
-            .to_lowercase()
-            .contains(&self.config.target_language.to_lowercase())
-            || self
-                .config
-                .target_language
-                .to_lowercase()
-                .contains(&detected_language.to_lowercase())
-        {
+        if detected_lower == target_lower {
             log::info!(
-                "Alternative language logic should apply - detected '{}' matches target '{}'",
+                "Azure - Alternative language logic SHOULD apply: detected '{}' matches target '{}', should translate to '{}'",
                 detected_language,
+                self.config.target_language,
+                self.config.alternative_target_language
+            );
+        } else {
+            log::info!(
+                "Azure - Primary target logic SHOULD apply: detected '{}' != target '{}', should translate to '{}'",
+                detected_language,
+                self.config.target_language,
                 self.config.target_language
             );
         }
-
         log::info!(
             "Translated text (first 100 chars): {}",
             if translated_text.len() > 100 {
@@ -214,9 +230,21 @@ impl AzureOpenAITranslationService {
             }
         );
 
+        // Determine the actual target language used for translation
+        let actual_target_language = if detected_lower == target_lower {
+            // Alternative language logic was applied
+            self.config.alternative_target_language.clone()
+        } else {
+            // Primary target language was used
+            self.config.target_language.clone()
+        };
+
+        log::info!("Returning target_language: {}", actual_target_language);
+
         Ok(TranslationResult {
             detected_language,
             translated_text,
+            target_language: actual_target_language,
         })
     }
 }
@@ -252,7 +280,6 @@ impl TranslationProvider for AzureOpenAITranslationService {
         } else {
             "system"
         };
-
         let mut request_body = json!({
             "messages": [
                 {
@@ -260,7 +287,7 @@ impl TranslationProvider for AzureOpenAITranslationService {
                     "content": [
                         {
                             "type": "text",
-                            "text": format!("{}\n\nAlways respond with valid JSON containing 'detected_language' and 'translated_text' fields. Make sure to properly escape newlines in the translated_text field.", smart_prompt)
+                            "text": format!("{}\n\nIMPORTANT FORMATTING RULES:\n- Always respond with valid JSON containing 'detected_language' and 'translated_text' fields\n- Preserve line breaks and paragraph structure in the translation\n- Use actual newline characters (\\n) in the JSON string value, not escaped \\\\n\n- Do NOT escape newlines in the JSON response - use literal newlines\n\nExample response format:\n{{\n  \"detected_language\": \"English\",\n  \"translated_text\": \"Line 1\\nLine 2\\n\\nNew paragraph\"\n}}", smart_prompt)
                         }
                     ]
                 },

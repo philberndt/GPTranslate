@@ -188,7 +188,9 @@
                                         class="text-content"
                                         title={entry.original_text}
                                     >
-                                        {truncateText(entry.original_text, 100)}
+                                        {#each truncateText(entry.original_text, 100).split('\n') as line, i}
+                                            {#if i > 0}<br />{/if}{line}
+                                        {/each}
                                     </div>
                                     <button
                                         class="copy-btn"
@@ -209,10 +211,12 @@
                                         class="text-content"
                                         title={entry.translated_text}
                                     >
-                                        {truncateText(
+                                        {#each truncateText(
                                             entry.translated_text,
                                             100,
-                                        )}
+                                        ).split('\n') as line, i}
+                                            {#if i > 0}<br />{/if}{line}
+                                        {/each}
                                     </div>
                                     <button
                                         class="copy-btn"
@@ -421,6 +425,8 @@
         color: #333;
         margin-bottom: 8px;
         min-height: 40px;
+        white-space: pre-wrap;
+        word-wrap: break-word;
     }
 
     .copy-btn {

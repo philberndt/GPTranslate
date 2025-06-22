@@ -18,6 +18,7 @@ lazy_static! {
 pub struct TranslationResult {
     pub detected_language: String,
     pub translated_text: String,
+    pub target_language: String,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -132,10 +133,24 @@ pub fn clean_text_for_translation(text: &str) -> String {
 }
 
 pub fn create_smart_prompt(config: &Config) -> String {
-    format!(
-        "{}\n\n# Alternative Language Logic\n- Primary target language: {}\n- Alternative target language: {}\n- If the detected language matches the primary target language, translate to the alternative target language instead.\n- If the detected language is different from the primary target language, translate to the primary target language.",
-        config.custom_prompt, config.target_language, config.alternative_target_language
-    )
+    let prompt = format!(
+        "{}\n\n# Translation Rules\n- Primary target language: {}\n- Alternative target language: {}\n\n**IMPORTANT**: \n- If the detected source language is the same as the primary target language ({}), then translate to the alternative target language ({}) instead.\n- If the detected source language is different from the primary target language ({}), then translate to the primary target language ({}).\n\nExample:\n- If text is in {} and primary target is {}, translate to {}\n- If text is in any other language and primary target is {}, translate to {}",
+        config.custom_prompt,
+        config.target_language,
+        config.alternative_target_language,
+        config.target_language,
+        config.alternative_target_language,
+        config.target_language,
+        config.target_language,
+        config.target_language,
+        config.target_language,
+        config.alternative_target_language,
+        config.target_language,
+        config.target_language
+    );
+
+    log::info!("Generated smart prompt: {}", prompt);
+    prompt
 }
 
 pub async fn translate_text(
@@ -149,20 +164,49 @@ pub async fn translate_text(
     drop(config_guard);
 
     log::info!(
-        "Config loaded, custom_prompt: {}",
+        "Config loaded - API Provider: {}, Model: {}, Target: {}, Alternative: {}, Custom Prompt: {}",
+        config_clone.api_provider,
+        config_clone.model,
+        config_clone.target_language,
+        config_clone.alternative_target_language,
         config_clone.custom_prompt
     );
 
     let service = TranslationService::new(config_clone.clone());
     match service.detect_and_translate(&text).await {
         Ok(result) => {
+            log::info!("Translation completed successfully");
+            log::info!("Detected language: {}", result.detected_language);
+            log::info!(
+                "Translated text length: {} characters",
+                result.translated_text.len()
+            );
+
             // Determine the actual target language that was used for translation
-            let actual_target_language = if result.detected_language.to_lowercase()
-                == config_clone.target_language.to_lowercase()
-            {
+            let detected_lower = result.detected_language.to_lowercase();
+            let target_lower = config_clone.target_language.to_lowercase();
+
+            log::info!(
+                "Language comparison: detected='{}', target='{}'",
+                detected_lower,
+                target_lower
+            );
+            let expected_target_language = if detected_lower == target_lower {
+                log::info!(
+                    "Detected language '{}' matches target language '{}' - using alternative target language '{}'",
+                    result.detected_language,
+                    config_clone.target_language,
+                    config_clone.alternative_target_language
+                );
                 // If detected language matches target language, we used the alternative
                 config_clone.alternative_target_language.clone()
             } else {
+                log::info!(
+                    "Detected language '{}' does not match target language '{}' - using primary target language '{}'",
+                    result.detected_language,
+                    config_clone.target_language,
+                    config_clone.target_language
+                );
                 // Otherwise, we used the configured target language
                 config_clone.target_language.clone()
             };
@@ -171,10 +215,11 @@ pub async fn translate_text(
                 original_text: text,
                 translated_text: result.translated_text,
                 detected_language: result.detected_language,
-                target_language: actual_target_language,
+                target_language: expected_target_language,
             })
         }
         Err(e) => {
+            log::error!("Translation failed: {}", e);
             if e.to_string().contains("Duplicate request detected") {
                 Err(Error::DuplicateRequest)
             } else {

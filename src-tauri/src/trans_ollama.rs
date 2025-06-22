@@ -173,31 +173,38 @@ impl OllamaTranslationService {
                     "translation failed".to_string()
                 }
             }
-        };
-
-        log::info!("Detected language: {}", detected_language);
+        };        log::info!("Detected language: {}", detected_language);
         log::info!("Target language: {}", self.config.target_language);
         log::info!(
             "Alternative target language: {}",
             self.config.alternative_target_language
         );
 
-        // Log if alternative language logic should have been applied
-        if detected_language
-            .to_lowercase()
-            .contains(&self.config.target_language.to_lowercase())
-            || self
-                .config
-                .target_language
-                .to_lowercase()
-                .contains(&detected_language.to_lowercase())
-        {
+        // Determine the actual target language used for translation
+        let detected_lower = detected_language.to_lowercase();
+        let target_lower = self.config.target_language.to_lowercase();
+
+        let actual_target_language = if detected_lower == target_lower {
+            // Alternative language logic was applied
             log::info!(
-                "Alternative language logic should apply - detected '{}' matches target '{}'",
+                "Ollama - Alternative language logic SHOULD apply: detected '{}' matches target '{}', should translate to '{}'",
                 detected_language,
+                self.config.target_language,
+                self.config.alternative_target_language
+            );
+            self.config.alternative_target_language.clone()
+        } else {
+            // Primary target language was used
+            log::info!(
+                "Ollama - Primary target logic SHOULD apply: detected '{}' != target '{}', should translate to '{}'",
+                detected_language,
+                self.config.target_language,
                 self.config.target_language
             );
-        }
+            self.config.target_language.clone()
+        };
+
+        log::info!("Returning target_language: {}", actual_target_language);
 
         log::info!(
             "Translated text (first 100 chars): {}",
@@ -211,6 +218,7 @@ impl OllamaTranslationService {
         Ok(TranslationResult {
             detected_language,
             translated_text,
+            target_language: actual_target_language,
         })
     }
 }

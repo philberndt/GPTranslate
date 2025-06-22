@@ -1,9 +1,11 @@
-use crate::translation::{TranslationProvider, TranslationResult, clean_text_for_translation, create_smart_prompt};
 use crate::config::Config;
+use crate::translation::{
+    TranslationProvider, TranslationResult, clean_text_for_translation, create_smart_prompt,
+};
 use anyhow::Result;
 use async_trait::async_trait;
 use reqwest;
-use serde_json::{json, Value};
+use serde_json::{Value, json};
 
 pub struct OpenAITranslationService {
     client: reqwest::Client,
@@ -140,19 +142,27 @@ impl OpenAITranslationService {
                 }
             }
         };
-
         let translated_text = match parsed["translated_text"].as_str() {
-            Some(text) => text.to_string(),
+            Some(text) => {
+                // Properly handle escaped newlines that OpenAI might return
+                text.replace("\\n", "\n")
+                    .replace("\\r\\n", "\n")
+                    .replace("\\r", "\n")
+                    .replace("\\t", "\t")
+            }
             None => {
                 // If translated_text field is missing, check if the whole response is just text
                 if parsed.is_string() {
-                    parsed.as_str().unwrap_or("translation failed").to_string()
+                    let text = parsed.as_str().unwrap_or("translation failed");
+                    text.replace("\\n", "\n")
+                        .replace("\\r\\n", "\n")
+                        .replace("\\r", "\n")
+                        .replace("\\t", "\t")
                 } else {
                     "translation failed".to_string()
                 }
             }
         };
-
         log::info!("Detected language: {}", detected_language);
         log::info!("Target language: {}", self.config.target_language);
         log::info!(
@@ -160,22 +170,31 @@ impl OpenAITranslationService {
             self.config.alternative_target_language
         );
 
-        // Log if alternative language logic should have been applied
-        if detected_language
-            .to_lowercase()
-            .contains(&self.config.target_language.to_lowercase())
-            || self
-                .config
-                .target_language
-                .to_lowercase()
-                .contains(&detected_language.to_lowercase())
-        {
+        // Determine the actual target language used for translation
+        let detected_lower = detected_language.to_lowercase();
+        let target_lower = self.config.target_language.to_lowercase();
+
+        let actual_target_language = if detected_lower == target_lower {
+            // Alternative language logic was applied
             log::info!(
-                "Alternative language logic should apply - detected '{}' matches target '{}'",
+                "OpenAI - Alternative language logic SHOULD apply: detected '{}' matches target '{}', should translate to '{}'",
                 detected_language,
+                self.config.target_language,
+                self.config.alternative_target_language
+            );
+            self.config.alternative_target_language.clone()
+        } else {
+            // Primary target language was used
+            log::info!(
+                "OpenAI - Primary target logic SHOULD apply: detected '{}' != target '{}', should translate to '{}'",
+                detected_language,
+                self.config.target_language,
                 self.config.target_language
             );
-        }
+            self.config.target_language.clone()
+        };
+
+        log::info!("Returning target_language: {}", actual_target_language);
 
         log::info!(
             "Translated text (first 100 chars): {}",
@@ -189,6 +208,7 @@ impl OpenAITranslationService {
         Ok(TranslationResult {
             detected_language,
             translated_text,
+            target_language: actual_target_language,
         })
     }
 }
@@ -208,10 +228,9 @@ impl TranslationProvider for OpenAITranslationService {
             "messages": [
                 {
                     "role": "system",
-                    "content": [
-                        {
+                    "content": [                        {
                             "type": "text",
-                            "text": format!("{}\n\nAlways respond with valid JSON containing 'detected_language' and 'translated_text' fields. Make sure to properly escape newlines in the translated_text field.", smart_prompt)
+                            "text": format!("{}\n\nIMPORTANT FORMATTING RULES:\n- Always respond with valid JSON containing 'detected_language' and 'translated_text' fields\n- Preserve line breaks and paragraph structure in the translation\n- Use actual newline characters (\\n) in the JSON string value, not escaped \\\\n\n- Do NOT escape newlines in the JSON response - use literal newlines\n\nExample response format:\n{{\n  \"detected_language\": \"English\",\n  \"translated_text\": \"Line 1\\nLine 2\\n\\nNew paragraph\"\n}}", smart_prompt)
                         }
                     ]
                 },

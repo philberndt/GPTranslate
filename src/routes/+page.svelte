@@ -9,14 +9,22 @@
   let originalText = $state("");
   let translatedText = $state("");
   let detectedLanguage = $state("");
+  let targetLanguage = $state(""); // Track the target language used for translation
   let isTranslating = $state(false);
   let config = $state<any>(null);
   let showSettings = $state(false);
   let showHistory = $state(false);
   let currentTheme = $state("auto");
-  // Debouncing variables
+  // Notification system
+  let showCopyNotification = $state(false);
+  let notificationTimer: ReturnType<typeof setTimeout> | null = null; // Debouncing variables
   let debounceTimer: ReturnType<typeof setTimeout> | null = null;
   const DEBOUNCE_DELAY = 500; // Reduced to 500ms for better responsiveness
+
+  // Reset protection variables
+  let resetDebounceTimer: ReturnType<typeof setTimeout> | null = null;
+  let lastTranslationTime = 0;
+  const RESET_PROTECTION_DELAY = 1000; // Prevent resets for 1 second after translation
 
   // Function to apply theme based on configuration
   function applyTheme(theme: string) {
@@ -44,21 +52,40 @@
       console.error("Failed to load config:", e);
     }
   }
-
   onMount(() => {
     // Load config
     const initializeApp = async () => {
-      await loadConfig(); // Listen for clipboard text from global shortcut
+      await loadConfig(); // Make sure config is loaded first
+
+      // Listen for clipboard text from global shortcut
       await listen("clipboard-text", (event) => {
         originalText = event.payload as string;
+        console.log(
+          "Received clipboard text, triggering debounced translation",
+        );
         // Use debounced translation to prevent conflicts with input events
         debouncedTranslateText();
-      });
-
-      // Listen for reset detected language from global shortcut
+      }); // Listen for reset detected language from global shortcut
       await listen("reset-detected-language", () => {
-        detectedLanguage = "";
-        console.log("Detected language reset via global shortcut");
+        // Debounce reset events and protect recent translations
+        if (resetDebounceTimer !== null) {
+          clearTimeout(resetDebounceTimer);
+        }
+
+        resetDebounceTimer = setTimeout(() => {
+          const timeSinceLastTranslation = Date.now() - lastTranslationTime;
+
+          if (timeSinceLastTranslation < RESET_PROTECTION_DELAY) {
+            console.log(
+              `Ignoring reset request - too soon after translation (${timeSinceLastTranslation}ms)`,
+            );
+            return;
+          }
+
+          detectedLanguage = "";
+          console.log("Detected language reset via global shortcut");
+          resetDebounceTimer = null;
+        }, 200); // Small debounce to prevent rapid resets
       });
     };
 
@@ -82,11 +109,15 @@
     return () => {
       // Clean up the listeners when the component is destroyed
       darkModeMediaQuery.removeEventListener("change", handleThemeChange);
-      document.removeEventListener("keydown", handleKeydown);
-
-      // Clear any pending debounce timer
+      document.removeEventListener("keydown", handleKeydown); // Clear any pending timers
       if (debounceTimer !== null) {
         clearTimeout(debounceTimer);
+      }
+      if (notificationTimer !== null) {
+        clearTimeout(notificationTimer);
+      }
+      if (resetDebounceTimer !== null) {
+        clearTimeout(resetDebounceTimer);
       }
     };
   });
@@ -95,6 +126,7 @@
       // Clear translation and detected language when text is empty
       translatedText = "";
       detectedLanguage = "";
+      targetLanguage = "";
       return;
     }
 
@@ -105,12 +137,45 @@
       })) as {
         translated_text: string;
         detected_language: string;
+        target_language: string;
       };
+
+      console.log("Translation result:", result);
+
       translatedText = result.translated_text;
-      detectedLanguage = result.detected_language;
+
+      // Set target language from the response
+      if (result.target_language && result.target_language.trim() !== "") {
+        targetLanguage = result.target_language;
+        console.log("Set target language to:", result.target_language);
+      } else {
+        targetLanguage = "";
+      }
+
+      // Only set detectedLanguage if it's a valid, non-empty string and not "unknown" variants
+      if (
+        result.detected_language &&
+        result.detected_language.trim() !== "" &&
+        result.detected_language.toLowerCase() !== "unknown" &&
+        result.detected_language.toLowerCase() !== "unknowm"
+      ) {
+        detectedLanguage = result.detected_language;
+        console.log("Set detected language to:", result.detected_language);
+      } else {
+        detectedLanguage = "";
+        console.log(
+          "Cleared detected language, received:",
+          result.detected_language,
+        );
+      }
+
+      // Update last translation time to protect against immediate resets
+      lastTranslationTime = Date.now();
     } catch (e) {
       console.error("Translation failed:", e);
       translatedText = "Translation failed: " + e;
+      detectedLanguage = "";
+      targetLanguage = "";
     } finally {
       isTranslating = false;
     }
@@ -145,6 +210,7 @@
       if (translatedText.trim() && (!isInputElement || isReadonlyTextarea)) {
         event.preventDefault();
         copyToClipboard();
+        showCopyNotificationMessage();
         console.log("Copied translated text to clipboard via Ctrl+C");
       }
     }
@@ -157,10 +223,23 @@
     }
   }
 
+  function showCopyNotificationMessage() {
+    // Clear any existing timer
+    if (notificationTimer !== null) {
+      clearTimeout(notificationTimer);
+    }
+
+    showCopyNotification = true;
+    notificationTimer = setTimeout(() => {
+      showCopyNotification = false;
+      notificationTimer = null;
+    }, 2000); // Show for 2 seconds
+  }
   function clearText() {
     originalText = "";
     translatedText = "";
     detectedLanguage = "";
+    targetLanguage = "";
   }
   function openSettings() {
     console.log("Opening settings, showSettings before:", showSettings);
@@ -202,9 +281,11 @@
       <div class="panel">
         <div class="panel-header">
           <h3>Original Text</h3>
-          {#if detectedLanguage}
-            <span class="language-tag">{detectedLanguage}</span>
-          {/if}
+          <div class="header-right">
+            {#if detectedLanguage}
+              <span class="language-tag">{detectedLanguage}</span>
+            {/if}
+          </div>
         </div>
         <textarea
           bind:value={originalText}
@@ -213,20 +294,32 @@
           oninput={debouncedTranslateText}
         ></textarea>
       </div>
-
       <div class="panel">
         <div class="panel-header">
           <h3>Translation</h3>
-          {#if isTranslating}
-            <span class="loading">Translating...</span>
+          <div class="header-right">
+            {#if targetLanguage}
+              <span class="language-tag">{targetLanguage}</span>
+            {/if}
+            {#if isTranslating}
+              <span class="loading">Translating...</span>
+            {/if}
+          </div>
+        </div>
+        <div
+          class="text-area translated-text"
+          role="textbox"
+          aria-readonly="true"
+          tabindex="0"
+        >
+          {#if translatedText}
+            {#each translatedText.split("\n") as line, i}
+              {#if i > 0}<br />{/if}{line}
+            {/each}
+          {:else}
+            <span class="placeholder">Translation will appear here...</span>
           {/if}
         </div>
-        <textarea
-          bind:value={translatedText}
-          placeholder="Translation will appear here..."
-          class="text-area"
-          readonly
-        ></textarea>
       </div>
     </div>
     <div class="controls">
@@ -272,7 +365,10 @@
           <i class="bi bi-globe"></i>Translate
         </button>
         <button
-          onclick={copyToClipboard}
+          onclick={() => {
+            copyToClipboard();
+            showCopyNotificationMessage();
+          }}
           disabled={!translatedText}
           title="Copy translation"
         >
@@ -292,6 +388,14 @@
 
 {#if showHistory}
   <History onClose={closeHistory} theme={currentTheme} />
+{/if}
+
+<!-- Copy notification toast -->
+{#if showCopyNotification}
+  <div class="copy-notification">
+    <i class="bi bi-check-circle"></i>
+    Translation copied to clipboard
+  </div>
 {/if}
 
 <style>
@@ -365,7 +469,6 @@
     background: white;
     overflow: hidden;
   }
-
   .panel-header {
     display: flex;
     justify-content: space-between;
@@ -373,6 +476,12 @@
     padding: 12px 16px;
     background: #f8f9fa;
     border-bottom: 1px solid #ddd;
+  }
+
+  .header-right {
+    display: flex;
+    align-items: center;
+    gap: 8px;
   }
 
   .panel-header h3 {
@@ -406,15 +515,24 @@
     background: transparent;
     min-height: 200px;
     height: 100%;
+    overflow-y: auto; /* Allow vertical scrolling */
   }
 
   .text-area:focus {
     background: #fafbfc;
   }
 
-  .text-area[readonly] {
+  .translated-text {
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    cursor: text;
     background: #f8f9fa;
     color: #495057;
+  }
+
+  .translated-text .placeholder {
+    color: #6c757d;
+    font-style: italic;
   }
   .controls {
     display: flex;
@@ -511,6 +629,40 @@
   .clear-btn:hover:not(:disabled) {
     background-color: #ff5252;
     border-color: #ff5252;
+  }
+
+  /* Copy notification styles */
+  .copy-notification {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background: #28a745;
+    color: white;
+    padding: 12px 20px;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+    font-weight: 500;
+    z-index: 1000;
+    animation: slideIn 0.3s ease-out;
+  }
+
+  .copy-notification i {
+    font-size: 16px;
+  }
+
+  @keyframes slideIn {
+    from {
+      transform: translateX(100%);
+      opacity: 0;
+    }
+    to {
+      transform: translateX(0);
+      opacity: 1;
+    }
   } /* Dark theme styles - Apply for both system preference and manual setting */
   @media (prefers-color-scheme: dark) {
     :root:not(.theme-light) {
@@ -546,9 +698,13 @@
       background: #333;
     }
 
-    :root:not(.theme-light) .text-area[readonly] {
+    :root:not(.theme-light) .translated-text {
       background: #2a2a2a;
       color: #ccc;
+    }
+
+    :root:not(.theme-light) .translated-text .placeholder {
+      color: #999;
     }
 
     :root:not(.theme-light) button {
@@ -604,9 +760,13 @@
     background: #333;
   }
 
-  .theme-dark .text-area[readonly] {
+  .theme-dark .translated-text {
     background: #2a2a2a;
     color: #ccc;
+  }
+
+  .theme-dark .translated-text .placeholder {
+    color: #999;
   }
 
   .theme-dark button {
@@ -627,6 +787,7 @@
   .theme-dark .clear-btn:hover:not(:disabled) {
     background-color: #c02653;
   }
+
   /* Manual light theme - always apply regardless of system preference */
   .theme-light {
     color: #333;
@@ -661,9 +822,13 @@
     background: #ffffff;
   }
 
-  .theme-light .text-area[readonly] {
+  .theme-light .translated-text {
     background: #f8f8f8;
     color: #666;
+  }
+
+  .theme-light .translated-text .placeholder {
+    color: #6c757d;
   }
 
   .theme-light button {
