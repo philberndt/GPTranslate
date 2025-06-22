@@ -63,8 +63,7 @@ git push origin X.X.X
 gh release create X.X.X \
   --title "GPTranslate vX.X.X - [Release Title]" \
   --notes "[Release notes - see template below]" \
-  "src-tauri/target/release/bundle/nsis/GPTranslate_X.X.X_x64-setup.exe" \
-  "src-tauri/target/release/bundle/msi/GPTranslate_X.X.X_x64_en-US.msi"
+  "src-tauri/target/release/bundle/nsis/GPTranslate_X.X.X_x64-setup.exe"
 ```
 
 ### Step 5: Create Winget Manifests
@@ -112,8 +111,7 @@ wingetcreate update PhilBerndt.GPTranslate -u https://github.com/philberndt/GPTr
 [List technical improvements, dependency updates, etc.]
 
 ## 📦 Installation
-- **Windows Installer (NSIS)**: GPTranslate_X.X.X_x64-setup.exe (Recommended)
-- **Windows MSI**: GPTranslate_X.X.X_x64_en-US.msi
+- **Windows Installer (NSIS)**: GPTranslate_X.X.X_x64-setup.exe
 
 [Brief summary of what this release brings to users]
 ```
