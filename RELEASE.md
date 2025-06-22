@@ -44,7 +44,6 @@ npm run tauri build
 
 This creates:
 - `src-tauri/target/release/bundle/nsis/GPTranslate_X.X.X_x64-setup.exe` (NSIS installer)
-- `src-tauri/target/release/bundle/msi/GPTranslate_X.X.X_x64_en-US.msi` (MSI installer)
 
 ### Step 3: Create Git Tag and Commit
 ```powershell
@@ -138,8 +137,6 @@ wingetcreate update PhilBerndt.GPTranslate -u https://github.com/philberndt/GPTr
 - **Winget**: Microsoft's package manager for Windows
 
 ### Future Considerations
-- **Chocolatey**: Windows package manager
-- **Scoop**: Command-line installer for Windows
 - **Microsoft Store**: Native Windows store distribution
 
 ## 🔒 Security Considerations
@@ -167,5 +164,5 @@ Future improvements to consider:
 
 ---
 
-**Last Updated**: December 2024
+**Last Updated**: 22/06/2025
 **Next Review**: After implementing CI/CD automation
