@@ -173,7 +173,8 @@ impl OllamaTranslationService {
                     "translation failed".to_string()
                 }
             }
-        };        log::info!("Detected language: {}", detected_language);
+        };
+        log::info!("Detected language: {}", detected_language);
         log::info!("Target language: {}", self.config.target_language);
         log::info!(
             "Alternative target language: {}",

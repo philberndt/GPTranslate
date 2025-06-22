@@ -102,7 +102,7 @@ GPTranslate offers flexible pricing options from completely **FREE¹** with Olla
 **Complete cost breakdown**: **$0.00** - Forever!
 
 - ✅ **No API costs** - Run completely offline
-- ✅ **No internet required** - Perfect for private/secure environments  
+- ✅ **No internet required** - Perfect for private/secure environments
 - ✅ **Complete privacy** - Your data never leaves your machine
 - ✅ **Unlimited usage** - Translate as much as you want
 - ✅ **Professional quality** - Modern AI models like Llama, Mistral, etc.
@@ -138,6 +138,7 @@ Azure OpenAI offers comparable pricing, which you can check in detail on the [of
 - **1000 translations/day**: ~$0.05 ($15/month)
 
 ---
+
 ¹ Requires expensive GPU for optimal performance 😒
 
 The `gpt-4.1-nano` model provides excellent translation quality at virtually no cost for typical usage patterns, making GPTranslate highly economical for both personal and professional use.

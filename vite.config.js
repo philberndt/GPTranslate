@@ -1,11 +1,11 @@
 /// <reference types="node" />
 import { defineConfig } from "vite";
 import { sveltekit } from "@sveltejs/kit/vite";
-import { fileURLToPath } from "url";  // added import
-import { dirname } from "path";       // added import
+import { fileURLToPath } from "url"; // added import
+import { dirname } from "path"; // added import
 
 const __filename = fileURLToPath(import.meta.url); // define __filename
-const __dirname = dirname(__filename);           // define __dirname
+const __dirname = dirname(__filename); // define __dirname
 
 const host = process.env.TAURI_DEV_HOST;
 
@@ -24,10 +24,10 @@ export default defineConfig(async () => ({
     host: host || false,
     hmr: host
       ? {
-        protocol: "ws",
-        host,
-        port: 1421,
-      }
+          protocol: "ws",
+          host,
+          port: 1421,
+        }
       : undefined,
     watch: {
       // 3. tell vite to ignore watching `src-tauri`

@@ -91,22 +91,22 @@ impl Config {
                     // Try to parse as a generic Value first to preserve existing settings
                     if let Ok(mut value) = serde_json::from_str::<serde_json::Value>(&content) {
                         // Add missing fields with defaults
-                        if !value.get("custom_prompt").is_some() {
+                        if value.get("custom_prompt").is_none() {
                             value["custom_prompt"] = serde_json::Value::String(
                                 "Translate the given text from {detected_language} to {target_language} accurately while preserving the meaning, tone, and nuance of the original content.\n\n# Additional Details\n- Ensure the translation retains the context, cultural meaning, tone, formal/informal style, and any idiomatic expressions.\n- Do **not** alter names, technical terms, or specific formatting unless required for grammatical correctness in the target language.\n- If the detected language is the same as the target language, choose the most appropriate alternative language for translation.\n\n# Output Format\nThe translation output should be provided as valid JSON containing 'detected_language' and 'translated_text' fields.\n\n# Notes\n- Ensure punctuation and capitalization match the norms of the target language.\n- When encountering idiomatic expressions, adapt them to equivalent phrases in the target language rather than direct word-for-word translation.\n- For ambiguous content, aim for the most contextually appropriate meaning.\n- Take into consideration the whole text and what it is about.".to_string()
                             );
                         } // Add alternative_target_language if missing
-                        if !value.get("alternative_target_language").is_some() {
+                        if value.get("alternative_target_language").is_none() {
                             value["alternative_target_language"] =
                                 serde_json::Value::String("Norwegian".to_string());
                         }
 
                         // Add ollama_url if missing
-                        if !value.get("ollama_url").is_some() {
+                        if value.get("ollama_url").is_none() {
                             value["ollama_url"] =
                                 serde_json::Value::String("http://localhost:11434".to_string());
                         } // Add available_models if missing with empty arrays
-                        if !value.get("available_models").is_some() {
+                        if value.get("available_models").is_none() {
                             let mut available_models = serde_json::Map::new();
                             available_models.insert("openai".to_string(), serde_json::json!([]));
                             available_models

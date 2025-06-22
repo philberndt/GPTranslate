@@ -21,7 +21,7 @@ pub fn get_system_theme() -> Result<SystemTheme> {
     use std::ptr;
     use winapi::shared::minwindef::{DWORD, HKEY};
     use winapi::um::winnt::{KEY_READ, REG_DWORD};
-    use winapi::um::winreg::{RegOpenKeyExW, RegQueryValueExW, HKEY_CURRENT_USER};
+    use winapi::um::winreg::{HKEY_CURRENT_USER, RegOpenKeyExW, RegQueryValueExW};
 
     log::info!("Attempting to detect Windows system theme...");
 
@@ -34,7 +34,10 @@ pub fn get_system_theme() -> Result<SystemTheme> {
         let result = RegOpenKeyExW(HKEY_CURRENT_USER, subkey.as_ptr(), 0, KEY_READ, &mut key);
 
         if result != 0 {
-            log::warn!("Failed to open registry key for theme detection (error code: {}), defaulting to light theme", result);
+            log::warn!(
+                "Failed to open registry key for theme detection (error code: {}), defaulting to light theme",
+                result
+            );
             return Ok(SystemTheme::Light);
         }
 

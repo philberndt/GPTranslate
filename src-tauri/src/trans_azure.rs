@@ -4,7 +4,6 @@ use crate::translation::{
 };
 use anyhow::Result;
 use async_trait::async_trait;
-use reqwest;
 use serde_json::{Value, json};
 
 pub struct AzureOpenAITranslationService {

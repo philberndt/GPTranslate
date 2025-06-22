@@ -18,30 +18,30 @@ ShortDescription: Fast, modern desktop translation application
 Description: A fast, modern desktop translation application built with Rust and Tauri that provides instant translation between multiple languages with global hotkey support, system tray integration, and a beautiful user interface. Supports OpenAI, Azure OpenAI, and Ollama for both cloud and local AI-powered translations.
 Moniker: gptranslate
 Tags:
-- translation
-- desktop
-- tauri
-- ai
-- clipboard
-- productivity
-- rust
-- svelte
-- hotkey
-- system-tray
-- ollama
-- local-ai
+  - translation
+  - desktop
+  - tauri
+  - ai
+  - clipboard
+  - productivity
+  - rust
+  - svelte
+  - hotkey
+  - system-tray
+  - ollama
+  - local-ai
 ReleaseNotes: |-
   🚀 New Features:
   • Ollama Support: Added complete support for Ollama local AI models for offline translation
   • Provider Architecture: Refactored translation system with modular provider design
   • Local Translation: Run translations completely offline with privacy-focused local models
-  
+
   🎯 Improvements:
   • Provider UI: Beautiful new provider selection grid with professional icons
   • Settings Redesign: Replaced dropdown with intuitive card-based provider selection
   • Better Organization: Split translation code into separate provider modules
   • Enhanced Config: Added ollama_url configuration with automatic defaults
-  
+
   🔧 Technical:
   • Added ollama-rs crate integration for robust Ollama communication
   • Improved error handling across all translation providers
@@ -49,7 +49,7 @@ ReleaseNotes: |-
 ReleaseNotesUrl: https://github.com/philberndt/gptranslate/releases/tag/1.2.0
 PurchaseUrl: https://gptranslate.berndt.no
 Documentations:
-- DocumentLabel: User Guide
-  DocumentUrl: https://gptranslate.berndt.no
+  - DocumentLabel: User Guide
+    DocumentUrl: https://gptranslate.berndt.no
 ManifestType: defaultLocale
 ManifestVersion: 1.6.0

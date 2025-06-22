@@ -93,7 +93,7 @@ async fn translate(text: String, config: State<'_, AppState>) -> Result<Translat
                 response.target_language.clone(),
             ) {
                 log::error!("Failed to add translation to history: {}", e);
-            }            // Convert TranslationResponse to TranslationResult for return
+            } // Convert TranslationResponse to TranslationResult for return
             Ok(TranslationResult {
                 detected_language: response.detected_language,
                 translated_text: response.translated_text,
@@ -427,11 +427,7 @@ fn parse_hotkey(hotkey: &str) -> Option<tauri_plugin_global_shortcut::Shortcut> 
         }
     }
 
-    if let Some(code) = code {
-        Some(Shortcut::new(Some(modifiers), code))
-    } else {
-        None
-    }
+    code.map(|code| Shortcut::new(Some(modifiers), code))
 }
 
 async fn setup_global_shortcut(
