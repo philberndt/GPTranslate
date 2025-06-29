@@ -3,14 +3,13 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>GPTranslate - AI Powered Translation App</title>
+    <title>GPTranslate v1.3.2 - AI Powered Translation App</title>
     <meta
       name="description"
       content="A fast, modern AI powered desktop translation application built with Rust and Tauri. Instant translation between multiple languages with global hotkey support and beautiful UI."
     />
     <!-- CSS Dependencies -->
-    <link rel="stylesheet" href="https://unpkg.com/ress/dist/ress.min.css" />
-    <link rel="stylesheet" href="https://unpkg.com/chota@latest" />
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
     <link
       rel="stylesheet"
       href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css"
@@ -104,6 +103,9 @@
         padding: 4rem 0;
         text-align: center;
         position: relative;
+        min-height: 70vh;
+        display: flex;
+        align-items: center;
       }
 
       .hero-content {
@@ -189,6 +191,10 @@
         padding: 4rem 0;
       }
 
+      .container {
+        max-width: 1200px;
+      }
+
       .section-alt {
         background-color: var(--bg-secondary);
       }
@@ -201,9 +207,6 @@
       }
 
       .features-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-        gap: 2rem;
         margin-top: 2rem;
       }
 
@@ -260,6 +263,16 @@
         transition: all 0.3s ease;
       }
 
+      .img-fluid {
+        border-radius: 12px;
+        box-shadow: var(--shadow-hover);
+        transition: all 0.3s ease;
+      }
+
+      .img-fluid:hover {
+        transform: scale(1.02);
+      }
+
       .screenshot:hover {
         transform: scale(1.02);
       }
@@ -298,9 +311,30 @@
 
       .footer {
         background: var(--bg-secondary);
-        padding: 2rem 0;
-        text-align: center;
+        padding: 3rem 0 2rem 0;
         border-top: 1px solid var(--border-color);
+      }
+
+      .footer h5, .footer h6 {
+        color: var(--primary-color);
+        font-weight: 600;
+      }
+
+      .footer a {
+        color: var(--text-color);
+        transition: color 0.3s ease;
+      }
+
+      .footer a:hover {
+        color: var(--primary-color);
+      }
+
+      .footer .list-unstyled li {
+        transition: transform 0.2s ease;
+      }
+
+      .footer .list-unstyled li:hover {
+        transform: translateX(5px);
       }
 
       @media (max-width: 768px) {
@@ -552,6 +586,11 @@
             costs, unlimited usage!
           </p>
           <div class="mb-2">
+            <span class="badge bg-primary fs-6 px-3 py-2">
+              <i class="bi bi-star-fill"></i> Current Version: v1.3.2
+            </span>
+          </div>
+          <div class="mb-2">
             <a
               href="https://github.com/philberndt/GPTranslate/releases"
               class="download-btn"
@@ -596,7 +635,7 @@
                 Loading latest version...
               </div>
               <div id="hero-release-details" class="release-details">
-                Latest: <strong id="hero-release-version">Loading...</strong> •
+                Latest: <strong id="hero-release-version">v1.3.2</strong> •
                 <span id="hero-release-date">Loading...</span>
               </div>
             </div>
@@ -613,7 +652,7 @@
           <img
             src="assets/main_light.png"
             alt="GPTranslate Main Interface"
-            class="screenshot"
+            class="screenshot img-fluid"
             id="main-screenshot"
           />
         </div>
@@ -625,85 +664,105 @@
       <div class="container">
         <h2>Powerful Features</h2>
         <div class="features-grid">
-          <div class="feature-card">
-            <i class="bi bi-lightning-charge feature-icon"></i>
-            <h3>Lightning Fast</h3>
-            <p>
-              Instant translations with debounced input and smart request
-              deduplication. Real-time translation as you type.
-            </p>
-          </div>
-          <div class="feature-card">
-            <i class="bi bi-globe feature-icon"></i>
-            <h3>Multi-Language Support</h3>
-            <p>
-              Seamless translation between dozens of languages with intelligent
-              auto-detection and configurable target languages.
-            </p>
-          </div>
-          <div class="feature-card">
-            <i class="bi bi-robot feature-icon"></i>
-            <h3>AI Powered</h3>
-            <p>
-              Leverages OpenAI, Azure OpenAI, and Ollama APIs for high-quality
-              translations with custom prompts and variable support.
-            </p>
-          </div>
-          <div class="feature-card">
-            <div class="feature-icon">
-              <img
-                src="assets/ollama_logo.svg"
-                alt="Ollama"
-                class="ollama-logo"
-              />
+          <div class="row g-4">
+            <div class="col-md-6 col-lg-4">
+              <div class="feature-card h-100">
+                <i class="bi bi-lightning-charge feature-icon"></i>
+                <h3>Lightning Fast</h3>
+                <p>
+                  Instant translations with debounced input and smart request
+                  deduplication. Real-time translation as you type.
+                </p>
+              </div>
             </div>
-            <h3>Ollama Support</h3>
-            <p>
-              <strong>Completely FREE!</strong> Run translations completely
-              offline with Ollama. Perfect for privacy-conscious users,
-              unlimited usage, and zero API costs.
-            </p>
-          </div>
-          <div class="feature-card">
-            <i class="bi bi-keyboard feature-icon"></i>
-            <h3>Global Hotkeys</h3>
-            <p>
-              Configurable global hotkey (Ctrl+Alt+C) for instant clipboard
-              translation from anywhere on your system.
-            </p>
-          </div>
-          <div class="feature-card">
-            <i class="bi bi-moon-stars feature-icon"></i>
-            <h3>Beautiful Themes</h3>
-            <p>
-              Auto, light, and dark themes with system detection. Modern,
-              responsive interface that scales beautifully.
-            </p>
-          </div>
-          <div class="feature-card">
-            <i class="bi bi-clock-history feature-icon"></i>
-            <h3>Translation History</h3>
-            <p>
-              Persistent translation history with easy access to previous
-              translations and efficient data management.
-            </p>
-          </div>
-          <div class="feature-card">
-            <i class="bi bi-cash-coin feature-icon"></i>
-            <h3>Extremely Cost Effective</h3>
-            <p>
-              Using the recommended gpt-4.1-nano model, costs virtually nothing
-              at ~$0.00005 per translation. 100 translations/day = ~$1.50/month.
-            </p>
-          </div>
-          <div class="feature-card">
-            <i class="bi bi-heart feature-icon"></i>
-            <h3>Free & Open Source</h3>
-            <p>
-              Completely free to use with full source code available on GitHub.
-              No subscriptions, no hidden fees, just transparent open-source
-              software.
-            </p>
+            <div class="col-md-6 col-lg-4">
+              <div class="feature-card h-100">
+                <i class="bi bi-globe feature-icon"></i>
+                <h3>Multi-Language Support</h3>
+                <p>
+                  Seamless translation between dozens of languages with intelligent
+                  auto-detection and configurable target languages.
+                </p>
+              </div>
+            </div>
+            <div class="col-md-6 col-lg-4">
+              <div class="feature-card h-100">
+                <i class="bi bi-robot feature-icon"></i>
+                <h3>AI Powered</h3>
+                <p>
+                  Leverages OpenAI, Azure OpenAI, and Ollama APIs for high-quality
+                  translations with custom prompts and variable support.
+                </p>
+              </div>
+            </div>
+            <div class="col-md-6 col-lg-4">
+              <div class="feature-card h-100">
+                <div class="feature-icon">
+                  <img
+                    src="assets/ollama_logo.svg"
+                    alt="Ollama"
+                    class="ollama-logo"
+                  />
+                </div>
+                <h3>Ollama Support</h3>
+                <p>
+                  <strong>Completely FREE!</strong> Run translations completely
+                  offline with Ollama. Perfect for privacy-conscious users,
+                  unlimited usage, and zero API costs.
+                </p>
+              </div>
+            </div>
+            <div class="col-md-6 col-lg-4">
+              <div class="feature-card h-100">
+                <i class="bi bi-keyboard feature-icon"></i>
+                <h3>Global Hotkeys</h3>
+                <p>
+                  Configurable global hotkey (Ctrl+Alt+C) for instant clipboard
+                  translation from anywhere on your system.
+                </p>
+              </div>
+            </div>
+            <div class="col-md-6 col-lg-4">
+              <div class="feature-card h-100">
+                <i class="bi bi-moon-stars feature-icon"></i>
+                <h3>Beautiful Themes</h3>
+                <p>
+                  Auto, light, and dark themes with system detection. Modern,
+                  responsive interface that scales beautifully.
+                </p>
+              </div>
+            </div>
+            <div class="col-md-6 col-lg-4">
+              <div class="feature-card h-100">
+                <i class="bi bi-clock-history feature-icon"></i>
+                <h3>Translation History</h3>
+                <p>
+                  Persistent translation history with easy access to previous
+                  translations and efficient data management.
+                </p>
+              </div>
+            </div>
+            <div class="col-md-6 col-lg-4">
+              <div class="feature-card h-100">
+                <i class="bi bi-cash-coin feature-icon"></i>
+                <h3>Extremely Cost Effective</h3>
+                <p>
+                  Using the recommended gpt-4.1-nano model, costs virtually nothing
+                  at ~$0.00005 per translation. 100 translations/day = ~$1.50/month.
+                </p>
+              </div>
+            </div>
+            <div class="col-md-6 col-lg-4">
+              <div class="feature-card h-100">
+                <i class="bi bi-heart feature-icon"></i>
+                <h3>Free & Open Source</h3>
+                <p>
+                  Completely free to use with full source code available on GitHub.
+                  No subscriptions, no hidden fees, just transparent open-source
+                  software.
+                </p>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -712,8 +771,8 @@
     <section class="section section-alt">
       <div class="container">
         <h2>Seamless System Integration</h2>
-        <div class="row">
-          <div class="col-6 is-vertical-align">
+        <div class="row align-items-center">
+          <div class="col-md-6">
             <div>
               <h3><i class="bi bi-window-sidebar"></i> System Tray</h3>
               <p>
@@ -736,34 +795,34 @@
               </p>
             </div>
           </div>
-          <div class="col-6">
+          <div class="col-md-6">
             <div class="screenshot-container">
               <img
                 src="assets/translation.png"
                 alt="GPTranslate Translation in Action"
-                class="screenshot"
+                class="screenshot img-fluid"
               />
             </div>
           </div>
         </div>
 
         <!-- Additional Screenshots -->
-        <div class="row mt-3">
-          <div class="col-6">
+        <div class="row mt-5">
+          <div class="col-md-6">
             <div class="screenshot-container">
               <img
                 src="assets/settings.png"
                 alt="GPTranslate Settings"
-                class="screenshot"
+                class="screenshot img-fluid"
               />
             </div>
           </div>
-          <div class="col-6">
+          <div class="col-md-6">
             <div class="screenshot-container">
               <img
                 src="assets/history.png"
                 alt="GPTranslate History"
-                class="screenshot"
+                class="screenshot img-fluid"
               />
             </div>
           </div>
@@ -774,17 +833,17 @@
     <section class="section">
       <div class="container">
         <h2>What You Need</h2>
-        <div class="row">
-          <div class="col-12">
+        <div class="row justify-content-center">
+          <div class="col-lg-10">
             <div class="feature-card feature-card-centered">
               <i class="bi bi-key feature-icon"></i>
               <h3>API Key Required</h3>
-              <p class="mb-1-5">
+              <p class="mb-4">
                 To use GPTranslate, you'll need an API key from one of these
                 providers:
               </p>
-              <div class="row mb-1-5">
-                <div class="col-6">
+              <div class="row mb-4">
+                <div class="col-md-6">
                   <h4 class="api-provider-heading">
                     <i class="bi bi-openai"></i> OpenAI
                   </h4>
@@ -799,7 +858,7 @@
                     <i class="bi bi-arrow-up-right"></i>
                   </a>
                 </div>
-                <div class="col-6">
+                <div class="col-md-6">
                   <h4 class="api-provider-heading">
                     <i class="bi bi-microsoft"></i> Azure OpenAI
                   </h4>
@@ -828,13 +887,13 @@
     <section class="section section-alt">
       <div class="container text-center">
         <h2>Get Started Today</h2>
-        <p class="mb-3">
+        <p class="mb-4">
           Download GPTranslate and experience fast, AI-powered translation with
           beautiful design.
         </p>
 
         <!-- Download Buttons -->
-        <div class="mb-2">
+        <div class="mb-3">
           <a
             href="https://github.com/philberndt/GPTranslate/releases"
             class="download-btn"
@@ -846,7 +905,7 @@
           </a>
         </div>
 
-        <p class="mt-1 opacity-07">
+        <p class="mt-3 opacity-75">
           <small>Free and open source • Available on GitHub</small>
         </p>
       </div>
@@ -855,29 +914,84 @@
     <!-- Footer -->
     <footer class="footer">
       <div class="container">
-        <p>&copy; 2025 GPTranslate. Built with ❤️ using Rust and Tauri.</p>
-        <p>
-          <a
-            href="https://github.com/philberndt/GPTranslate"
-            target="_blank"
-            rel="noopener"
-            >GitHub</a
-          >
-          •
-          <a
-            href="https://github.com/philberndt/GPTranslate/releases"
-            target="_blank"
-            rel="noopener"
-            >Releases</a
-          >
-          •
-          <a
-            href="https://github.com/philberndt/GPTranslate/issues"
-            target="_blank"
-            rel="noopener"
-            >Support</a
-          >
-        </p>
+        <div class="row">
+          <div class="col-md-8">
+            <h5 class="mb-3">GPTranslate v1.3.2</h5>
+            <p class="mb-3">&copy; 2025 GPTranslate. Built with ❤️ using Rust and Tauri.</p>
+            <p class="mb-0">
+              Free and open source desktop translation application with AI-powered translation,
+              global hotkeys, and beautiful themes.
+            </p>
+          </div>
+          <div class="col-md-4">
+            <h6 class="mb-3">Quick Links</h6>
+            <ul class="list-unstyled">
+              <li class="mb-2">
+                <a
+                  href="https://github.com/philberndt/GPTranslate"
+                  target="_blank"
+                  rel="noopener"
+                  class="text-decoration-none"
+                >
+                  <i class="bi bi-github"></i> Source Code
+                </a>
+              </li>
+              <li class="mb-2">
+                <a
+                  href="https://github.com/philberndt/GPTranslate/releases"
+                  target="_blank"
+                  rel="noopener"
+                  class="text-decoration-none"
+                >
+                  <i class="bi bi-download"></i> Download Latest
+                </a>
+              </li>
+              <li class="mb-2">
+                <a
+                  href="https://github.com/philberndt/GPTranslate/issues"
+                  target="_blank"
+                  rel="noopener"
+                  class="text-decoration-none"
+                >
+                  <i class="bi bi-bug"></i> Report Issues
+                </a>
+              </li>
+              <li class="mb-2">
+                <a
+                  href="https://github.com/philberndt/GPTranslate/discussions"
+                  target="_blank"
+                  rel="noopener"
+                  class="text-decoration-none"
+                >
+                  <i class="bi bi-chat-dots"></i> Discussions
+                </a>
+              </li>
+              <li class="mb-2">
+                <a
+                  href="https://github.com/philberndt/GPTranslate/wiki"
+                  target="_blank"
+                  rel="noopener"
+                  class="text-decoration-none"
+                >
+                  <i class="bi bi-book"></i> Documentation
+                </a>
+              </li>
+            </ul>
+          </div>
+        </div>
+        <hr class="my-4">
+        <div class="row align-items-center">
+          <div class="col-md-6">
+            <small class="text-muted">
+              Made with Rust, Tauri, Svelte, and Bootstrap • Licensed under MIT
+            </small>
+          </div>
+          <div class="col-md-6 text-md-end">
+            <small class="text-muted">
+              Version 1.3.2 • Updated January 2025
+            </small>
+          </div>
+        </div>
       </div>
     </footer>
     <script>
@@ -1100,5 +1214,8 @@
       // Fetch release info on page load
       fetchLatestRelease();
     </script>
+    
+    <!-- Bootstrap JavaScript -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
   </body>
 </html>
