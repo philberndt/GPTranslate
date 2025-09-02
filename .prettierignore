@@ -1,0 +1,7 @@
+node_modules/
+tauri-plugin-mcp/
+manifests/
+.vscode
+.specstory
+.svelte-kit
+build

@@ -1,0 +1,17 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Run OpenCode",
+      "type": "shell",
+      "command": "opencode",
+      "args": ["--port", "54578"],
+      "options": {
+        "env": {
+          "OPENCODE_CALLER": "vscode"
+        }
+      },
+      "problemMatcher": []
+    }
+  ]
+}

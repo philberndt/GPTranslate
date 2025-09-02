@@ -11,6 +11,7 @@ mod config;
 mod history;
 pub mod theme;
 mod trans_azure;
+mod trans_azure_translator;
 mod trans_ollama;
 mod trans_openai;
 mod translation;
@@ -21,7 +22,7 @@ use history::{
     TranslationHistory, add_translation_to_history, clear_translation_history, deduplicate_history,
     delete_history_entry, fix_target_language_in_history, get_translation_history,
 };
-use translation::{TranslationResult, TranslationService};
+use translation::{TranslationResult, TranslationService, AlternativeTranslationsResult};
 
 // Application state
 pub struct AppState {
@@ -141,10 +142,8 @@ async fn save_config(
             *service = TranslationService::new(new_config.clone());
 
             // Re-register global shortcut if hotkey changed
-            if hotkey_changed {
-                if let Err(e) = setup_global_shortcut(&app, &new_config).await {
-                    log::error!("Failed to update global shortcut: {}", e);
-                }
+            if hotkey_changed && let Err(e) = setup_global_shortcut(&app, &new_config).await {
+                log::error!("Failed to update global shortcut: {}", e);
             }
 
             Ok(())
@@ -193,6 +192,18 @@ async fn test_translation_from_clipboard(
     }
 }
 
+#[tauri::command]
+async fn get_alternative_translations(
+    selected_text: String,
+    target_language: String,
+    state: State<'_, AppState>,
+) -> Result<AlternativeTranslationsResult, String> {
+    match translation::get_alternative_translations(selected_text, target_language, state).await {
+        Ok(result) => Ok(result),
+        Err(e) => Err(e.to_string()),
+    }
+}
+
 fn extract_api_version_from_url(url: &str) -> Option<String> {
     // Try to extract api-version from URL query parameters
     if let Ok(parsed_url) = url::Url::parse(url) {
@@ -211,6 +222,7 @@ async fn validate_api_key(
     api_key: String,
     endpoint: Option<String>,
     api_version: Option<String>,
+    region: Option<String>,
 ) -> Result<bool, String> {
     let client = reqwest::Client::new();
 
@@ -277,6 +289,35 @@ async fn validate_api_key(
                 Ok(response.status().is_success())
             } else {
                 Err("Ollama URL is required".to_string())
+            }
+        }
+        "azure_translator" => {
+            if let Some(endpoint) = endpoint {
+                // Test Azure Translator with a simple language detection call
+                let url = format!("{}/detect?api-version=3.0", endpoint.trim_end_matches('/'));
+                let test_body = serde_json::json!([{"Text": "Hello"}]);
+
+                let mut request = client
+                    .post(&url)
+                    .header("Ocp-Apim-Subscription-Key", &api_key)
+                    .header("Content-Type", "application/json; charset=UTF-8");
+
+                // Add region header if provided
+                if let Some(region) = region {
+                    if !region.is_empty() {
+                        request = request.header("Ocp-Apim-Subscription-Region", &region);
+                    }
+                }
+
+                let response = request
+                    .json(&test_body)
+                    .send()
+                    .await
+                    .map_err(|e| format!("Azure Translator API request failed: {}", e))?;
+
+                Ok(response.status().is_success())
+            } else {
+                Err("Azure Translator endpoint is required".to_string())
             }
         }
         _ => Err("Unsupported API provider".to_string()),
@@ -523,6 +564,7 @@ async fn handle_clipboard_capture(app: &AppHandle, window: &tauri::WebviewWindow
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
+    // Initialize logging
     env_logger::init();
 
     let config = Config::load().unwrap_or_else(|e| {
@@ -535,7 +577,10 @@ pub fn run() {
         config: Arc::new(Mutex::new(config.clone())),
         translation_service: Arc::new(Mutex::new(translation_service)),
     };
-    tauri::Builder::default()
+
+    let mut builder = tauri::Builder::default();
+
+    builder = builder
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_clipboard_manager::init())
         .plugin(tauri_plugin_global_shortcut::Builder::new().build())
@@ -549,7 +594,9 @@ pub fn run() {
                 let _ = window.show();
                 let _ = window.set_focus();
             }
-        }))
+        }));
+
+    builder
         .manage(app_state)
         .on_window_event(|window, event| {
             match event {
@@ -571,17 +618,17 @@ pub fn run() {
                 }
                 tauri::WindowEvent::Resized(..) => {
                     // Check if window is minimized
-                    if let Ok(is_minimized) = window.is_minimized() {
-                        if is_minimized {
-                            // Get the config to check minimize_to_tray setting
-                            let app_state = window.state::<AppState>();
-                            let config = app_state.config.blocking_lock();
+                    if let Ok(is_minimized) = window.is_minimized()
+                        && is_minimized
+                    {
+                        // Get the config to check minimize_to_tray setting
+                        let app_state = window.state::<AppState>();
+                        let config = app_state.config.blocking_lock();
 
-                            if config.minimize_to_tray {
-                                // Hide the window when minimized
-                                let _ = window.hide();
-                                log::info!("Window hidden to tray on minimize");
-                            }
+                        if config.minimize_to_tray {
+                            // Hide the window when minimized
+                            let _ = window.hide();
+                            log::info!("Window hidden to tray on minimize");
                         }
                     }
                 }
@@ -627,7 +674,8 @@ pub fn run() {
             deduplicate_history_cmd,
             delete_history_entry_cmd,
             fix_target_language_in_history_cmd,
-            reset_detected_language
+            reset_detected_language,
+            get_alternative_translations
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

@@ -6,10 +6,7 @@ use anyhow::Result;
 use async_trait::async_trait;
 use ollama_rs::{
     Ollama,
-    generation::{
-        completion::{GenerationResponse, request::GenerationRequest},
-        options::GenerationOptions,
-    },
+    generation::completion::{GenerationResponse, request::GenerationRequest},
 };
 use serde_json::{Value, json};
 
@@ -231,7 +228,7 @@ impl TranslationProvider for OllamaTranslationService {
         log::info!("Cleaned text for Ollama translation: {}", cleaned_text);
 
         let user_prompt = format!("Text to translate: \"{}\"", cleaned_text);
-        let smart_prompt = create_smart_prompt(&self.config);
+        let smart_prompt = create_smart_prompt(&self.config, None);
         let full_prompt = format!(
             "{}\n\nAlways respond with valid JSON containing 'detected_language' and 'translated_text' fields. Preserve line breaks and formatting in the translated text.\n\n{}",
             smart_prompt, user_prompt
@@ -240,14 +237,9 @@ impl TranslationProvider for OllamaTranslationService {
         log::info!("Using Ollama model: {}", self.config.model);
         log::info!("Full prompt for Ollama: {}", full_prompt);
 
-        // Create generation options for better translation
-        let options = GenerationOptions::default()
-            .temperature(0.3)
-            .top_p(0.9)
-            .num_predict(800);
-
-        let request =
-            GenerationRequest::new(self.config.model.clone(), full_prompt).options(options);
+        // NOTE: GenerationOptions API removed/changed in ollama-rs 0.3.x; using basic request.
+        // If advanced tuning is needed, update to the new ModelOptions once identified.
+        let request = GenerationRequest::new(self.config.model.clone(), full_prompt);
 
         let response: GenerationResponse = self
             .client

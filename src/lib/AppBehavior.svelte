@@ -1,306 +1,223 @@
 <script lang="ts">
-    interface Props {
-        config: any;
-        onConfigChange: (updates: any) => void;
-    }
+  interface Props {
+    config: any
+    onConfigChange: (updates: any) => void
+  }
 
-    let { config, onConfigChange }: Props = $props();
+  let { config, onConfigChange }: Props = $props()
 
-    function updateConfig(field: string, value: any) {
-        onConfigChange({ [field]: value });
-    }
+  function updateConfig(field: string, value: any) {
+    onConfigChange({ [field]: value })
+  }
 </script>
 
 <!-- App Behavior Section -->
-<section class="settings-section">
-    <h3><i class="bi bi-sliders"></i>App Behavior</h3>
+<div class="">
+  <h4 class=""><i class=""></i>App Behavior</h4>
 
-    <div class="form-group">
-        <label for="target-language">Target Language</label>
+  <div class="">
+    <div class="">
+      <label for="theme" class="">Theme</label>
+      <select
+        id="theme"
+        class=""
+        value={config.theme}
+        onchange={(e) =>
+          updateConfig("theme", (e.target as HTMLSelectElement).value)}
+      >
+        <option value="auto">Auto (System)</option>
+        <option value="light">Light</option>
+        <option value="dark">Dark</option>
+      </select>
+    </div>
+    <div class="">
+      <label for="hotkey" class="">Global Hotkey</label>
+      <input
+        id="hotkey"
+        type="text"
+        class=""
+        value={config.hotkey}
+        placeholder="Ctrl+Alt+C"
+        oninput={(e) =>
+          updateConfig("hotkey", (e.target as HTMLInputElement).value)}
+      />
+      <div class="">Example: Ctrl+Alt+C, Alt+Shift+T, etc.</div>
+    </div>
+  </div>
+
+  <div class="">
+    <div class="">
+      <label for="reasoning-effort" class="">Reasoning Effort</label>
+      <select
+        id="reasoning-effort"
+        class=""
+        value={config.reasoning_effort || "medium"}
+        onchange={(e) =>
+          updateConfig(
+            "reasoning_effort",
+            (e.target as HTMLSelectElement).value
+          )}
+      >
+        <option value="minimal">Minimal (GPT-5 only)</option>
+        <option value="low">Low</option>
+        <option value="medium">Medium</option>
+        <option value="high">High</option>
+      </select>
+      <div class="">
+        Applies to reasoning models (o1/o3/o4-mini/GPT-5). Not used by
+        non-reasoning models.
+      </div>
+    </div>
+  </div>
+
+  <!-- Automatic Translation Settings -->
+  <fieldset class="">
+    <legend class=""
+      ><i class=""></i>Automatic Translation</legend
+    >
+    <div class="">
+      <input
+        id="auto-translate-enabled"
+        type="checkbox"
+        class=""
+        role="switch"
+        checked={config.auto_translate_enabled}
+        onchange={(e) =>
+          updateConfig(
+            "auto_translate_enabled",
+            (e.target as HTMLInputElement).checked
+          )}
+      />
+      <label class="" for="auto-translate-enabled">
+        Enable automatic translations
+      </label>
+    </div>
+
+    <div class="">
+      <div class="">
+        <label for="debounce-ms" class="">Debounce (ms)</label>
         <input
-            id="target-language"
-            type="text"
-            value={config.target_language}
-            placeholder="English, Spanish, French, etc."
-            oninput={(e) =>
-                updateConfig(
-                    "target_language",
-                    (e.target as HTMLInputElement).value,
-                )}
+          id="debounce-ms"
+          type="range"
+          class=""
+          min="100"
+          max="2000"
+          step="50"
+          disabled={!config.auto_translate_enabled}
+          value={config.auto_translate_debounce_ms}
+          oninput={(e) =>
+            updateConfig(
+              "auto_translate_debounce_ms",
+              parseInt((e.target as HTMLInputElement).value)
+            )}
         />
-        <small>
-            Specify the default language to translate to. This language will be
-            used in the custom prompt as &#123;target_language&#125;.
-        </small>
+        <div class="">
+          {config.auto_translate_debounce_ms} ms delay after typing stops
+        </div>
+      </div>
     </div>
 
-    <div class="form-group">
-        <label for="alternative-target-language"
-            >Alternative Target Language</label
-        >
-        <input
-            id="alternative-target-language"
-            type="text"
-            value={config.alternative_target_language}
-            placeholder="Norwegian, Spanish, German, etc."
-            oninput={(e) =>
-                updateConfig(
-                    "alternative_target_language",
-                    (e.target as HTMLInputElement).value,
-                )}
-        />
-        <small>
-            Language to use when the detected language is the same as the target
-            language. For example, if you normally translate to English, but the
-            input is already English, it will translate to this alternative
-            language instead.
-        </small>
+    <div class="">
+      <input
+        id="auto-translate-on-paste"
+        type="checkbox"
+        class=""
+        disabled={!config.auto_translate_enabled}
+        checked={config.auto_translate_on_paste}
+        onchange={(e) =>
+          updateConfig(
+            "auto_translate_on_paste",
+            (e.target as HTMLInputElement).checked
+          )}
+      />
+      <label class="" for="auto-translate-on-paste">
+        Translate automatically when text is pasted
+      </label>
     </div>
+    <div class="">
+      <input
+        id="auto-translate-while-typing"
+        type="checkbox"
+        class=""
+        disabled={!config.auto_translate_enabled}
+        checked={config.auto_translate_while_typing}
+        onchange={(e) =>
+          updateConfig(
+            "auto_translate_while_typing",
+            (e.target as HTMLInputElement).checked
+          )}
+      />
+      <label class="" for="auto-translate-while-typing">
+        Translate automatically while typing
+      </label>
+    </div>
+  </fieldset>
 
-    <div class="form-group">
-        <label for="theme">Theme</label>
-        <select
-            id="theme"
-            value={config.theme}
-            onchange={(e) =>
-                updateConfig("theme", (e.target as HTMLSelectElement).value)}
-        >
-            <option value="auto">Auto (System)</option>
-            <option value="light">Light</option>
-            <option value="dark">Dark</option>
-        </select>
-    </div>
+  <div class="">
+    <input
+      id="auto-start"
+      type="checkbox"
+      class=""
+      checked={config.auto_start}
+      onchange={(e) =>
+        updateConfig("auto_start", (e.target as HTMLInputElement).checked)}
+    />
+    <label class="" for="auto-start">
+      Start with Windows
+    </label>
+  </div>
 
-    <div class="form-group">
-        <label for="hotkey">Global Hotkey</label>
-        <input
-            id="hotkey"
-            type="text"
-            value={config.hotkey}
-            placeholder="Ctrl+Alt+C"
-            oninput={(e) =>
-                updateConfig("hotkey", (e.target as HTMLInputElement).value)}
-        />
-        <small> Example: Ctrl+Alt+C, Alt+Shift+T, etc. </small>
-    </div>
+  <div class="">
+    <input
+      id="minimize-to-tray"
+      type="checkbox"
+      class=""
+      checked={config.minimize_to_tray}
+      onchange={(e) =>
+        updateConfig(
+          "minimize_to_tray",
+          (e.target as HTMLInputElement).checked
+        )}
+    />
+    <label class="" for="minimize-to-tray">
+      Minimize to system tray
+    </label>
+  </div>
+</div>
 
-    <div class="checkbox-group">
-        <label class="checkbox-label">
-            <input
-                type="checkbox"
-                checked={config.auto_start}
-                onchange={(e) =>
-                    updateConfig(
-                        "auto_start",
-                        (e.target as HTMLInputElement).checked,
-                    )}
-            />
-            <span class="checkmark"></span>
-            Start with Windows
-        </label>
-    </div>
-
-    <div class="checkbox-group">
-        <label class="checkbox-label">
-            <input
-                type="checkbox"
-                checked={config.minimize_to_tray}
-                onchange={(e) =>
-                    updateConfig(
-                        "minimize_to_tray",
-                        (e.target as HTMLInputElement).checked,
-                    )}
-            />
-            <span class="checkmark"></span>
-            Minimize to system tray
-        </label>
-    </div>
-</section>
+<hr class="" />
 
 <!-- Custom Prompt Section -->
-<section class="settings-section">
-    <h3>
-        <i class="bi bi-chat-text"></i>Custom Translation Prompt
-    </h3>
+<div class="">
+  <h4 class="">
+    <i class=""></i>Custom Translation Prompt
+  </h4>
 
-    <div class="form-group">
-        <label for="custom-prompt">Translation Instructions</label>
-        <textarea
-            id="custom-prompt"
-            value={config.custom_prompt}
-            placeholder="Enter custom instructions for the AI translator..."
-            class="prompt-textarea"
-            rows="8"
-            oninput={(e) =>
-                updateConfig(
-                    "custom_prompt",
-                    (e.target as HTMLTextAreaElement).value,
-                )}
-        ></textarea>
-        <small>
-            Customize how the AI translates text. You can use these variables in
-            your prompt:
-            <br />
-            <code>&#123;detected_language&#125;</code> - The automatically
-            detected source language
-            <br />
-            <code>&#123;target_language&#125;</code> - Your configured target language
-        </small>
+  <div class="">
+    <label for="custom-prompt" class=""
+      >Translation Instructions</label
+    >
+    <textarea
+      id="custom-prompt"
+      class=""
+      value={config.custom_prompt}
+      placeholder="Enter custom instructions for the AI translator..."
+      rows="8"
+      oninput={(e) =>
+        updateConfig("custom_prompt", (e.target as HTMLTextAreaElement).value)}
+    ></textarea>
+    <div class="">
+      Customize how the AI translates text. You can use these variables in your
+      prompt:
+      <br />
+      <code>&#123;detected_language&#125;</code> - The automatically detected
+      source language
+      <br />
+      <code>&#123;target_language&#125;</code> - Your configured target language
     </div>
-</section>
+  </div>
+</div>
 
 <style>
-    .settings-section {
-        margin: 24px 0;
-        min-width: 0;
-    }
-
-    .settings-section h3 {
-        font-size: 1.1rem;
-        color: #333;
-        margin: 0 0 16px 0;
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        padding-bottom: 8px;
-        border-bottom: 1px solid #e0e0e0;
-    }
-
-    .form-group {
-        margin-bottom: 16px;
-        min-width: 0;
-    }
-
-    .form-group label {
-        display: block;
-        font-weight: 500;
-        margin-bottom: 4px;
-        color: #333;
-    }
-
-    .form-group input,
-    .form-group select {
-        width: 100%;
-        max-width: 100%;
-        padding: 10px 12px;
-        border: 1px solid #ddd;
-        border-radius: 6px;
-        font-family: inherit;
-        font-size: 14px;
-        transition: border-color 0.2s;
-        box-sizing: border-box;
-        min-width: 0;
-    }
-
-    .form-group input:focus,
-    .form-group select:focus {
-        outline: none;
-        border-color: #379df1;
-        box-shadow: 0 0 0 2px rgba(55, 157, 241, 0.1);
-    }
-
-    .form-group small {
-        color: #666;
-        font-size: 12px;
-        margin-top: 4px;
-        display: block;
-    }
-
-    .form-group small code {
-        background: #f1f3f4;
-        color: #d73a49;
-        padding: 2px 4px;
-        border-radius: 3px;
-        font-family: "Consolas", "Monaco", "Courier New", monospace;
-        font-size: 11px;
-    }
-
-    .checkbox-group {
-        margin-bottom: 12px;
-    }
-
-    .checkbox-label {
-        display: flex;
-        align-items: center;
-        cursor: pointer;
-        font-weight: normal;
-        user-select: none;
-    }
-
-    .checkbox-label input[type="checkbox"] {
-        width: auto;
-        margin-right: 8px;
-    }
-
-    .prompt-textarea {
-        width: 100%;
-        max-width: 100%;
-        padding: 12px;
-        border: 1px solid #ddd;
-        border-radius: 6px;
-        font-family: "Consolas", "Monaco", "Courier New", monospace;
-        font-size: 13px;
-        line-height: 1.4;
-        resize: vertical;
-        min-height: 120px;
-        transition: border-color 0.2s;
-        box-sizing: border-box;
-    }
-
-    .prompt-textarea:focus {
-        outline: none;
-        border-color: #379df1;
-        box-shadow: 0 0 0 2px rgba(55, 157, 241, 0.1);
-    }
-
-    /* Dark mode */
-    @media (prefers-color-scheme: dark) {
-        .settings-section h3 {
-            color: #f6f6f6;
-            border-color: #444;
-        }
-
-        .form-group label {
-            color: #f6f6f6;
-        }
-
-        .form-group input,
-        .form-group select {
-            background: #3a3a3a;
-            border-color: #555;
-            color: #f6f6f6;
-        }
-
-        .form-group input:focus,
-        .form-group select:focus {
-            border-color: #379df1;
-            background: #404040;
-        }
-
-        .form-group small {
-            color: #ccc;
-        }
-
-        .form-group small code {
-            background: #444;
-            color: #7dd3fc;
-        }
-
-        .prompt-textarea {
-            background: #404040;
-            border-color: #444;
-            color: #f6f6f6;
-        }
-
-        .prompt-textarea:focus {
-            border-color: #379df1;
-            background: #4a4a4a;
-        }
-    }
-
-    @media (max-width: 768px) {
-        .settings-section {
-            margin: 16px 0;
-        }
-    }
+  /* CSS moved to /src/app.css */
 </style>

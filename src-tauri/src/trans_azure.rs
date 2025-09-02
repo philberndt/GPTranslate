@@ -13,6 +13,7 @@ pub struct AzureOpenAITranslationService {
 
 impl AzureOpenAITranslationService {
     pub fn new(config: Config) -> Self {
+
         log::info!(
             "Creating AzureOpenAITranslationService with endpoint: {}",
             config.azure_endpoint
@@ -21,6 +22,29 @@ impl AzureOpenAITranslationService {
             client: reqwest::Client::new(),
             config,
         }
+    }
+
+    fn is_reasoning_model(&self) -> bool {
+        // Automatic detection based on known reasoning model name patterns
+        // Supports custom Azure deployment names that include underlying model name
+        let deployment_name = if !self.config.azure_deployment_name.is_empty() {
+            self.config.azure_deployment_name.as_str()
+        } else {
+            ""
+        };
+        let model_name = self.config.model.as_str();
+        
+        // Check both deployment name and model name
+        let is_reasoning = is_reasoning_model_name(deployment_name) || is_reasoning_model_name(model_name);
+        
+        log::info!(
+            "Azure - Reasoning model detection: deployment='{}', model='{}', is_reasoning={}",
+            deployment_name,
+            model_name,
+            is_reasoning
+        );
+        
+        is_reasoning
     }
 
     async fn call_azure_openai(&self, request_body: Value) -> Result<Value> {
@@ -68,10 +92,12 @@ impl AzureOpenAITranslationService {
             .await?;
 
         if !response.status().is_success() {
+            let status = response.status();
             let error_text = response.text().await?;
-            log::error!("Azure OpenAI API request failed: {}", error_text);
+            log::error!("Azure OpenAI API request failed: Status: {}, Error: {}", status, error_text);
             return Err(anyhow::anyhow!(
-                "Azure OpenAI API request failed: {}",
+                "Azure OpenAI API request failed ({}): {}",
+                status,
                 error_text
             ));
         }
@@ -255,7 +281,7 @@ impl TranslationProvider for AzureOpenAITranslationService {
         log::info!("Cleaned text for translation: {}", cleaned_text);
 
         let user_prompt = format!("Text to translate: \"{}\"", cleaned_text);
-        let smart_prompt = create_smart_prompt(&self.config);
+        let smart_prompt = create_smart_prompt(&self.config, None);
         log::info!("Using smart prompt with alternative language logic");
 
         // Determine which token parameter to use based on model
@@ -265,30 +291,33 @@ impl TranslationProvider for AzureOpenAITranslationService {
             &self.config.model
         };
 
-        // Check if this is a reasoning model (o1, o3 series)
-        let is_reasoning_model = model_name.starts_with("o1") || model_name.starts_with("o3");
+        // Check if this is a reasoning model
+        let is_reasoning_model = self.is_reasoning_model();
 
         log::info!(
-            "Model name detected: {}, is_reasoning_model: {}",
+            "Azure - Model name detected: {}, is_reasoning_model: {}",
             model_name,
             is_reasoning_model
         );
+        log::info!(
+            "Azure - Deployment name: '{}', Model config: '{}'",
+            self.config.azure_deployment_name,
+            self.config.model
+        );
 
-        let system_role = if is_reasoning_model {
+        // GPT-5 series supports system messages, o-series may need developer messages
+        let system_role = if is_reasoning_model && (model_name.starts_with("o1") || model_name.starts_with("o3") || model_name.starts_with("o4-mini")) {
             "developer"
         } else {
             "system"
         };
+        let system_content = format!("{}\n\nIMPORTANT FORMATTING RULES:\n- Always respond with valid JSON containing 'detected_language' and 'translated_text' fields\n- Preserve line breaks and paragraph structure in the translation\n- Use actual newline characters (\\n) in the JSON string value, not escaped \\\\n\n- Do NOT escape newlines in the JSON response - use literal newlines\n\nExample response format:\n{{\n  \"detected_language\": \"English\",\n  \"translated_text\": \"Line 1\\nLine 2\\n\\nNew paragraph\"\n}}", smart_prompt);
+
         let mut request_body = json!({
             "messages": [
                 {
                     "role": system_role,
-                    "content": [
-                        {
-                            "type": "text",
-                            "text": format!("{}\n\nIMPORTANT FORMATTING RULES:\n- Always respond with valid JSON containing 'detected_language' and 'translated_text' fields\n- Preserve line breaks and paragraph structure in the translation\n- Use actual newline characters (\\n) in the JSON string value, not escaped \\\\n\n- Do NOT escape newlines in the JSON response - use literal newlines\n\nExample response format:\n{{\n  \"detected_language\": \"English\",\n  \"translated_text\": \"Line 1\\nLine 2\\n\\nNew paragraph\"\n}}", smart_prompt)
-                        }
-                    ]
+                    "content": system_content
                 },
                 {
                     "role": "user",
@@ -305,6 +334,10 @@ impl TranslationProvider for AzureOpenAITranslationService {
         // Use appropriate token parameter based on model type
         if is_reasoning_model {
             request_body["max_completion_tokens"] = json!(800);
+            // Add reasoning_effort parameter for Azure reasoning models
+            let effort = self.config.reasoning_effort.as_deref().unwrap_or("medium");
+            request_body["reasoning_effort"] = json!(effort);
+            log::info!("Azure - Using reasoning effort: {}", effort);
         } else {
             request_body["max_tokens"] = json!(800);
         }
@@ -321,10 +354,30 @@ impl TranslationProvider for AzureOpenAITranslationService {
         }
 
         let response = self.call_azure_openai(request_body).await?;
+        log::info!(
+            "Azure API Response: {}",
+            serde_json::to_string_pretty(&response).unwrap_or_default()
+        );
+        
         let content = response["choices"][0]["message"]["content"]
             .as_str()
             .ok_or_else(|| anyhow::anyhow!("No content in response"))?;
 
+        log::info!("Azure API Response Content: {}", content);
         self.parse_response_content(content)
     }
+}
+
+fn is_reasoning_model_name(name: &str) -> bool {
+    let n = name.to_lowercase();
+    // Known Azure OpenAI reasoning model families and variants based on Microsoft documentation
+    // GPT-5 series: gpt-5, gpt-5-mini, gpt-5-nano, gpt-5-chat, gpt-5-thinking
+    n.starts_with("gpt-5") ||
+    n.starts_with("gpt5") ||
+    // O-series models: o1, o1-mini, o3, o3-mini, o3-pro, o4-mini
+    n.starts_with("o1") ||
+    n.starts_with("o3") ||
+    n.starts_with("o4-mini") ||
+    // Codex reasoning model
+    n.starts_with("codex-mini")
 }

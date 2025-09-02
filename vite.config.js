@@ -1,13 +1,13 @@
 /// <reference types="node" />
-import { defineConfig } from "vite";
-import { sveltekit } from "@sveltejs/kit/vite";
-import { fileURLToPath } from "url"; // added import
-import { dirname } from "path"; // added import
+import { defineConfig } from "vite"
+import { sveltekit } from "@sveltejs/kit/vite"
+import { fileURLToPath } from "url" // added import
+import { dirname } from "path" // added import
 
-const __filename = fileURLToPath(import.meta.url); // define __filename
-const __dirname = dirname(__filename); // define __dirname
+const __filename = fileURLToPath(import.meta.url) // define __filename
+const __dirname = dirname(__filename) // define __dirname
 
-const host = process.env.TAURI_DEV_HOST;
+const host = process.env.TAURI_DEV_HOST
 
 // https://vitejs.dev/config/
 export default defineConfig(async () => ({
@@ -22,8 +22,9 @@ export default defineConfig(async () => ({
     port: 1420,
     strictPort: true,
     host: host || false,
-    hmr: host
-      ? {
+    hmr:
+      host ?
+        {
           protocol: "ws",
           host,
           port: 1421,
@@ -39,4 +40,4 @@ export default defineConfig(async () => ({
       ],
     },
   },
-}));
+}))
