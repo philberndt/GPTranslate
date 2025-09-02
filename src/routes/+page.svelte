@@ -1,14 +1,24 @@
 <script lang="ts">
-  import "../styles.css"
   import { invoke, listen } from "../lib/tauri"
   import { onMount } from "svelte"
-  import Settings from "../lib/Settings.svelte"
   import History from "../lib/History.svelte"
+  import Settings from "../lib/Settings.svelte"
   import ModelSelector from "../lib/ModelSelector.svelte"
   import AlternativeTranslations from "../lib/AlternativeTranslations.svelte"
 
   import CompactLanguageDropdown from "../lib/CompactLanguageDropdown.svelte"
   import { LanguageManager, type Language } from "../lib/languages"
+
+  // Import Heroicons
+  import {
+    ClockIcon,
+    CogIcon,
+    ArrowsRightLeftIcon,
+    ClipboardDocumentIcon,
+    TrashIcon,
+    GlobeAltIcon,
+    CheckCircleIcon,
+  } from "heroicons-svelte/24/outline"
   let originalText = $state("")
   let translatedText = $state("")
   let detectedLanguage = $state("")
@@ -43,8 +53,39 @@
   const RESET_PROTECTION_DELAY = 1000
 
   // Function to apply theme based on configuration
-  function applyTheme(theme: string) {}
-  function updateAutoTheme() {}
+  function applyTheme(theme: string) {
+    if (theme === "auto") {
+      updateAutoTheme()
+    } else {
+      // Apply the specified theme
+      document.documentElement.setAttribute("data-theme", theme)
+    }
+  }
+
+  function updateAutoTheme() {
+    const isDark = window.matchMedia("(prefers-color-scheme: dark)").matches
+    document.documentElement.setAttribute(
+      "data-theme",
+      isDark ? "dark" : "light"
+    )
+  }
+
+  // Function to change theme and save it to config
+  async function changeTheme(newTheme: string) {
+    currentTheme = newTheme
+    applyTheme(newTheme)
+
+    // Save to configuration
+    if (config) {
+      const newConfig = { ...config, theme: newTheme }
+      try {
+        await invoke("save_config", { newConfig })
+        config = newConfig
+      } catch (error) {
+        console.error("Failed to save theme:", error)
+      }
+    }
+  }
   // Function to load/refresh config
   async function loadConfig() {
     try {
@@ -55,13 +96,34 @@
       console.log("✅ Config after assignment:", $state.snapshot(config))
       // Apply theme from config
       if (config && config.theme) {
+        currentTheme = config.theme
         applyTheme(config.theme)
+      } else {
+        // Default to auto if no theme is set
+        currentTheme = "auto"
+        applyTheme("auto")
       }
 
       // Sync language state with config
       syncLanguageState()
     } catch (e) {
       console.error("Failed to load config:", e)
+      // Fallback config for browser mode
+      config = {
+        api_provider: "openai",
+        theme: "auto",
+        openai_api_key: "",
+        azure_api_key: "",
+        azure_endpoint: "",
+        azure_api_version: "2024-02-01",
+        user_source_language: "English",
+        user_target_language: "Spanish",
+        available_models: {
+          openai: [],
+        },
+      }
+      currentTheme = "auto"
+      applyTheme("auto")
     }
   }
 
@@ -337,19 +399,7 @@
     targetLanguage = ""
   }
   function openSettings() {
-    const settingsModal = document.getElementById("settingsModal")
-    if (settingsModal) {
-      const modal = new Modal(settingsModal)
-      // When settings modal is closed, reload config to pick up any changes
-      settingsModal.addEventListener(
-        "hidden.bs.modal",
-        () => {
-          loadConfig()
-        },
-        { once: true }
-      )
-      modal.show()
-    }
+    activeView = "settings"
   }
 
   function openHistory() {
@@ -359,91 +409,91 @@
     activeView = "translate"
   }
 
+  function closeSettings() {
+    activeView = "translate"
+    // Reload config when settings are closed to pick up any changes
+    loadConfig()
+  }
+
   function handleTranslatedTextUpdate(newText: string) {
     translatedText = newText
     console.log("Translated text updated:", newText)
   }
 </script>
 
-<main>
+<main class="container mx-auto p-4 max-w-7xl">
   {#if activeView === "translate"}
-    <div data-view="translate">
-      <div>
-        <div>
-          <div>
-            <div>
-              <div>
-                <div>
-                  <h5>Original Text</h5>
-                </div>
-                <div>
-                  <div>
-                    {#if config}
-                      <CompactLanguageDropdown
-                        selectedLanguage={sourceLanguage}
-                        favoriteLanguages={config.favorite_languages || []}
-                        includeAutoDetect={true}
-                        onLanguageSelect={handleSourceLanguageChange}
-                        label=""
-                      />
-                    {/if}
-                    {#if detectedLanguage && sourceLanguage.code === "auto"}
-                      <i></i>
-                      <span>{detectedLanguage}</span>
-                    {/if}
+    <div data-view="translate" class="space-y-6">
+      <!-- Translation Cards Grid -->
+      <div class="grid lg:grid-cols-2 gap-6">
+        <!-- Source Text Card -->
+        <div class="card bg-base-100 shadow-xl">
+          <div class="card-body">
+            <div class="card-title justify-between items-center">
+              <h5 class="text-lg font-semibold">Original Text</h5>
+              <div class="flex items-center gap-3">
+                {#if config}
+                  <CompactLanguageDropdown
+                    selectedLanguage={sourceLanguage}
+                    favoriteLanguages={config.favorite_languages || []}
+                    includeAutoDetect={true}
+                    onLanguageSelect={handleSourceLanguageChange}
+                    label=""
+                  />
+                {/if}
+                {#if detectedLanguage && sourceLanguage.code === "auto"}
+                  <div class="badge badge-outline badge-sm">
+                    <GlobeAltIcon class="w-3 h-3 mr-1" />
+                    <span>{detectedLanguage}</span>
                   </div>
-                </div>
+                {/if}
               </div>
             </div>
-            <div>
-              <textarea
-                bind:value={originalText}
-                placeholder={`Enter text to translate or use ${config?.hotkey || "Ctrl+Alt+C"} to capture from clipboard...`}
-                oninput={() => {
-                  if (
-                    config?.auto_translate_enabled &&
-                    config?.auto_translate_while_typing
-                  ) {
-                    debouncedTranslateText()
-                  }
-                }}
-              ></textarea>
-            </div>
+            <textarea
+              class="textarea textarea-bordered textarea-lg w-full h-48 resize-none"
+              bind:value={originalText}
+              placeholder={`Enter text to translate or use ${config?.hotkey || "Ctrl+Alt+C"} to capture from clipboard...`}
+              oninput={() => {
+                if (
+                  config?.auto_translate_enabled &&
+                  config?.auto_translate_while_typing
+                ) {
+                  debouncedTranslateText()
+                }
+              }}
+            ></textarea>
           </div>
         </div>
-        <div>
-          <div>
-            <div>
-              <div>
-                <div>
-                  <div>
-                    <span>To:</span>
-                    {#if config}
-                      <CompactLanguageDropdown
-                        selectedLanguage={primaryTargetLanguage}
-                        favoriteLanguages={config.favorite_languages || []}
-                        includeAutoDetect={false}
-                        onLanguageSelect={handlePrimaryTargetLanguageChange}
-                        label=""
-                      />
-                    {/if}
+
+        <!-- Translation Result Card -->
+        <!-- Translation Result Card -->
+        <div class="card bg-base-100 shadow-xl">
+          <div class="card-body">
+            <div class="card-title justify-between items-center">
+              <div class="flex items-center gap-2">
+                <span class="text-lg font-semibold">To:</span>
+                {#if config}
+                  <CompactLanguageDropdown
+                    selectedLanguage={primaryTargetLanguage}
+                    favoriteLanguages={config.favorite_languages || []}
+                    includeAutoDetect={false}
+                    onLanguageSelect={handlePrimaryTargetLanguageChange}
+                    label=""
+                  />
+                {/if}
+              </div>
+              <div class="flex items-center gap-2">
+                {#if targetLanguage}
+                  <span class="badge badge-secondary">{targetLanguage}</span>
+                {/if}
+                {#if isTranslating}
+                  <div class="loading loading-spinner loading-sm" role="status">
+                    <span class="sr-only">Translating...</span>
                   </div>
-                </div>
-                <div class="">
-                  <div class="">
-                    {#if targetLanguage}
-                      <span class="">{targetLanguage}</span>
-                    {/if}
-                    {#if isTranslating}
-                      <div class="" role="status">
-                        <span class="">Translating...</span>
-                      </div>
-                    {/if}
-                  </div>
-                </div>
+                {/if}
               </div>
             </div>
-            <div class="">
+            <div class="space-y-4">
               <AlternativeTranslations
                 {translatedText}
                 targetLanguage={targetLanguage ||
@@ -454,86 +504,118 @@
           </div>
         </div>
       </div>
-      <div class="">
-        <!-- Navigation icons on the left -->
-        <div class="">
-          <button
-            type="button"
-            class=""
-            onclick={openHistory}
-            title="Translation History"
-            aria-label="Open translation history"
-          >
-            <i></i>
-          </button>
-          <button
-            type="button"
-            onclick={openSettings}
-            title="Settings"
-            aria-label="Open settings"
-          >
-            <i class=""></i>
-          </button>
-        </div>
-        <!-- Model selector -->
-        <div class="">
-          <ModelSelector {config} onModelChange={handleModelChange} />
-        </div>
 
-        <!-- Action buttons on the right -->
-        <div class="" role="group" aria-label="Translation actions">
-          <button
-            type="button"
-            onclick={translateText}
-            disabled={!originalText.trim() || isTranslating}
-            title="Translate text"
-          >
-            <i class=""></i>Translate
-          </button>
-          <button
-            type="button"
-            onclick={() => {
-              copyToClipboard()
-              showCopyNotificationMessage()
-            }}
-            disabled={!translatedText}
-            title="Copy translation"
-          >
-            <i></i>Copy
-          </button>
-          <button
-            type="button"
-            class=""
-            onclick={clearText}
-            title="Clear all text"
-          >
-            <i class=""></i>Clear
-          </button>
+      <!-- Control Panel -->
+      <div class="card bg-base-100 shadow-xl">
+        <div class="card-body py-4">
+          <div class="flex flex-wrap justify-between items-center gap-4">
+            <!-- Navigation icons on the left -->
+            <div class="flex gap-2">
+              <button
+                type="button"
+                class="btn btn-ghost btn-sm"
+                onclick={openHistory}
+                title="Translation History"
+                aria-label="Open translation history"
+              >
+                <ClockIcon class="w-5 h-5" />
+                History
+              </button>
+              <button
+                type="button"
+                class="btn btn-ghost btn-sm"
+                onclick={openSettings}
+                title="Settings"
+                aria-label="Open settings"
+              >
+                <CogIcon class="w-5 h-5" />
+                Settings
+              </button>
+            </div>
+
+            <!-- Model selector -->
+            <div class="flex-1 max-w-xs">
+              <ModelSelector {config} onModelChange={handleModelChange} />
+            </div>
+
+            <!-- Action buttons on the right -->
+            <div
+              class="btn-group"
+              role="group"
+              aria-label="Translation actions"
+            >
+              <button
+                type="button"
+                class="btn btn-primary"
+                onclick={translateText}
+                disabled={!originalText.trim() || isTranslating}
+                title="Translate text"
+              >
+                <ArrowsRightLeftIcon class="w-5 h-5" />
+                Translate
+              </button>
+              <button
+                type="button"
+                class="btn btn-secondary"
+                onclick={() => {
+                  copyToClipboard()
+                  showCopyNotificationMessage()
+                }}
+                disabled={!translatedText}
+                title="Copy translation"
+              >
+                <ClipboardDocumentIcon class="w-5 h-5" />
+                Copy
+              </button>
+              <button
+                type="button"
+                class="btn btn-outline"
+                onclick={clearText}
+                title="Clear all text"
+              >
+                <TrashIcon class="w-5 h-5" />
+                Clear
+              </button>
+            </div>
+          </div>
         </div>
       </div>
     </div>
   {:else if activeView === "history"}
-    <div class="" data-view="history">
+    <div class="min-h-screen" data-view="history">
       <History onClose={closeHistory} theme={currentTheme} />
+    </div>
+  {:else if activeView === "settings"}
+    <div class="min-h-screen" data-view="settings">
+      {#if config}
+        <Settings
+          {config}
+          onClose={closeSettings}
+          theme={currentTheme}
+          onThemeChange={changeTheme}
+        />
+      {:else}
+        <div class="p-8">
+          <div class="text-center">
+            <h2 class="text-xl font-bold mb-4">Loading Settings...</h2>
+            <p>Configuration is loading. Please wait.</p>
+          </div>
+        </div>
+      {/if}
     </div>
   {/if}
 </main>
 
-<!-- Settings Modal -->
-<Settings {config} />
-
 <!-- Copy notification toast -->
 {#if showCopyNotification}
-  <div class="">
-    <div class="" role="alert">
-      <div class="">
-        <i class=""></i>
+  <div class="toast toast-top toast-end">
+    <div class="alert alert-success" role="alert">
+      <div class="flex items-center gap-2">
+        <CheckCircleIcon class="w-5 h-5" />
         Translation copied to clipboard
       </div>
     </div>
   </div>
 {/if}
 
-<style>
-  /* CSS goes in /src/styles.css */
-</style>
+<!-- Custom CSS goes in /src/styles.css */ -->

@@ -58,14 +58,13 @@
   }
 </script>
 
-<div class="">
+<div>
   {#if label}
-    <label for="language-select" class="">{label}</label>
+    <label for="language-select">{label}</label>
   {/if}
 
   <select
     id="language-select"
-    class=""
     value={selectedLanguage.code}
     onchange={handleLanguageChange}
     {disabled}
@@ -105,6 +104,4 @@
   </select>
 </div>
 
-<style>
-  /* CSS goes in /src/styles.css */
-</style>
+<!-- Custom CSS goes in /src/styles.css */ -->

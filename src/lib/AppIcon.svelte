@@ -1,16 +1,15 @@
 <script>
   // This component displays the application icon
   export let size = 24 // Default size in pixels
-  export let className = "" // Additional CSS classes
+  // Additional CSS classes can be added via the 'className' prop
+  export let className = ""
 </script>
 
 <img
   src="/logo_app.svg"
   alt="GPTranslate Logo"
-  class=""
+  class={className}
   style="width: {size}px; height: {size}px;"
 />
 
-<style>
-  /* CSS goes in /src/styles.css */
-</style>
+<!-- Custom CSS goes in /src/styles.css -->

@@ -1,28 +1,56 @@
 /** @type {import('tailwindcss').Config} */
 module.exports = {
-  darkMode: 'class',
-  content: [
-    './src/**/*.{html,js,svelte,ts}',
-    './index.html'
-  ],
+  darkMode: "class",
+  content: ["./src/**/*.{html,js,svelte,ts}", "./index.html"],
   theme: { extend: {} },
-  plugins: [require('daisyui')],
+  plugins: [require("daisyui")],
   daisyui: {
     themes: [
+      "light",
+      "dark",
+      "cupcake",
+      "bumblebee",
+      "emerald",
+      "corporate",
+      "synthwave",
+      "retro",
+      "cyberpunk",
+      "valentine",
+      "halloween",
+      "garden",
+      "forest",
+      "aqua",
+      "lofi",
+      "pastel",
+      "fantasy",
+      "wireframe",
+      "black",
+      "luxury",
+      "dracula",
+      "cmyk",
+      "autumn",
+      "business",
+      "acid",
+      "lemonade",
+      "night",
+      "coffee",
+      "winter",
+      "dim",
+      "nord",
+      "sunset",
       {
         gptranslate: {
-          primary: '#2563eb',
-          secondary: '#7c3aed',
-            accent: '#fb923c',
-            neutral: '#2a323c',
-            'base-100': '#1d232a',
-            info: '#0ea5e9',
-            success: '#10b981',
-            warning: '#fbbf24',
-            error: '#ef4444'
-        }
+          primary: "#2563eb",
+          secondary: "#7c3aed",
+          accent: "#fb923c",
+          neutral: "#2a323c",
+          "base-100": "#1d232a",
+          info: "#0ea5e9",
+          success: "#10b981",
+          warning: "#fbbf24",
+          error: "#ef4444",
+        },
       },
-      'dark'
-    ]
-  }
+    ],
+  },
 };

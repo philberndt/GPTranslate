@@ -1,6 +1,13 @@
 <script lang="ts">
   import { invoke } from "./tauri"
 
+  // Import Heroicons
+  import {
+    ChevronDownIcon,
+    CheckIcon,
+    InformationCircleIcon,
+  } from "heroicons-svelte/24/outline"
+
   interface ModelConfig {
     name: string
     display_name: string
@@ -229,9 +236,9 @@
   }
 </script>
 
-<div class="">
+<div class="dropdown relative">
   <button
-    class=""
+    class="btn btn-outline btn-sm gap-2"
     type="button"
     onclick={() => (isOpen = !isOpen)}
     aria-expanded={isOpen}
@@ -248,19 +255,23 @@
         <path d={getProviderIcon(config.provider).path}></path>
       </svg>
     {/if}
-    <span class="">{getCurrentModelDisplayName()}</span>
+    <span class="text-sm truncate max-w-32">{getCurrentModelDisplayName()}</span
+    >
+    <ChevronDownIcon class="w-4 h-4" />
   </button>
 
   {#if isOpen}
-    <div class="">
+    <div
+      class="dropdown-content menu bg-base-100 rounded-box w-80 max-h-96 overflow-y-auto shadow-xl border border-base-300 z-50 absolute top-full left-0 mt-1"
+    >
       {#if config?.available_models}
         {#if hasAnyModels()}
           <!-- Include all providers that have models OR are special cases like Azure AI Translator -->
           {#each [...Object.keys(config.available_models), "azure_translator"].filter((provider, index, arr) => arr.indexOf(provider) === index) as provider (provider)}
             {#if hasEnabledModels(provider)}
-              <div class="">
-                <div class="">
-                  <span class="">
+              <div class="menu-title">
+                <div class="flex items-center gap-2 px-3 py-2">
+                  <span class="w-4 h-4">
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
                       width="14"
@@ -271,7 +282,7 @@
                       <path d={getProviderIcon(provider).path}></path>
                     </svg>
                   </span>
-                  <span class=""
+                  <span class="font-semibold text-sm"
                     >{provider === "azure_openai" ? "Azure OpenAI"
                     : provider === "azure_translator" ? "Azure AI Translator"
                     : provider
@@ -280,15 +291,19 @@
                   >
 
                   {#if !isProviderConfigured(provider)}
-                    <span class="">Not Configured</span>
+                    <span class="badge badge-warning badge-xs"
+                      >Not Configured</span
+                    >
                   {/if}
                 </div>
+              </div>
 
-                {#if isProviderConfigured(provider)}
-                  {#if provider === "azure_translator"}
-                    <!-- Azure AI Translator doesn't use models -->
+              {#if isProviderConfigured(provider)}
+                {#if provider === "azure_translator"}
+                  <!-- Azure AI Translator doesn't use models -->
+                  <li>
                     <button
-                      class=""
+                      class="flex items-center justify-between p-3 text-left hover:bg-base-200"
                       type="button"
                       onclick={(e) => {
                         e.stopPropagation()
@@ -296,67 +311,81 @@
                         selectModel(provider, "")
                       }}
                     >
-                      <div class="">
-                        <div class="">Azure AI Translator</div>
-                        <div class="">Neural machine translation service</div>
+                      <div class="flex-1">
+                        <div class="font-medium text-sm">
+                          Azure AI Translator
+                        </div>
+                        <div class="text-xs text-base-content/60">
+                          Neural machine translation service
+                        </div>
                       </div>
                       {#if config.provider === provider}
-                        <i class=""></i>
+                        <CheckIcon class="w-4 h-4 text-success" />
                       {/if}
                     </button>
-                  {:else}
-                    <div>
-                      {#each getEnabledModelsForProvider(provider) as model (model.name)}
-                        <button
-                          class=""
-                          type="button"
-                          onclick={(e) => {
-                            e.stopPropagation()
-                            console.log(
-                              `🖱️ Model button clicked: ${model.name} from provider ${provider}`
-                            )
-                            selectModel(provider, model.name)
-                          }}
-                        >
-                          <div class="">
-                            <div class="">{model.display_name}</div>
-                            {#if model.description}
-                              <div class="">
-                                {model.description}
-                              </div>
-                            {/if}
-                          </div>
-                          {#if config.provider === provider && config.model === model.name}
-                            <i class=""></i>
-                          {/if}
-                        </button>
-                      {/each}
-                    </div>
-                  {/if}
+                  </li>
                 {:else}
-                  <div class="">
+                  {#each getEnabledModelsForProvider(provider) as model (model.name)}
+                    <li>
+                      <button
+                        class="flex items-center justify-between p-3 text-left hover:bg-base-200"
+                        type="button"
+                        onclick={(e) => {
+                          e.stopPropagation()
+                          console.log(
+                            `🖱️ Model button clicked: ${model.name} from provider ${provider}`
+                          )
+                          selectModel(provider, model.name)
+                        }}
+                      >
+                        <div class="flex-1">
+                          <div class="font-medium text-sm">
+                            {model.display_name}
+                          </div>
+                          {#if model.description}
+                            <div class="text-xs text-base-content/60">
+                              {model.description}
+                            </div>
+                          {/if}
+                        </div>
+                        {#if config.provider === provider && config.model === model.name}
+                          <CheckIcon class="w-4 h-4 text-success" />
+                        {/if}
+                      </button>
+                    </li>
+                  {/each}
+                {/if}
+              {:else}
+                <li>
+                  <div class="p-3 text-xs text-base-content/60">
                     Configure this provider in settings to use its models.
                   </div>
-                {/if}
-              </div>
+                </li>
+              {/if}
             {/if}
           {/each}
         {:else}
-          <div class="">
-            <div class="">
-              <i class=""></i>
-              <div class="">No models configured</div>
-              <div class="">
+          <li>
+            <div class="p-4 text-center">
+              <InformationCircleIcon class="w-8 h-8 mx-auto mb-2 text-info" />
+              <div class="font-medium text-sm">No models configured</div>
+              <div class="text-xs text-base-content/60 mt-1">
                 Please add models in Settings → Model Management to get started.
               </div>
             </div>
-          </div>
+          </li>
         {/if}
       {:else}
-        <div class="">
-          <div class="" role="status" aria-hidden="true"></div>
-          Loading models...
-        </div>
+        <li>
+          <div class="p-4 text-center">
+            <div
+              class="loading loading-spinner loading-md"
+              role="status"
+              aria-hidden="true"
+            ></div>
+            <div class="text-sm mt-2">Loading models...</div>
+          </div>
+        </li>
       {/if}
     </div>
   {/if}
@@ -365,7 +394,7 @@
 <!-- Click outside to close -->
 {#if isOpen}
   <div
-    class=""
+    class="fixed inset-0 z-40"
     onclick={() => (isOpen = false)}
     onkeydown={(e) => {
       if (e.key === "Escape") isOpen = false
@@ -376,6 +405,4 @@
   ></div>
 {/if}
 
-<style>
-  /* CSS goes in /src/styles.css */
-</style>
+<!-- Custom CSS goes in /src/styles.css */ -->

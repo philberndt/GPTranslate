@@ -9,30 +9,25 @@
   let { isSaving, saveMessage, onSave, onReset }: Props = $props()
 </script>
 
-<div class="">
-  <div class="">
+<div>
+  <div>
     {#if saveMessage}
-      <span class="" role="status">
-        <i class=""></i>
+      <span role="status">
         {saveMessage}
       </span>
     {/if}
   </div>
-  <div class="">
-    <button type="button" class="" onclick={onReset}>
-      <i class=""></i>Reset to Defaults
-    </button>
-    <button type="button" class="" onclick={onSave} disabled={isSaving}>
+  <div>
+    <button type="button" onclick={onReset}> Reset to Defaults </button>
+    <button type="button" onclick={onSave} disabled={isSaving}>
       {#if isSaving}
-        <div class="" role="status" aria-hidden="true"></div>
+        <div role="status" aria-hidden="true"></div>
         Saving...
       {:else}
-        <i class=""></i>Save Settings
+        Save Settings
       {/if}
     </button>
   </div>
 </div>
 
-<style>
-  /* CSS goes in /src/styles.css */
-</style>
+<!-- Custom CSS goes in /src/styles.css */ -->

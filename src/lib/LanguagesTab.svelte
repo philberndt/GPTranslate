@@ -59,23 +59,17 @@
   }
 </script>
 
-<div class="">
-  <div class="">
-    <div class="">
-      <h4 class="">
-        <i class=""></i>
-        Translation Languages
-      </h4>
+<div>
+  <div>
+    <div>
+      <h4>Translation Languages</h4>
     </div>
   </div>
 
   <!-- Primary Language Settings -->
-  <div class="">
-    <div class="">
-      <label for="primary-target" class="">
-        <i class=""></i>
-        Primary Target Language
-      </label>
+  <div>
+    <div>
+      <label for="primary-target"> Primary Target Language </label>
       <LanguageDropdown
         selectedLanguage={targetLanguage}
         favoriteLanguages={config.favorite_languages || []}
@@ -83,14 +77,11 @@
         onLanguageSelect={handleTargetLanguageChange}
         label=""
       />
-      <div class="">The main language you want to translate to.</div>
+      <div>The main language you want to translate to.</div>
     </div>
 
-    <div class="">
-      <label for="alternative-target" class="">
-        <i class=""></i>
-        Alternative Target Language
-      </label>
+    <div>
+      <label for="alternative-target"> Alternative Target Language </label>
       <LanguageDropdown
         selectedLanguage={alternativeLanguage}
         favoriteLanguages={config.favorite_languages || []}
@@ -98,23 +89,20 @@
         onLanguageSelect={handleAlternativeLanguageChange}
         label=""
       />
-      <div class="">
+      <div>
         Used when the detected language is the same as your primary target.
       </div>
     </div>
   </div>
 
   <!-- Smart Translation Logic Explanation -->
-  <div class="">
-    <h6 class="">
-      <i class=""></i>
-      How Smart Language Selection Works
-    </h6>
-    <p class="">
+  <div>
+    <h6>How Smart Language Selection Works</h6>
+    <p>
       GPTranslate automatically chooses the best target language based on what
       it detects:
     </p>
-    <ul class="">
+    <ul>
       <li>
         <strong>If detected language ≠ primary target:</strong> Uses your primary
         target language
@@ -135,7 +123,7 @@
   </div>
 
   <!-- Favorite Languages Management -->
-  <div class="">
+  <div>
     <FavoriteLanguagesManager
       favoriteLanguageCodes={config.favorite_languages || []}
       onFavoritesUpdate={handleFavoritesUpdate}
@@ -143,6 +131,4 @@
   </div>
 </div>
 
-<style>
-  /* CSS goes in /src/styles.css */
-</style>
+<!-- Custom CSS goes in /src/styles.css */ -->

@@ -53,122 +53,109 @@
 </script>
 
 <!-- Model Management Section -->
-<div class="">
-  <h4 class=""><i class=""></i>Model Management</h4>
+<div>
+  <h4>Model Management</h4>
 
   <!-- Add New Model -->
-  <div class="">
-    <h5 class="">
-      <i class=""></i>
-      Add New Model
-    </h5>
-    <div class="">
-      <div class="">
-        <label for="provider-select" class="">Provider</label>
-        <select id="provider-select" class="" bind:value={selectedProvider}>
+  <div>
+    <h5>Add New Model</h5>
+    <div>
+      <div>
+        <label for="provider-select">Provider</label>
+        <select id="provider-select" bind:value={selectedProvider}>
           <option value="openai">OpenAI</option>
           <option value="azure_openai">Azure OpenAI</option>
           <option value="ollama">Ollama</option>
         </select>
       </div>
-      <div class="">
-        <label for="model-name" class="">Model Name</label>
+      <div>
+        <label for="model-name">Model Name</label>
         <input
           id="model-name"
           type="text"
-          class=""
           bind:value={newModelName}
           placeholder="e.g., gpt-4o-mini"
         />
       </div>
     </div>
-    <div class="">
-      <div class="">
-        <label for="model-display" class="">Display Name</label>
+    <div>
+      <div>
+        <label for="model-display">Display Name</label>
         <input
           id="model-display"
           type="text"
-          class=""
           bind:value={newModelDisplayName}
           placeholder="e.g., GPT-4o Mini"
         />
       </div>
-      <div class="">
-        <label for="model-description" class="">Description (optional)</label>
+      <div>
+        <label for="model-description">Description (optional)</label>
         <input
           id="model-description"
           type="text"
-          class=""
           bind:value={newModelDescription}
           placeholder="e.g., Fast and cost-effective model"
         />
       </div>
     </div>
     <button
-      class=""
       onclick={addModel}
       disabled={!newModelName.trim() || !newModelDisplayName.trim()}
     >
-      <i class=""></i>
       Add Model
     </button>
   </div>
 
-  <hr class="" />
+  <hr />
 
   <!-- Model Lists -->
   {#each Object.entries(availableModels) as [provider, models] (provider)}
     {#if models && models.length > 0 && provider !== "azure_translator"}
-      <div class="">
-        <div class="">
-          <h5 class="">
-            <i class=""></i>
+      <div>
+        <div>
+          <h5>
             {provider === "openai" ? "OpenAI"
             : provider === "azure_openai" ? "Azure OpenAI"
             : provider === "ollama" ? "Ollama"
             : provider} Models
           </h5>
-          <span class=""
+          <span
             >({getEnabledModelsForProvider(provider).length}/{models.length} enabled)</span
           >
         </div>
 
-        <div class="">
+        <div>
           {#each models as model, index (model.name)}
-            <div class="">
-              <div class="">
-                <div class="">
+            <div>
+              <div>
+                <div>
                   {model.display_name}
                 </div>
-                <div class="">
+                <div>
                   <code class={model.is_enabled ? "text-primary" : "text-muted"}
                     >{model.name}</code
                   >
                   {#if model.description}
-                    <span class="">{model.description}</span>
+                    <span>{model.description}</span>
                   {/if}
                 </div>
               </div>
-              <div class="">
+              <div>
                 <button
                   type="button"
-                  class=""
                   onclick={() => onModelToggle(provider, index)}
                   title={model.is_enabled ? "Disable model" : "Enable model"}
                   aria-label={model.is_enabled ? "Disable model" : (
                     "Enable model"
                   )}
                 >
-                  <i class=""></i>
                 </button>
                 <button
                   type="button"
-                  class=""
                   onclick={() => onModelRemove(provider, index)}
                   title="Remove model"
                   aria-label="Remove model"
                 >
-                  <i class=""></i>
                 </button>
               </div>
             </div>
@@ -179,6 +166,4 @@
   {/each}
 </div>
 
-<style>
-  /* CSS goes in /src/styles.css */
-</style>
+<!-- Custom CSS goes in /src/styles.css */ -->

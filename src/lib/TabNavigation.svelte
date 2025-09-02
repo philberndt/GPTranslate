@@ -8,40 +8,36 @@
 </script>
 
 <!-- Tab Navigation (DaisyUI) -->
-<div class="" role="tablist">
+<div role="tablist">
   <button
     type="button"
-    class=""
-    onclick="{() => onTabChange('api')}"
+    onclick={() => onTabChange("api")}
     role="tab"
-    aria-selected="{activeTab === 'api'}"
+    aria-selected={activeTab === "api"}
   >
     API Configuration
   </button>
   <button
     type="button"
-    class=""
-    onclick="{() => onTabChange('models')}"
+    onclick={() => onTabChange("models")}
     role="tab"
-    aria-selected="{activeTab === 'models'}"
+    aria-selected={activeTab === "models"}
   >
     Model Management
   </button>
   <button
     type="button"
-    class=""
-    onclick="{() => onTabChange('behavior')}"
+    onclick={() => onTabChange("behavior")}
     role="tab"
-    aria-selected="{activeTab === 'behavior'}"
+    aria-selected={activeTab === "behavior"}
   >
     App Behavior
   </button>
   <button
     type="button"
-    class=""
-    onclick="{() => onTabChange('about')}"
+    onclick={() => onTabChange("about")}
     role="tab"
-    aria-selected="{activeTab === 'about'}"
+    aria-selected={activeTab === "about"}
   >
     About
   </button>

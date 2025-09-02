@@ -1,6 +1,4 @@
 <script lang="ts">
-  // import { invoke } from "@tauri-apps/api/core"; // TODO: Implement API testing
-
   interface Props {
     config: any
     isValidatingApiKey: boolean
@@ -35,86 +33,70 @@
     // Iterate through all providers and their models
     Object.entries(config.available_models).forEach(([provider, models]) => {
       if (models && Array.isArray(models)) {
-        <div class="">
-          <h4 class=""><i class=""></i>API Configuration</h4>
-          <div class="">
-            <fieldset class="">
-              <legend class="">API Provider</legend>
-              <div class="">
-                <div class="">
-                  <button
-                    type="button"
-                    class={`btn btn-outline w-full justify-start gap-3 ${config.api_provider==='openai' ? 'btn-active' : ''}`}
+        const providerName =
+          provider.charAt(0).toUpperCase() + provider.slice(1).replace("_", " ")
+        models.forEach((model: any) => {
+          if (model.enabled) {
+            availableModels.push({
+              value: `${provider}:${model.name}`,
               label: `${providerName}: ${model.display_name || model.name}`,
             })
           }
         })
       }
-                    <div class="">
+    })
 
     return availableModels
-  } // async function testProvider(provider: ProviderKey) {
-  //     isTesting[provider] = true;
-  //     testResults[provider] = null;
+  }
+</script>
 
-  //     try {
-  //         // For now, just use the existing validateApiKey function
-  //         // TODO: Implement proper provider testing    //         await validateApiKey();
-  //         testResults[provider] = true;
-  //     } catch (e) {
-  //         console.error(`Failed to test ${provider}:`, e);
-  //         testResults[provider] = false;
-  //     } finally {
-  //         isTesting[provider] = false;
-                <div class="">
-                  <button
-                    type="button"
-                    class={`btn btn-outline w-full justify-start gap-3 ${config.api_provider==='azure_openai' ? 'btn-active' : ''}`}
-<div class="">
-  <h4 class=""><i class=""></i>API Configuration</h4>
-  <div class="">
-    <fieldset>
-      <legend class="">API Provider</legend>
-                    <div class="">
-        <div class="">
+<div class="space-y-6">
+  <h4 class="text-lg font-semibold flex items-center gap-2">
+    <i class="fas fa-cog"></i>API Configuration
+  </h4>
+  <div class="form-control">
+    <fieldset class="border border-base-300 rounded-lg p-4">
+      <legend class="text-sm font-medium px-2">API Provider</legend>
+      <div class="grid grid-cols-1 gap-3">
+        <div class="form-control">
           <button
             type="button"
-            class=""
+            class={`btn btn-outline w-full justify-start gap-3 ${config.api_provider === "openai" ? "btn-active" : ""}`}
             onclick={() => {
               updateConfig("api_provider", "openai")
               onApiProviderChange()
             }}
           >
-            <div class="">
+            <div class="w-6 h-6">
               <svg
                 xmlns="http://www.w3.org/2000/svg"
-                width="48"
-                height="48"
-                viewBox="0 0 16 16"
-                <div class="">
-                  <button
-                    type="button"
-                    class={`btn btn-outline w-full justify-start gap-3 ${config.api_provider==='azure_translator' ? 'btn-active' : ''}`}
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="currentColor"
+              >
+                <path
+                  d="M22.2819 9.8211a5.9847 5.9847 0 0 0-.5157-4.9108 6.0462 6.0462 0 0 0-6.5098-2.9A6.0651 6.0651 0 0 0 4.9807 4.1818a5.9847 5.9847 0 0 0-3.9977 2.9 6.0462 6.0462 0 0 0 .7427 7.0966 5.98 5.98 0 0 0 .511 4.9107 6.051 6.051 0 0 0 6.5146 2.9001A5.9847 5.9847 0 0 0 13.2599 24a6.0557 6.0557 0 0 0 5.7718-4.2058 5.9894 5.9894 0 0 0 3.9977-2.9001 6.0557 6.0557 0 0 0-.7475-7.0729zm-9.022 12.6081a4.4755 4.4755 0 0 1-2.8764-1.0408l.1419-.0804 4.7783-2.7582a.7948.7948 0 0 0 .3927-.6813v-6.7369l2.02 1.1686a.071.071 0 0 1 .038.052v5.5826a4.504 4.504 0 0 1-4.4945 4.4944zm-9.6607-4.1254a4.4708 4.4708 0 0 1-.5346-3.0137l.142.0852 4.783 2.7582a.7712.7712 0 0 0 .7806 0l5.8428-3.3685v2.3324a.0804.0804 0 0 1-.0332.0615L9.74 19.9502a4.4992 4.4992 0 0 1-6.1408-1.6464zM2.3408 7.8956a4.485 4.485 0 0 1 2.3655-1.9728V11.6a.7664.7664 0 0 0 .3879.6765l5.8144 3.3543-2.0201 1.1685a.0757.0757 0 0 1-.071 0l-4.8303-2.7865A4.504 4.504 0 0 1 2.3408 7.872zm16.5963 3.8558L13.1038 8.364 15.1192 7.2a.0757.0757 0 0 1 .071 0l4.8303 2.7913a4.4944 4.4944 0 0 1-.6765 8.1042v-5.6772a.79.79 0 0 0-.407-.667zm2.0107-3.0231l-.142-.0852-4.7735-2.7818a.7759.7759 0 0 0-.7854 0L9.409 9.2297V6.8974a.0662.0662 0 0 1 .0284-.0615l4.8303-2.7866a4.4992 4.4992 0 0 1 6.6802 4.66zM8.3065 12.863l-2.02-1.1638a.0804.0804 0 0 1-.038-.0567V6.0742a4.4992 4.4992 0 0 1 7.3757-3.4537l-.142.0805L8.704 5.459a.7948.7948 0 0 0-.3927.6813zm1.0976-2.3654l2.602-1.4998 2.6069 1.4998v2.9994l-2.5974 1.4997-2.6067-1.4997Z"
+                ></path>
               </svg>
             </div>
             <div>OpenAI</div>
           </button>
         </div>
-                    <div class="">
-        <div class="">
+        <div class="form-control">
           <button
             type="button"
-            class=""
+            class={`btn btn-outline w-full justify-start gap-3 ${config.api_provider === "azure_openai" ? "btn-active" : ""}`}
             onclick={() => {
               updateConfig("api_provider", "azure_openai")
               onApiProviderChange()
             }}
           >
-            <div class="">
+            <div class="w-6 h-6">
               <svg
                 xmlns="http://www.w3.org/2000/svg"
-                width="48"
-                height="48"
+                width="24"
+                height="24"
                 viewBox="0 0 16 16"
                 fill="currentColor"
               >
@@ -127,20 +109,20 @@
           </button>
         </div>
 
-        <div class="">
+        <div class="form-control">
           <button
             type="button"
-            class=""
+            class={`btn btn-outline w-full justify-start gap-3 ${config.api_provider === "azure_translator" ? "btn-active" : ""}`}
             onclick={() => {
               updateConfig("api_provider", "azure_translator")
               onApiProviderChange()
             }}
           >
-            <div class="">
+            <div class="w-6 h-6">
               <svg
                 xmlns="http://www.w3.org/2000/svg"
-                width="48"
-                height="48"
+                width="24"
+                height="24"
                 fill="currentColor"
                 viewBox="0 0 64 64"
               >
@@ -154,20 +136,20 @@
           </button>
         </div>
 
-        <div class="">
+        <div class="form-control">
           <button
             type="button"
-            class={`btn btn-outline w-full justify-start gap-3 ${config.api_provider==='ollama' ? 'btn-active' : ''}`}
+            class={`btn btn-outline w-full justify-start gap-3 ${config.api_provider === "ollama" ? "btn-active" : ""}`}
             onclick={() => {
               updateConfig("api_provider", "ollama")
               onApiProviderChange()
             }}
           >
-            <div class="">
+            <div class="w-6 h-6">
               <svg
                 xmlns="http://www.w3.org/2000/svg"
-                width="48"
-                height="48"
+                width="24"
+                height="24"
                 viewBox="0 0 24 24"
                 fill="currentColor"
                 fill-rule="evenodd"
@@ -185,13 +167,12 @@
   </div>
 
   {#if config.api_provider === "openai"}
-    <div class="">
-      <label for="openai-key" class=""><span class="">OpenAI API Key</span></label>
-      <div class="">
+    <div>
+      <label for="openai-key"><span>OpenAI API Key</span></label>
+      <div>
         <input
           id="openai-key"
           type="password"
-          class=""
           value={config.openai_api_key}
           placeholder="sk-..."
           onblur={validateApiKey}
@@ -201,28 +182,25 @@
               (e.target as HTMLInputElement).value
             )}
         />
-        <span class="">
+        <span>
           {#if isValidatingApiKey}
-            <span class=""></span>
+            <span></span>
           {:else if apiKeyValid === true}
-            <span class="">✓</span>
+            <span>✓</span>
           {:else if apiKeyValid === false}
-            <span class="">✕</span>
+            <span>✕</span>
           {:else}
-            <span class="">?</span>
+            <span>?</span>
           {/if}
         </span>
       </div>
     </div>
   {:else if config.api_provider === "azure_openai"}
-    <div class="">
-      <label for="azure-endpoint" class=""
-        >Azure OpenAI Endpoint</label
-      >
+    <div>
+      <label for="azure-endpoint">Azure OpenAI Endpoint</label>
       <input
         id="azure-endpoint"
         type="url"
-        class=""
         value={config.azure_endpoint}
         placeholder="Paste your full Azure OpenAI endpoint URL here..."
         onblur={validateApiKey}
@@ -231,7 +209,7 @@
           onAzureEndpointChange()
         }}
       />
-      <div class="">
+      <div>
         Paste the complete endpoint URL from Azure portal. Supported formats:
         <br />
         •
@@ -245,8 +223,7 @@
       </div>
 
       {#if azureEndpointInfo?.isValid}
-        <div class="">
-          <i class=""></i>
+        <div>
           <div>
             <strong>Auto-detected:</strong>
             {azureEndpointInfo.type} endpoint
@@ -259,8 +236,7 @@
           </div>
         </div>
       {:else if azureEndpointInfo?.isValid === false}
-        <div class="">
-          <i class=""></i>
+        <div>
           <div>
             <strong>Invalid endpoint format.</strong> Please use a valid Azure OpenAI
             endpoint URL.
@@ -269,41 +245,29 @@
       {/if}
     </div>
 
-    <div class="">
-      <label for="azure-key" class="">Azure API Key</label>
-      <div class="">
+    <div>
+      <label for="azure-key">Azure API Key</label>
+      <div>
         <input
           id="azure-key"
           type="password"
-          class=""
           value={config.azure_api_key}
           placeholder="Your Azure API key"
           onblur={validateApiKey}
           oninput={(e) =>
             updateConfig("azure_api_key", (e.target as HTMLInputElement).value)}
         />
-        <span class="">
-          {#if isValidatingApiKey}
-            <i class=""></i>
-          {:else if apiKeyValid === true}
-            <i class=""></i>
-          {:else if apiKeyValid === false}
-            <i class=""></i>
-          {:else}
-            <i class=""></i>
-          {/if}
+        <span>
+          {#if isValidatingApiKey}{:else if apiKeyValid === true}{:else if apiKeyValid === false}{:else}{/if}
         </span>
       </div>
     </div>
-    <div class="">
-      <div class="">
-        <label for="azure-deployment" class=""
-          >Azure Deployment Name</label
-        >
+    <div>
+      <div>
+        <label for="azure-deployment">Azure Deployment Name</label>
         <input
           id="azure-deployment"
           type="text"
-          class=""
           value={config.azure_deployment_name}
           placeholder="gpt-4"
           oninput={(e) =>
@@ -313,14 +277,11 @@
             )}
         />
       </div>
-      <div class="">
-        <label for="azure-api-version" class=""
-          >Azure API Version</label
-        >
+      <div>
+        <label for="azure-api-version">Azure API Version</label>
         <input
           id="azure-api-version"
           type="text"
-          class=""
           value={config.azure_api_version}
           placeholder="2025-01-01-preview"
           oninput={(e) =>
@@ -329,20 +290,17 @@
               (e.target as HTMLInputElement).value
             )}
         />
-        <div class="">
+        <div>
           API version for Azure OpenAI requests (e.g., 2025-01-01-preview)
         </div>
       </div>
     </div>
   {:else if config.api_provider === "azure_translator"}
-    <div class="">
-      <label for="azure-translator-endpoint" class=""
-        >Azure Translator Endpoint</label
-      >
+    <div>
+      <label for="azure-translator-endpoint">Azure Translator Endpoint</label>
       <input
         id="azure-translator-endpoint"
         type="url"
-        class=""
         value={config.azure_translator_endpoint}
         placeholder="https://api.cognitive.microsofttranslator.com"
         onblur={validateApiKey}
@@ -352,20 +310,17 @@
             (e.target as HTMLInputElement).value
           )}
       />
-      <div class="">
+      <div>
         Azure Translator Service endpoint URL. Default is the global endpoint.
       </div>
     </div>
 
-    <div class="">
-      <label for="azure-translator-key" class=""
-        >Azure Translator API Key</label
-      >
-      <div class="">
+    <div>
+      <label for="azure-translator-key">Azure Translator API Key</label>
+      <div>
         <input
           id="azure-translator-key"
           type="password"
-          class=""
           value={config.azure_translator_api_key}
           placeholder="Your Azure Translator API key"
           onblur={validateApiKey}
@@ -375,32 +330,21 @@
               (e.target as HTMLInputElement).value
             )}
         />
-        <span class="">
-          {#if isValidatingApiKey}
-            <i class=""></i>
-          {:else if apiKeyValid === true}
-            <i class=""></i>
-          {:else if apiKeyValid === false}
-            <i class=""></i>
-          {:else}
-            <i class=""></i>
-          {/if}
+        <span>
+          {#if isValidatingApiKey}{:else if apiKeyValid === true}{:else if apiKeyValid === false}{:else}{/if}
         </span>
       </div>
-      <div class="">
+      <div>
         Get your API key from the Azure portal under your Translator resource's
         "Keys and Endpoint" section.
       </div>
     </div>
 
-    <div class="">
-      <label for="azure-translator-region" class=""
-        >Azure Translator Region</label
-      >
+    <div>
+      <label for="azure-translator-region">Azure Translator Region</label>
       <input
         id="azure-translator-region"
         type="text"
-        class=""
         value={config.azure_translator_region}
         placeholder="e.g., eastus, westus2, uksouth"
         onblur={validateApiKey}
@@ -410,7 +354,7 @@
             (e.target as HTMLInputElement).value
           )}
       />
-      <div class="">
+      <div>
         Azure region where your Translator resource is located. Required for
         multi-service or regional resources. Optional for global single-service
         resources. Find this in the Azure portal under "Keys and Endpoint".
@@ -418,14 +362,12 @@
     </div>
 
     <!-- Fallback Provider for Alternative Translations -->
-    <div class="">
-      <label for="alternatives-fallback" class="">
-        <i class=""></i>
+    <div>
+      <label for="alternatives-fallback">
         Alternative Translations Fallback Provider
       </label>
       <select
         id="alternatives-fallback"
-        class=""
         value={config.alternatives_fallback_provider || ""}
         onchange={(e) =>
           updateConfig(
@@ -437,12 +379,12 @@
         {#if getAvailableFallbackModels().length === 0}
           <option value="" disabled>No configured models available</option>
         {:else}
-          {#each getAvailableFallbackModels() as model}
+          {#each getAvailableFallbackModels() as model (model.value)}
             <option value={model.value}>{model.label}</option>
           {/each}
         {/if}
       </select>
-      <div class="">
+      <div>
         Azure Translator cannot generate alternative translations by itself.
         Configure a fallback AI model to enable alternative translations when
         using Azure Translator. Only models that you have configured and enabled
@@ -454,32 +396,23 @@
       </div>
     </div>
   {:else if config.api_provider === "ollama"}
-    <div class="">
-      <label for="ollama-url" class="">Ollama Server URL</label>
-      <div class="">
+    <div>
+      <label for="ollama-url">Ollama Server URL</label>
+      <div>
         <input
           id="ollama-url"
           type="text"
-          class=""
           value={config.ollama_url || "http://localhost:11434"}
           placeholder="http://localhost:11434"
           onblur={validateApiKey}
           oninput={(e) =>
             updateConfig("ollama_url", (e.target as HTMLInputElement).value)}
         />
-        <span class="">
-          {#if isValidatingApiKey}
-            <i class=""></i>
-          {:else if apiKeyValid === true}
-            <i class=""></i>
-          {:else if apiKeyValid === false}
-            <i class=""></i>
-          {:else}
-            <i class=""></i>
-          {/if}
+        <span>
+          {#if isValidatingApiKey}{:else if apiKeyValid === true}{:else if apiKeyValid === false}{:else}{/if}
         </span>
       </div>
-      <div class="">
+      <div>
         URL of your Ollama server. Make sure Ollama is running locally or
         provide the remote server URL.
       </div>
@@ -487,6 +420,4 @@
   {/if}
 </div>
 
-<style>
-  /* CSS goes in /src/styles.css */
-</style>
+<!-- Custom CSS goes in /src/styles.css -->

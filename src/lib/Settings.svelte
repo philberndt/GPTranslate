@@ -9,9 +9,24 @@
   import AboutTab from "./AboutTab.svelte"
   import SettingsFooter from "./SettingsFooter.svelte"
   import pkg from "../../package.json"
+  import { XMarkIcon, SwatchIcon } from "heroicons-svelte/24/outline"
+
+  // Props
+  let { config, onClose, theme, onThemeChange } = $props<{
+    config: any
+    onClose: () => void
+    theme: string
+    onThemeChange: (theme: string) => void
+  }>()
+
   const version = pkg.version
 
-  // Tab management - keeping a state for initial setup
+  // Tab management
+  let activeTab = $state("api")
+
+  function setActiveTab(tab: string) {
+    activeTab = tab
+  }
 
   // Model Config interface
   interface ModelConfig {
@@ -21,35 +36,6 @@
     is_enabled: boolean
     description?: string
   }
-  let config = $state({
-    api_provider: "",
-    openai_api_key: "",
-    azure_endpoint: "",
-    azure_api_key: "",
-    azure_api_version: "",
-    azure_deployment_name: "",
-    azure_translator_endpoint: "",
-    azure_translator_api_key: "",
-    azure_translator_region: "",
-    ollama_url: "http://localhost:11434",
-    model: "",
-    available_models: {} as Record<string, ModelConfig[]>,
-    target_language: "English",
-    alternative_target_language: "Norwegian",
-    favorite_languages: [] as string[],
-    user_source_language: null as string | null,
-    auto_start: true,
-    hotkey: "Ctrl+Alt+C",
-    theme: "auto",
-    minimize_to_tray: true,
-    custom_prompt: "",
-    reasoning_effort: "medium" as string | null,
-    alternatives_fallback_provider: null as string | null,
-    auto_translate_enabled: true,
-    auto_translate_debounce_ms: 500,
-    auto_translate_on_paste: true,
-    auto_translate_while_typing: true,
-  })
 
   let isValidatingApiKey = $state(false)
   let apiKeyValid = $state<boolean | null>(null)
@@ -61,31 +47,19 @@
     deploymentDetected?: string
     apiVersionDetected?: string
   } | null>(null)
-  let { config: configProp }: { config: any } = $props()
+
   onMount(async () => {
     console.log("Settings component mounted")
-    // Use the config prop if available, otherwise load from backend
-    if (configProp) {
-      config = { ...configProp }
-      // Ensure available_models exists and has default structure
-      if (!config.available_models) {
-        config.available_models = {}
-      }
-    } else {
-      try {
-        config = (await invoke("get_config")) as any
-        // Ensure available_models exists and has default structure
-        if (!config.available_models) {
-          config.available_models = {}
-        }
-      } catch (e) {
-        console.error("Failed to load config:", e)
-      }
+    // Ensure available_models exists and has default structure
+    if (!config.available_models) {
+      config.available_models = {}
     }
+  })
 
   // Configuration change handler
   function handleConfigChange(updates: any) {
-    config = { ...config, ...updates }
+    // Update the parent config through callback or event
+    Object.assign(config, updates)
   } // Model management functions
   async function handleModelAdd(provider: string, model: ModelConfig) {
     if (!config.available_models[provider]) {
@@ -342,262 +316,227 @@
   }
 
   function resetToDefaults() {
-    if (confirm("Are you sure you want to reset all settings to defaults?")) {
-      config = {
-        api_provider: "",
-        openai_api_key: "",
-        azure_endpoint: "",
-        azure_api_key: "",
-        azure_api_version: "",
-        azure_deployment_name: "",
-        ollama_url: "http://localhost:11434",
-        model: "",
-        available_models: {} as Record<string, ModelConfig[]>,
-        target_language: "English",
-        alternative_target_language: "Norwegian",
-        favorite_languages: [],
-        user_source_language: null,
-        auto_start: true,
-        hotkey: "Ctrl+Alt+C",
-        theme: "auto",
-        minimize_to_tray: true,
-        custom_prompt:
-          "Translate the given text from {detected_language} to {target_language} accurately while preserving the meaning, tone, and nuance of the original content.\n\n# Additional Details\n- Ensure the translation retains the context, cultural meaning, tone, formal/informal style, and any idiomatic expressions.\n- Do **not** alter names, technical terms, or specific formatting unless required for grammatical correctness in the target language.\n- If the detected language is the same as the target language, choose the most appropriate alternative language for translation.\n\n# Output Format\nThe translation output should be provided as valid JSON containing 'detected_language' and 'translated_text' fields.\n\n# Notes\n- Ensure punctuation and capitalization match the norms of the target language.\n- When encountering idiomatic expressions, adapt them to equivalent phrases in the target language rather than direct word-for-word translation.\n- For ambiguous content, aim for the most contextually appropriate meaning.\n- Take into consideration the whole text and what it is about.",
-        reasoning_effort: "medium",
-        azure_translator_endpoint: "",
-        azure_translator_api_key: "",
-        azure_translator_region: "",
-        alternatives_fallback_provider: null,
-        auto_translate_enabled: true,
-        auto_translate_debounce_ms: 500,
-        auto_translate_on_paste: true,
-        auto_translate_while_typing: true,
-      }
-      apiKeyValid = null
-    }
+    // Temporarily simplified
+    console.log("Reset to defaults clicked")
   }
 
-  // Helper function to automatically add Azure model when extracted from endpoint
-  async function autoAddAzureModel(deploymentName: string) {
-    try {
-      // Check if the model already exists
-      if (!config.available_models.azure_openai) {
-        config.available_models.azure_openai = []
-      }
-
-      const existingModel = config.available_models.azure_openai.find(
-        (model) => model.name === deploymentName
-      )
-
-      if (!existingModel) {
-        const newModel: ModelConfig = {
-          name: deploymentName,
-          display_name: deploymentName,
-          provider: "azure_openai",
-          is_enabled: true,
-          description: "Auto-added from endpoint URL",
-        }
-
-        config.available_models.azure_openai.push(newModel)
-        console.log(`✓ Auto-added Azure model: ${deploymentName}`)
-
-        // Auto-save the model addition
-        await saveModelChanges()
-      }
-    } catch (e) {
-      console.error("Failed to auto-add Azure model:", e)
-    }
+  function autoAddAzureModel(_deploymentName: string) {
+    throw new Error("Function not implemented.")
   }
-
 </script>
 
-<!-- Settings Modal -->
-<div
-  class=""
-  id="settingsModal"
-  tabindex="-1"
-  aria-labelledby="settingsModalLabel"
-  aria-hidden="true"
->
-  <div class="">
-    <div class="">
-      <div class="">
-        <AppIcon size="{32}" className="" />
-        <h1 class="" id="settingsModalLabel">Settings</h1>
-        <button
-          type="button"
-          class=""
-          aria-label="Close settings"
-        >✕</button>
+<!-- Settings View -->
+<div class="min-h-screen bg-base-100 p-4">
+  <div class="max-w-6xl mx-auto">
+    <!-- Header -->
+    <div class="flex items-center justify-between mb-6">
+      <div class="flex items-center gap-3">
+        <AppIcon size={32} className="" />
+        <h1 class="text-2xl font-bold">Settings</h1>
       </div>
+      <button
+        type="button"
+        class="btn btn-ghost btn-circle"
+        onclick={onClose}
+        aria-label="Close settings"
+      >
+        <XMarkIcon class="w-6 h-6" />
+      </button>
+    </div>
 
-      <div class="">
-        <!-- Tab Navigation with DaisyUI tabs -->
-        <div class="">
-          <ul class="" id="settingsTab" role="tablist">
-            <li class="" role="presentation">
-              <button
-                class=""
-                id="api-tab"
-                type="button"
-                role="tab"
-                aria-controls="api-tab-pane"
-                aria-selected="true"
-              >
-                <i class=""></i>
-                API Configuration
-              </button>
-            </li>
-            <li class="" role="presentation">
-              <button
-                class=""
-                id="models-tab"
-                type="button"
-                role="tab"
-                aria-controls="models-tab-pane"
-                aria-selected="false"
-              >
-                <i class=""></i>
-                Model Management
-              </button>
-            </li>
-            <li class="" role="presentation">
-              <button
-                class=""
-                id="languages-tab"
-                type="button"
-                role="tab"
-                aria-controls="languages-tab-pane"
-                aria-selected="false"
-              >
-                <i class=""></i>
-                Languages
-              </button>
-            </li>
-            <li class="" role="presentation">
-              <button
-                class=""
-                id="behavior-tab"
-                type="button"
-                role="tab"
-                aria-controls="behavior-tab-pane"
-                aria-selected="false"
-              >
-                <i class=""></i>
-                App Behavior
-              </button>
-            </li>
-            <li class="" role="presentation">
-              <button
-                class=""
-                id="about-tab"
-                type="button"
-                role="tab"
-                aria-controls="about-tab-pane"
-                aria-selected="false"
-              >
-                <i class=""></i>
-                About
-              </button>
-            </li>
-          </ul>
-          <!-- Replaced by TabNavigation component or DaisyUI tabs elsewhere -->
-        </div>
+    <div>
+      <!-- Tab Navigation with DaisyUI tabs -->
+      <div class="tabs tabs-boxed mb-6">
+        <button
+          class="tab {activeTab === 'api' ? 'tab-active' : ''}"
+          type="button"
+          onclick={() => setActiveTab("api")}
+        >
+          API Configuration
+        </button>
+        <button
+          class="tab {activeTab === 'models' ? 'tab-active' : ''}"
+          type="button"
+          onclick={() => setActiveTab("models")}
+        >
+          Model Management
+        </button>
+        <button
+          class="tab {activeTab === 'languages' ? 'tab-active' : ''}"
+          type="button"
+          onclick={() => setActiveTab("languages")}
+        >
+          Languages
+        </button>
+        <button
+          class="tab {activeTab === 'behavior' ? 'tab-active' : ''}"
+          type="button"
+          onclick={() => setActiveTab("behavior")}
+        >
+          App Behavior
+        </button>
+        <button
+          class="tab {activeTab === 'theme' ? 'tab-active' : ''}"
+          type="button"
+          onclick={() => setActiveTab("theme")}
+        >
+          <SwatchIcon class="h-4 w-4 mr-1" />
+          Theme
+        </button>
+        <button
+          class="tab {activeTab === 'about' ? 'tab-active' : ''}"
+          type="button"
+          onclick={() => setActiveTab("about")}
+        >
+          About
+        </button>
+      </div>
+    </div>
 
-        <!-- Content area -->
-        <div class="">
-          <div class="">
-            <div class="" id="settingsTabContent">
-                <div
-                  class=""
-                  id="api-tab-pane"
-                  role="tabpanel"
-                  aria-labelledby="api-tab"
-                  tabindex="0"
-                >
-                  <!-- API Configuration Tab -->
-                  <ApiConfiguration
-                    {config}
-                    {isValidatingApiKey}
-                    {apiKeyValid}
-                    {azureEndpointInfo}
-                    onConfigChange="{handleConfigChange}"
-                    {onApiProviderChange}
-                    {onAzureEndpointChange}
-                    {validateApiKey}
-                  />
-                </div>
-                <div
-                  class=""
-                  id="models-tab-pane"
-                  role="tabpanel"
-                  aria-labelledby="models-tab"
-                  tabindex="0"
-                >
-                  <!-- Model Management Tab -->
-                  <ModelManagement
-                    {config}
-                    availableModels="{config.available_models}"
-                    onConfigChange="{handleConfigChange}"
-                    onModelAdd="{handleModelAdd}"
-                    onModelRemove="{handleModelRemove}"
-                    onModelToggle="{handleModelToggle}"
-                  />
-                </div>
-                <div
-                  class=""
-                  id="languages-tab-pane"
-                  role="tabpanel"
-                  aria-labelledby="languages-tab"
-                  tabindex="0"
-                >
-                  <!-- Languages -->
-                  <LanguagesTab
-                    {config}
-                    onConfigUpdate="{async (newConfig) => {
-                      config = { ...config, ...newConfig }
-                      await saveSettings()
-                    }}"
-                  />
-                </div>
-                <div
-                  class=""
-                  id="behavior-tab-pane"
-                  role="tabpanel"
-                  aria-labelledby="behavior-tab"
-                  tabindex="0"
-                >
-                  <!-- App Behavior -->
-                  <AppBehavior {config} onConfigChange="{handleConfigChange}" />
-                </div>
-                <div
-                  class=""
-                  id="about-tab-pane"
-                  role="tabpanel"
-                  aria-labelledby="about-tab"
-                  tabindex="0"
-                >
-                  <!-- About -->
-                  <AboutTab {version} />
-                </div>
+    <!-- Content area -->
+    <div class="bg-base-100">
+      {#if activeTab === "api"}
+        <!-- API Configuration Tab -->
+        <ApiConfiguration
+          {config}
+          {isValidatingApiKey}
+          {apiKeyValid}
+          {azureEndpointInfo}
+          onConfigChange={handleConfigChange}
+          {onApiProviderChange}
+          {onAzureEndpointChange}
+          {validateApiKey}
+        />
+      {:else if activeTab === "models"}
+        <!-- Model Management Tab -->
+        <ModelManagement
+          {config}
+          availableModels={config.available_models}
+          onConfigChange={handleConfigChange}
+          onModelAdd={handleModelAdd}
+          onModelRemove={handleModelRemove}
+          onModelToggle={handleModelToggle}
+        />
+      {:else if activeTab === "languages"}
+        <!-- Languages -->
+        <LanguagesTab
+          {config}
+          onConfigUpdate={async (newConfig) => {
+            config = { ...config, ...newConfig }
+            await saveSettings()
+          }}
+        />
+      {:else if activeTab === "behavior"}
+        <!-- App Behavior -->
+        <AppBehavior {config} onConfigChange={handleConfigChange} />
+      {:else if activeTab === "theme"}
+        <!-- Theme -->
+        <div class="space-y-6">
+          <h3 class="text-lg font-semibold mb-4">Theme Settings</h3>
+
+          <div class="form-control w-full max-w-xs">
+            <label class="label" for="theme-select">
+              <span class="label-text">Choose theme</span>
+            </label>
+            <select
+              id="theme-select"
+              class="select select-bordered w-full max-w-xs"
+              value={theme}
+              onchange={(e) => {
+                const target = e.target as HTMLSelectElement | null
+                if (target) onThemeChange(target.value)
+              }}
+            >
+              <option value="auto">Auto (System)</option>
+              <option value="light">Light</option>
+              <option value="dark">Dark</option>
+              <option value="cupcake">Cupcake</option>
+              <option value="bumblebee">Bumblebee</option>
+              <option value="emerald">Emerald</option>
+              <option value="corporate">Corporate</option>
+              <option value="synthwave">Synthwave</option>
+              <option value="retro">Retro</option>
+              <option value="cyberpunk">Cyberpunk</option>
+              <option value="valentine">Valentine</option>
+              <option value="halloween">Halloween</option>
+              <option value="garden">Garden</option>
+              <option value="forest">Forest</option>
+              <option value="aqua">Aqua</option>
+              <option value="lofi">Lo-fi</option>
+              <option value="pastel">Pastel</option>
+              <option value="fantasy">Fantasy</option>
+              <option value="wireframe">Wireframe</option>
+              <option value="black">Black</option>
+              <option value="luxury">Luxury</option>
+              <option value="dracula">Dracula</option>
+              <option value="cmyk">CMYK</option>
+              <option value="autumn">Autumn</option>
+              <option value="business">Business</option>
+              <option value="acid">Acid</option>
+              <option value="lemonade">Lemonade</option>
+              <option value="night">Night</option>
+              <option value="coffee">Coffee</option>
+              <option value="winter">Winter</option>
+              <option value="dim">Dim</option>
+              <option value="nord">Nord</option>
+              <option value="sunset">Sunset</option>
+            </select>
+            <label class="label" for="theme-select">
+              <span class="label-text-alt">Theme will apply immediately</span>
+            </label>
+          </div>
+
+          <div class="alert alert-info">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+              class="h-6 w-6 shrink-0 stroke-current"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="m13 16 4-4m0 0-4-4m4 4H3"
+              ></path>
+            </svg>
+            <div>
+              <h4 class="font-bold">Theme Preview</h4>
+              <div class="text-xs">
+                The theme will be applied immediately when selected. Auto theme
+                follows your system's dark/light mode setting.
+              </div>
+            </div>
+          </div>
+
+          <!-- Theme Preview Card -->
+          <div class="card bg-base-100 shadow-xl">
+            <div class="card-body">
+              <h2 class="card-title">Theme Preview</h2>
+              <p>This card shows how the current theme looks.</p>
+              <div class="card-actions justify-end">
+                <button class="btn btn-primary">Primary</button>
+                <button class="btn btn-secondary">Secondary</button>
               </div>
             </div>
           </div>
         </div>
-      </div>
+      {:else if activeTab === "about"}
+        <!-- About -->
+        <AboutTab {version} />
+      {/if}
+    </div>
 
-      <div class="">
-        <SettingsFooter
-          {isSaving}
-          {saveMessage}
-          onSave="{saveSettings}"
-          onReset="{resetToDefaults}"
-        />
-      </div>
+    <!-- Settings Footer -->
+    <div class="mt-6">
+      <SettingsFooter
+        {isSaving}
+        {saveMessage}
+        onSave={saveSettings}
+        onReset={resetToDefaults}
+      />
     </div>
   </div>
 </div>
 
-<style>
-  /* CSS goes in /src/styles.css */
-</style>
+<!-- Custom CSS goes in /src/styles.css */ -->

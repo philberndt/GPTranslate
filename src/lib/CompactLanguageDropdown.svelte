@@ -43,9 +43,9 @@
   }
 </script>
 
-<div class="">
+<div class="form-control w-full max-w-xs">
   <select
-    class=""
+    class="select select-bordered select-sm w-full"
     value={selectedLanguage.code}
     onchange={handleLanguageChange}
     {disabled}
@@ -63,6 +63,4 @@
   </select>
 </div>
 
-<style>
-  /* CSS goes in /src/styles.css */
-</style>
+<!-- Custom CSS goes in /src/styles.css */ -->

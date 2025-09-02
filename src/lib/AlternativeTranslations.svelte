@@ -2,6 +2,13 @@
   import { invoke } from "./tauri"
   import { onMount } from "svelte"
 
+  // Import Heroicons
+  import {
+    LanguageIcon,
+    XMarkIcon,
+    ExclamationTriangleIcon,
+  } from "heroicons-svelte/24/outline"
+
   // Props
   interface Props {
     translatedText: string
@@ -192,7 +199,7 @@
 <!-- Translated text area with selection support -->
 <div
   bind:this={translatedTextElement}
-  class=""
+  class="textarea textarea-bordered textarea-lg w-full h-48 resize-none cursor-text p-4 whitespace-pre-wrap"
   role="textbox"
   aria-readonly="true"
   tabindex="0"
@@ -202,37 +209,41 @@
       {#if i > 0}<br />{/if}{line}
     {/each}
   {:else}
-    <span class="">Translation will appear here...</span>
+    <span class="text-base-content/60 italic"
+      >Translation will appear here...</span
+    >
   {/if}
 </div>
 
 <!-- Alternative translations popup -->
 {#if showPopup}
-  <div bind:this={popupElement} class="">
-    <div class="">
-      <div class="">
-        <h6 class="">
-          <i class=""></i>
-          Alternative Translations
-        </h6>
+  <div
+    bind:this={popupElement}
+    class="card bg-base-100 shadow-2xl border border-base-300 w-80 fixed z-50"
+    style="left: {popupPosition.x}px; top: {popupPosition.y}px;"
+  >
+    <div class="card-body p-4">
+      <div class="card-title text-base">
+        <LanguageIcon class="w-5 h-5" />
+        Alternative Translations
       </div>
-      <div class="">
+      <div class="space-y-3">
         {#if isLoading}
-          <div class="">
-            <div class="" role="status">
-              <span class="">Loading alternatives...</span>
+          <div class="flex items-center gap-3">
+            <div class="loading loading-spinner loading-sm" role="status">
+              <span class="sr-only">Loading alternatives...</span>
             </div>
-            <div class="">Finding alternatives...</div>
+            <div class="text-sm">Finding alternatives...</div>
           </div>
         {:else if alternatives.length > 0}
-          <div class="">
+          <div class="text-sm text-base-content/70">
             Click to replace "{selectedText}":
           </div>
-          <div class="">
+          <div class="space-y-2 max-h-40 overflow-y-auto">
             {#each alternatives as alternative, index (index)}
               <button
                 type="button"
-                class=""
+                class="btn btn-outline btn-sm w-full text-left justify-start"
                 onclick={() => replaceWithAlternative(alternative)}
                 title="Click to replace with this alternative"
               >
@@ -241,21 +252,20 @@
             {/each}
           </div>
         {:else}
-          <div class="">
-            <i class=""></i>
-            <div class="">No alternatives found</div>
+          <div class="flex items-center gap-3 text-warning">
+            <ExclamationTriangleIcon class="w-5 h-5" />
+            <div class="text-sm">No alternatives found</div>
           </div>
         {/if}
       </div>
-      <div class="">
-        <button type="button" class="" onclick={hidePopup}>
-          <i class=""></i> Close
+      <div class="card-actions justify-end pt-2">
+        <button type="button" class="btn btn-ghost btn-sm" onclick={hidePopup}>
+          <XMarkIcon class="w-4 h-4" />
+          Close
         </button>
       </div>
     </div>
   </div>
 {/if}
 
-<style>
-  /* CSS goes in /src/styles.css */
-</style>
+<!-- Custom CSS goes in /src/styles.css */ -->

@@ -1,5 +1,8 @@
 use crate::config::Config;
 use crate::provider_factory::create_provider;
+use crate::trans_openai::OpenAITranslationService;
+use crate::trans_azure::AzureOpenAITranslationService;
+use crate::trans_ollama::OllamaTranslationService;
 use anyhow::Result;
 use async_trait::async_trait;
 use lazy_static::lazy_static;

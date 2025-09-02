@@ -83,22 +83,16 @@
   }
 </script>
 
-<div class="">
-  <hr class="" />
+<div>
+  <hr />
 
-  <h5 class="">
-    <i class=""></i>
-    Favorite Languages
-  </h5>
+  <h5>Favorite Languages</h5>
 
   <!-- Always visible Add Favorite Language section -->
-  <div class="">
-    <h6 class="">
-      <i class=""></i>
-      Add Favorite Language
-    </h6>
-    <div class="">
-      <div class="">
+  <div>
+    <h6>Add Favorite Language</h6>
+    <div>
+      <div>
         <LanguageDropdown
           selectedLanguage={selectedLanguageForAdd}
           favoriteLanguages={[]}
@@ -108,16 +102,14 @@
           placeholder="Add a favorite language..."
         />
       </div>
-      <div class="">
+      <div>
         <button
           type="button"
-          class=""
           onclick={handleAddButtonClick}
           disabled={disabled ||
             !selectedLanguageForAdd.code ||
             favoriteLanguageCodes.includes(selectedLanguageForAdd.code)}
         >
-          <i class=""></i>
           Add
         </button>
       </div>
@@ -125,58 +117,51 @@
   </div>
 
   {#if favoriteLanguages.length === 0}
-    <div class="">
-      <i class=""></i>
-      <p class="">No favorite languages yet. Add some for quick access!</p>
+    <div>
+      <p>No favorite languages yet. Add some for quick access!</p>
     </div>
   {:else}
-    <div class="">
+    <div>
       {#each favoriteLanguages as language, index (language.code)}
-        <div class="" class:disabled>
-          <div class="">
-            <div class="">
-              <span class="">
+        <div class:disabled>
+          <div>
+            <div>
+              <span>
                 {LanguageManager.formatDisplayName(language)}
               </span>
               {#if LanguageManager.isCustomLanguage(language)}
-                <span class="">Custom</span>
+                <span>Custom</span>
               {/if}
             </div>
           </div>
 
-          <div class="">
-            <div class="" role="group">
+          <div>
+            <div role="group">
               <button
                 type="button"
-                class=""
                 onclick={() => moveUp(index)}
                 disabled={disabled || index === 0}
                 title="Move up"
                 aria-label="Move up"
               >
-                <i class=""></i>
               </button>
 
               <button
                 type="button"
-                class=""
                 onclick={() => moveDown(index)}
                 disabled={disabled || index === favoriteLanguages.length - 1}
                 title="Move down"
                 aria-label="Move down"
               >
-                <i class=""></i>
               </button>
 
               <button
                 type="button"
-                class=""
                 onclick={() => removeFavorite(language.code)}
                 {disabled}
                 title="Remove from favorites"
                 aria-label="Remove from favorites"
               >
-                <i class=""></i>
               </button>
             </div>
           </div>
@@ -184,16 +169,13 @@
       {/each}
     </div>
 
-    <div class="">
-      <small class="">
-        <i class=""></i>
-        Favorite languages appear first in language dropdowns for quick access. Use
-        the arrows to reorder them by preference.
+    <div>
+      <small>
+        Favorite languages appear first in language dropdowns for quick access.
+        Use the arrows to reorder them by preference.
       </small>
     </div>
   {/if}
 </div>
 
-<style>
-  /* CSS goes in /src/styles.css */
-</style>
+<!-- Custom CSS goes in /src/styles.css */ -->

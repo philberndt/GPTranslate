@@ -147,12 +147,11 @@
 
 <svelte:window onresize={handleWindowResize} />
 
-<div class="" class:disabled>
-  <div class="">
+<div class:disabled>
+  <div>
     <input
       bind:this={searchInput}
       type="text"
-      class=""
       value={displayValue}
       {placeholder}
       {disabled}
@@ -165,48 +164,40 @@
 
     <button
       type="button"
-      class=""
       onclick={openDropdown}
       {disabled}
       aria-label="Open language selector"
     >
-      <i class=""></i>
     </button>
   </div>
 
   {#if isOpen}
-    <div bind:this={dropdownElement} class="">
+    <div bind:this={dropdownElement}>
       {#if searchResults.length === 0 && !showCustomOption}
-        <div class="">
-          <i class=""></i>
-          No languages found
-        </div>
+        <div>No languages found</div>
       {:else}
         {#each searchResults as language, index (language.code)}
           <button
             type="button"
-            class=""
             class:active={index === selectedIndex}
             onclick={() => selectLanguage(language)}
           >
-            <div class="">
-              <div class="">{language.english_name}</div>
+            <div>
+              <div>{language.english_name}</div>
               {#if language.native_name !== language.english_name && language.code !== "auto"}
-                <div class="">{language.native_name}</div>
+                <div>{language.native_name}</div>
               {/if}
             </div>
           </button>
         {/each}
 
         {#if showCustomOption}
-          <div class=""></div>
+          <div></div>
           <button
             type="button"
-            class=""
             class:active={selectedIndex === searchResults.length}
             onclick={createCustomLanguage}
           >
-            <i class=""></i>
             Add "{searchQuery}" as custom language
           </button>
         {/if}
@@ -215,6 +206,4 @@
   {/if}
 </div>
 
-<style>
-  /* CSS goes in /src/styles.css */
-</style>
+<!-- Custom CSS goes in /src/styles.css */ -->

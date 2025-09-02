@@ -7,45 +7,32 @@
 </script>
 
 <!-- About Section -->
-<div class="">
-  <div class="">
-    <div class="">
-      <AppIcon size={56} className="" />
-      <h2 class="">GPTranslate</h2>
-      <span class="">v{version}</span>
-      <h4 class=""><i class=""></i>About</h4>
-
-      <div class="">
-        <div class="">
-          <div class="">
-            <strong class="">Developer:</strong>
-            <span>Phil Berndt</span>
-          </div>
-        </div>
-        <div class="">
-          <div class="">
-            <strong class="">Email:</strong>
-            <span>phil@berndt.no</span>
-          </div>
-        </div>
-        <div class="">
-          <div class="">
-            <strong class="">Website:</strong>
-            <a
-              href="https://gptranslate.berndt.no"
-              target="_blank"
-              rel="noopener noreferrer"
-              class=""
-            >
-              gptranslate.berndt.no
-            </a>
-          </div>
-        </div>
-      </div>
+<section class="flex flex-col items-center gap-4">
+  <AppIcon size={56} className="" />
+  <h2 class="text-2xl font-bold">GPTranslate</h2>
+  <span class="text-sm text-base-content/70">v{version}</span>
+  <h4 class="text-lg font-semibold mt-2">About</h4>
+  <div class="flex flex-col gap-2 mt-2">
+    <div>
+      <strong>Developer:</strong>
+      <span>Phil Berndt</span>
+    </div>
+    <div>
+      <strong>Email:</strong>
+      <span>phil@berndt.no</span>
+    </div>
+    <div>
+      <strong>Website:</strong>
+      <a
+        href="https://gptranslate.berndt.no"
+        target="_blank"
+        rel="noopener noreferrer"
+        class="link"
+      >
+        gptranslate.berndt.no
+      </a>
     </div>
   </div>
-</div>
+</section>
 
-<style>
-  /* CSS goes in /src/styles.css */
-</style>
+<!-- Custom CSS goes in /src/styles.css */ -->
