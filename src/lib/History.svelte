@@ -99,9 +99,7 @@
 </script>
 
 <div class="" data-theme={theme}>
-  <div
-    class=""
-  >
+  <div class="">
     <h4 class="">
       <i class=""></i>Translation History
     </h4>
@@ -139,10 +137,7 @@
     {#if isLoading}
       <div class="">
         <div class="">
-          <div
-            class=""
-            role="status"
-          ></div>
+          <div class="" role="status"></div>
           Loading history...
         </div>
       </div>
@@ -162,12 +157,9 @@
       <div class="">
         {#each history.entries as entry (entry.id)}
           <div class="">
-            <div
-              class=""
-            >
+            <div class="">
               <div class="">
-                <span class="">{entry.detected_language}</span
-                >
+                <span class="">{entry.detected_language}</span>
                 <i class=""></i>
                 <span class="">{entry.target_language}</span>
               </div>
@@ -189,9 +181,7 @@
             <div class="">
               <div class="">
                 <div class="">
-                  <div
-                    class=""
-                  >
+                  <div class="">
                     <h6 class="">Original</h6>
                     <button
                       class=""
@@ -202,10 +192,7 @@
                       <i class=""></i>
                     </button>
                   </div>
-                  <div
-                    class=""
-                    title={entry.original_text}
-                  >
+                  <div class="" title={entry.original_text}>
                     {#each truncateText(entry.original_text, 100).split("\n") as line, i (i)}
                       {#if i > 0}<br />{/if}{line}
                     {/each}
@@ -213,9 +200,7 @@
                 </div>
 
                 <div class="">
-                  <div
-                    class=""
-                  >
+                  <div class="">
                     <h6 class="">Translation</h6>
                     <button
                       class=""
@@ -226,10 +211,7 @@
                       <i class=""></i>
                     </button>
                   </div>
-                  <div
-                    class=""
-                    title={entry.translated_text}
-                  >
+                  <div class="" title={entry.translated_text}>
                     {#each truncateText(entry.translated_text, 100).split("\n") as line, i (i)}
                       {#if i > 0}<br />{/if}{line}
                     {/each}
@@ -245,5 +227,5 @@
 </div>
 
 <style>
-  /* CSS moved to /src/app.css */
+  /* CSS goes in /src/styles.css */
 </style>

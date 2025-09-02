@@ -127,9 +127,7 @@
   {#if favoriteLanguages.length === 0}
     <div class="">
       <i class=""></i>
-      <p class="">
-        No favorite languages yet. Add some for quick access!
-      </p>
+      <p class="">No favorite languages yet. Add some for quick access!</p>
     </div>
   {:else}
     <div class="">
@@ -197,5 +195,5 @@
 </div>
 
 <style>
-  /* CSS moved to /src/app.css */
+  /* CSS goes in /src/styles.css */
 </style>

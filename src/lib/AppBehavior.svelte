@@ -72,9 +72,7 @@
 
   <!-- Automatic Translation Settings -->
   <fieldset class="">
-    <legend class=""
-      ><i class=""></i>Automatic Translation</legend
-    >
+    <legend class=""><i class=""></i>Automatic Translation</legend>
     <div class="">
       <input
         id="auto-translate-enabled"
@@ -162,9 +160,7 @@
       onchange={(e) =>
         updateConfig("auto_start", (e.target as HTMLInputElement).checked)}
     />
-    <label class="" for="auto-start">
-      Start with Windows
-    </label>
+    <label class="" for="auto-start"> Start with Windows </label>
   </div>
 
   <div class="">
@@ -179,9 +175,7 @@
           (e.target as HTMLInputElement).checked
         )}
     />
-    <label class="" for="minimize-to-tray">
-      Minimize to system tray
-    </label>
+    <label class="" for="minimize-to-tray"> Minimize to system tray </label>
   </div>
 </div>
 
@@ -194,9 +188,7 @@
   </h4>
 
   <div class="">
-    <label for="custom-prompt" class=""
-      >Translation Instructions</label
-    >
+    <label for="custom-prompt" class="">Translation Instructions</label>
     <textarea
       id="custom-prompt"
       class=""
@@ -219,5 +211,5 @@
 </div>
 
 <style>
-  /* CSS moved to /src/app.css */
+  /* CSS goes in /src/styles.css */
 </style>

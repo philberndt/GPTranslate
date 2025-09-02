@@ -83,17 +83,6 @@
       }
     }
 
-    // Initialize Bootstrap tabs
-    const triggerTabList = document.querySelectorAll(
-      '#settingsTab button[data-bs-toggle="tab"]'
-    )
-    if (triggerTabList.length > 0) {
-      triggerTabList.forEach((triggerEl) => {
-        new Tab(triggerEl)
-      })
-    }
-  })
-
   // Configuration change handler
   function handleConfigChange(updates: any) {
     config = { ...config, ...updates }
@@ -420,7 +409,6 @@
     }
   }
 
-  // ...existing code...
 </script>
 
 <!-- Settings Modal -->
@@ -434,30 +422,23 @@
   <div class="">
     <div class="">
       <div class="">
-        <div class="">
-          <AppIcon size="{32}" className="me-3" />
-          <h1 class="" id="settingsModalLabel">
-            Settings
-          </h1>
-        </div>
+        <AppIcon size="{32}" className="" />
+        <h1 class="" id="settingsModalLabel">Settings</h1>
         <button
           type="button"
           class=""
-          data-bs-dismiss="modal"
           aria-label="Close settings"
-        ></button>
+        >✕</button>
       </div>
 
       <div class="">
-        <!-- Tab Navigation with darker background -->
+        <!-- Tab Navigation with DaisyUI tabs -->
         <div class="">
           <ul class="" id="settingsTab" role="tablist">
             <li class="" role="presentation">
               <button
                 class=""
                 id="api-tab"
-                data-bs-toggle="tab"
-                data-bs-target="#api-tab-pane"
                 type="button"
                 role="tab"
                 aria-controls="api-tab-pane"
@@ -471,8 +452,6 @@
               <button
                 class=""
                 id="models-tab"
-                data-bs-toggle="tab"
-                data-bs-target="#models-tab-pane"
                 type="button"
                 role="tab"
                 aria-controls="models-tab-pane"
@@ -486,8 +465,6 @@
               <button
                 class=""
                 id="languages-tab"
-                data-bs-toggle="tab"
-                data-bs-target="#languages-tab-pane"
                 type="button"
                 role="tab"
                 aria-controls="languages-tab-pane"
@@ -501,8 +478,6 @@
               <button
                 class=""
                 id="behavior-tab"
-                data-bs-toggle="tab"
-                data-bs-target="#behavior-tab-pane"
                 type="button"
                 role="tab"
                 aria-controls="behavior-tab-pane"
@@ -516,8 +491,6 @@
               <button
                 class=""
                 id="about-tab"
-                data-bs-toggle="tab"
-                data-bs-target="#about-tab-pane"
                 type="button"
                 role="tab"
                 aria-controls="about-tab-pane"
@@ -528,13 +501,13 @@
               </button>
             </li>
           </ul>
+          <!-- Replaced by TabNavigation component or DaisyUI tabs elsewhere -->
         </div>
 
-        <!-- Content area in a card -->
+        <!-- Content area -->
         <div class="">
           <div class="">
-            <div class="">
-              <div class="" id="settingsTabContent">
+            <div class="" id="settingsTabContent">
                 <div
                   class=""
                   id="api-tab-pane"
@@ -626,5 +599,5 @@
 </div>
 
 <style>
-  /* CSS moved to /src/app.css */
+  /* CSS goes in /src/styles.css */
 </style>

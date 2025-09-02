@@ -219,10 +219,7 @@
       <div class="">
         {#if isLoading}
           <div class="">
-            <div
-              class=""
-              role="status"
-            >
+            <div class="" role="status">
               <span class="">Loading alternatives...</span>
             </div>
             <div class="">Finding alternatives...</div>
@@ -251,11 +248,7 @@
         {/if}
       </div>
       <div class="">
-        <button
-          type="button"
-          class=""
-          onclick={hidePopup}
-        >
+        <button type="button" class="" onclick={hidePopup}>
           <i class=""></i> Close
         </button>
       </div>
@@ -264,5 +257,5 @@
 {/if}
 
 <style>
-  /* CSS moved to /src/app.css */
+  /* CSS goes in /src/styles.css */
 </style>

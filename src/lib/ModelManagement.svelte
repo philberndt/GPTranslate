@@ -65,11 +65,7 @@
     <div class="">
       <div class="">
         <label for="provider-select" class="">Provider</label>
-        <select
-          id="provider-select"
-          class=""
-          bind:value={selectedProvider}
-        >
+        <select id="provider-select" class="" bind:value={selectedProvider}>
           <option value="openai">OpenAI</option>
           <option value="azure_openai">Azure OpenAI</option>
           <option value="ollama">Ollama</option>
@@ -98,9 +94,7 @@
         />
       </div>
       <div class="">
-        <label for="model-description" class=""
-          >Description (optional)</label
-        >
+        <label for="model-description" class="">Description (optional)</label>
         <input
           id="model-description"
           type="text"
@@ -128,9 +122,7 @@
       <div class="">
         <div class="">
           <h5 class="">
-            <i
-              class=""
-            ></i>
+            <i class=""></i>
             {provider === "openai" ? "OpenAI"
             : provider === "azure_openai" ? "Azure OpenAI"
             : provider === "ollama" ? "Ollama"
@@ -143,13 +135,9 @@
 
         <div class="">
           {#each models as model, index (model.name)}
-            <div
-              class=""
-            >
+            <div class="">
               <div class="">
-                <div
-                  class=""
-                >
+                <div class="">
                   {model.display_name}
                 </div>
                 <div class="">
@@ -157,9 +145,7 @@
                     >{model.name}</code
                   >
                   {#if model.description}
-                    <span
-                      class="">{model.description}</span
-                    >
+                    <span class="">{model.description}</span>
                   {/if}
                 </div>
               </div>
@@ -173,9 +159,7 @@
                     "Enable model"
                   )}
                 >
-                  <i
-                    class=""
-                  ></i>
+                  <i class=""></i>
                 </button>
                 <button
                   type="button"
@@ -196,5 +180,5 @@
 </div>
 
 <style>
-  /* CSS moved to /src/app.css */
+  /* CSS goes in /src/styles.css */
 </style>

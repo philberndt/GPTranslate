@@ -1,9 +1,5 @@
 <script lang="ts">
-  import "bootstrap/dist/css/bootstrap.min.css"
-  import "bootstrap-icons/font/bootstrap-icons.css"
-  import "../app.css"
-  import "bootstrap/dist/js/bootstrap.bundle.min.js"
-  import { Modal } from "bootstrap"
+  import "../styles.css"
   import { invoke, listen } from "../lib/tauri"
   import { onMount } from "svelte"
   import Settings from "../lib/Settings.svelte"
@@ -44,33 +40,11 @@
   // Reset protection variables
   let resetDebounceTimer: ReturnType<typeof setTimeout> | null = null
   let lastTranslationTime = 0
-  const RESET_PROTECTION_DELAY = 1000 // Prevent resets for 1 second after translation
+  const RESET_PROTECTION_DELAY = 1000
 
-  // Function to apply theme based on configuration (case-insensitive, rely solely on Bootstrap color modes)
-  function applyTheme(theme: string) {
-    const t = (theme || "auto").toLowerCase()
-    currentTheme = t
-    if (t === "auto") {
-      updateAutoTheme()
-    } else if (t === "light" || t === "dark") {
-      document.documentElement.setAttribute("data-bs-theme", t)
-    } else {
-      currentTheme = "auto"
-      updateAutoTheme()
-    }
-  }
-  function updateAutoTheme() {
-    if (typeof window === "undefined") return
-    const prefersDark = window.matchMedia(
-      "(prefers-color-scheme: dark)"
-    ).matches
-    if (prefersDark) {
-      document.documentElement.setAttribute("data-bs-theme", "dark")
-    } else {
-      // Use default light variables by removing attribute
-      document.documentElement.removeAttribute("data-bs-theme")
-    }
-  }
+  // Function to apply theme based on configuration
+  function applyTheme(theme: string) {}
+  function updateAutoTheme() {}
   // Function to load/refresh config
   async function loadConfig() {
     try {
@@ -406,10 +380,10 @@
                   <div>
                     {#if config}
                       <CompactLanguageDropdown
-                        selectedLanguage="{sourceLanguage}"
-                        favoriteLanguages="{config.favorite_languages || []}"
-                        includeAutoDetect="{true}"
-                        onLanguageSelect="{handleSourceLanguageChange}"
+                        selectedLanguage={sourceLanguage}
+                        favoriteLanguages={config.favorite_languages || []}
+                        includeAutoDetect={true}
+                        onLanguageSelect={handleSourceLanguageChange}
                         label=""
                       />
                     {/if}
@@ -423,17 +397,16 @@
             </div>
             <div>
               <textarea
-                bind:value="{originalText}"
-                placeholder="{`Enter text to translate or use ${config?.hotkey || 'Ctrl+Alt+C'} to capture from clipboard...`}"
-
-                oninput="{() => {
+                bind:value={originalText}
+                placeholder={`Enter text to translate or use ${config?.hotkey || "Ctrl+Alt+C"} to capture from clipboard...`}
+                oninput={() => {
                   if (
                     config?.auto_translate_enabled &&
                     config?.auto_translate_while_typing
                   ) {
                     debouncedTranslateText()
                   }
-                }}"
+                }}
               ></textarea>
             </div>
           </div>
@@ -447,10 +420,10 @@
                     <span>To:</span>
                     {#if config}
                       <CompactLanguageDropdown
-                        selectedLanguage="{primaryTargetLanguage}"
-                        favoriteLanguages="{config.favorite_languages || []}"
-                        includeAutoDetect="{false}"
-                        onLanguageSelect="{handlePrimaryTargetLanguageChange}"
+                        selectedLanguage={primaryTargetLanguage}
+                        favoriteLanguages={config.favorite_languages || []}
+                        includeAutoDetect={false}
+                        onLanguageSelect={handlePrimaryTargetLanguageChange}
                         label=""
                       />
                     {/if}
@@ -462,10 +435,7 @@
                       <span class="">{targetLanguage}</span>
                     {/if}
                     {#if isTranslating}
-                      <div
-                        class=""
-                        role="status"
-                      >
+                      <div class="" role="status">
                         <span class="">Translating...</span>
                       </div>
                     {/if}
@@ -476,9 +446,9 @@
             <div class="">
               <AlternativeTranslations
                 {translatedText}
-                targetLanguage="{targetLanguage ||
-                  primaryTargetLanguage.english_name}"
-                onTextUpdate="{handleTranslatedTextUpdate}"
+                targetLanguage={targetLanguage ||
+                  primaryTargetLanguage.english_name}
+                onTextUpdate={handleTranslatedTextUpdate}
               />
             </div>
           </div>
@@ -490,7 +460,7 @@
           <button
             type="button"
             class=""
-            onclick="{openHistory}"
+            onclick={openHistory}
             title="Translation History"
             aria-label="Open translation history"
           >
@@ -498,8 +468,7 @@
           </button>
           <button
             type="button"
-
-            onclick="{openSettings}"
+            onclick={openSettings}
             title="Settings"
             aria-label="Open settings"
           >
@@ -508,28 +477,26 @@
         </div>
         <!-- Model selector -->
         <div class="">
-          <ModelSelector {config} onModelChange="{handleModelChange}" />
+          <ModelSelector {config} onModelChange={handleModelChange} />
         </div>
 
         <!-- Action buttons on the right -->
         <div class="" role="group" aria-label="Translation actions">
           <button
             type="button"
-
-            onclick="{translateText}"
-            disabled="{!originalText.trim() || isTranslating}"
+            onclick={translateText}
+            disabled={!originalText.trim() || isTranslating}
             title="Translate text"
           >
             <i class=""></i>Translate
           </button>
           <button
             type="button"
-
-            onclick="{() => {
+            onclick={() => {
               copyToClipboard()
               showCopyNotificationMessage()
-            }}"
-            disabled="{!translatedText}"
+            }}
+            disabled={!translatedText}
             title="Copy translation"
           >
             <i></i>Copy
@@ -537,7 +504,7 @@
           <button
             type="button"
             class=""
-            onclick="{clearText}"
+            onclick={clearText}
             title="Clear all text"
           >
             <i class=""></i>Clear
@@ -547,7 +514,7 @@
     </div>
   {:else if activeView === "history"}
     <div class="" data-view="history">
-      <History onClose="{closeHistory}" theme="{currentTheme}" />
+      <History onClose={closeHistory} theme={currentTheme} />
     </div>
   {/if}
 </main>
@@ -568,5 +535,5 @@
 {/if}
 
 <style>
-  /* CSS moved to /src/app.css */
+  /* CSS goes in /src/styles.css */
 </style>

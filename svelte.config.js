@@ -8,7 +8,6 @@ import { vitePreprocess } from "@sveltejs/vite-plugin-svelte"
 const config = {
   preprocess: vitePreprocess(),
   compilerOptions: {
-    // Enable Svelte DevTools in development
     dev: process.env.NODE_ENV !== "production",
   },
   kit: {
@@ -18,7 +17,6 @@ const config = {
     }),
     prerender: {
       handleHttpError: ({ path, referrer, message }) => {
-        // ignore deliberate link to shiny 404 page
         if (
           path === "/not-found" &&
           referrer === "/blog/how-is-sveltekit-so-fast"

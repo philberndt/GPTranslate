@@ -248,9 +248,7 @@
         <path d={getProviderIcon(config.provider).path}></path>
       </svg>
     {/if}
-    <span class=""
-      >{getCurrentModelDisplayName()}</span
-    >
+    <span class="">{getCurrentModelDisplayName()}</span>
   </button>
 
   {#if isOpen}
@@ -261,9 +259,7 @@
           {#each [...Object.keys(config.available_models), "azure_translator"].filter((provider, index, arr) => arr.indexOf(provider) === index) as provider (provider)}
             {#if hasEnabledModels(provider)}
               <div class="">
-                <div
-                  class=""
-                >
+                <div class="">
                   <span class="">
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
@@ -302,9 +298,7 @@
                     >
                       <div class="">
                         <div class="">Azure AI Translator</div>
-                        <div class="">
-                          Neural machine translation service
-                        </div>
+                        <div class="">Neural machine translation service</div>
                       </div>
                       {#if config.provider === provider}
                         <i class=""></i>
@@ -360,11 +354,7 @@
         {/if}
       {:else}
         <div class="">
-          <div
-            class=""
-            role="status"
-            aria-hidden="true"
-          ></div>
+          <div class="" role="status" aria-hidden="true"></div>
           Loading models...
         </div>
       {/if}
@@ -387,5 +377,5 @@
 {/if}
 
 <style>
-  /* CSS moved to /src/app.css */
+  /* CSS goes in /src/styles.css */
 </style>

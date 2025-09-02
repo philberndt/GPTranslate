@@ -7,58 +7,46 @@
   let { activeTab, onTabChange }: Props = $props()
 </script>
 
-<!-- Tab Navigation -->
-<ul class="" role="tablist">
-  <li class="" role="presentation">
-    <button
-      class=""
-      type="button"
-      onclick={() => onTabChange("api")}
-      role="tab"
-      aria-selected={activeTab === "api"}
-    >
-      <i class=""></i>
-      API Configuration
-    </button>
-  </li>
-  <li class="" role="presentation">
-    <button
-      class=""
-      type="button"
-      onclick={() => onTabChange("models")}
-      role="tab"
-      aria-selected={activeTab === "models"}
-    >
-      <i class=""></i>
-      Model Management
-    </button>
-  </li>
-  <li class="" role="presentation">
-    <button
-      class=""
-      type="button"
-      onclick={() => onTabChange("behavior")}
-      role="tab"
-      aria-selected={activeTab === "behavior"}
-    >
-      <i class=""></i>
-      App Behavior
-    </button>
-  </li>
-  <li class="" role="presentation">
-    <button
-      class=""
-      type="button"
-      onclick={() => onTabChange("about")}
-      role="tab"
-      aria-selected={activeTab === "about"}
-    >
-      <i class=""></i>
-      About
-    </button>
-  </li>
-</ul>
+<!-- Tab Navigation (DaisyUI) -->
+<div class="" role="tablist">
+  <button
+    type="button"
+    class=""
+    onclick="{() => onTabChange('api')}"
+    role="tab"
+    aria-selected="{activeTab === 'api'}"
+  >
+    API Configuration
+  </button>
+  <button
+    type="button"
+    class=""
+    onclick="{() => onTabChange('models')}"
+    role="tab"
+    aria-selected="{activeTab === 'models'}"
+  >
+    Model Management
+  </button>
+  <button
+    type="button"
+    class=""
+    onclick="{() => onTabChange('behavior')}"
+    role="tab"
+    aria-selected="{activeTab === 'behavior'}"
+  >
+    App Behavior
+  </button>
+  <button
+    type="button"
+    class=""
+    onclick="{() => onTabChange('about')}"
+    role="tab"
+    aria-selected="{activeTab === 'about'}"
+  >
+    About
+  </button>
+</div>
 
 <style>
-  /* CSS moved to /src/app.css */
+  /* No custom CSS added per instructions */
 </style>

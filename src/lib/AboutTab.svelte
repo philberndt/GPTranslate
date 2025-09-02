@@ -10,7 +10,7 @@
 <div class="">
   <div class="">
     <div class="">
-      <AppIcon size={56} className="mb-3" />
+      <AppIcon size={56} className="" />
       <h2 class="">GPTranslate</h2>
       <span class="">v{version}</span>
       <h4 class=""><i class=""></i>About</h4>
@@ -47,5 +47,5 @@
 </div>
 
 <style>
-  /* CSS moved to /src/app.css */
+  /* CSS goes in /src/styles.css */
 </style>

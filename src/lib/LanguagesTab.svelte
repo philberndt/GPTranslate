@@ -83,9 +83,7 @@
         onLanguageSelect={handleTargetLanguageChange}
         label=""
       />
-      <div class="">
-        The main language you want to translate to.
-      </div>
+      <div class="">The main language you want to translate to.</div>
     </div>
 
     <div class="">
@@ -146,5 +144,5 @@
 </div>
 
 <style>
-  /* CSS moved to /src/app.css */
+  /* CSS goes in /src/styles.css */
 </style>

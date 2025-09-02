@@ -12,37 +12,19 @@
 <div class="">
   <div class="">
     {#if saveMessage}
-      <span
-        class=""
-        role="status"
-      >
-        <i
-          class=""
-        ></i>
+      <span class="" role="status">
+        <i class=""></i>
         {saveMessage}
       </span>
     {/if}
   </div>
   <div class="">
-    <button
-      type="button"
-      class=""
-      onclick={onReset}
-    >
+    <button type="button" class="" onclick={onReset}>
       <i class=""></i>Reset to Defaults
     </button>
-    <button
-      type="button"
-      class=""
-      onclick={onSave}
-      disabled={isSaving}
-    >
+    <button type="button" class="" onclick={onSave} disabled={isSaving}>
       {#if isSaving}
-        <div
-          class=""
-          role="status"
-          aria-hidden="true"
-        ></div>
+        <div class="" role="status" aria-hidden="true"></div>
         Saving...
       {:else}
         <i class=""></i>Save Settings
@@ -52,5 +34,5 @@
 </div>
 
 <style>
-  /* CSS moved to /src/app.css */
+  /* CSS goes in /src/styles.css */
 </style>

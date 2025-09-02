@@ -16,6 +16,7 @@ mod trans_ollama;
 mod trans_openai;
 mod translation;
 mod tray;
+mod provider_factory;
 
 use config::Config;
 use history::{

@@ -1,8 +1,5 @@
 use crate::config::Config;
-use crate::trans_azure::AzureOpenAITranslationService;
-use crate::trans_azure_translator::AzureTranslatorService;
-use crate::trans_ollama::OllamaTranslationService;
-use crate::trans_openai::OpenAITranslationService;
+use crate::provider_factory::create_provider;
 use anyhow::Result;
 use async_trait::async_trait;
 use lazy_static::lazy_static;
@@ -68,24 +65,7 @@ pub struct TranslationService {
 }
 
 impl TranslationService {
-    pub fn new(config: Config) -> Self {
-        let provider: Box<dyn TranslationProvider + Send + Sync> =
-            match config.api_provider.as_str() {
-                "openai" => Box::new(OpenAITranslationService::new(config)),
-                "azure_openai" => Box::new(AzureOpenAITranslationService::new(config)),
-                "azure_translator" => Box::new(AzureTranslatorService::new(config)),
-                "ollama" => Box::new(OllamaTranslationService::new(config)),
-                _ => {
-                    log::warn!(
-                        "Unknown API provider '{}', defaulting to OpenAI",
-                        config.api_provider
-                    );
-                    Box::new(OpenAITranslationService::new(config))
-                }
-            };
-
-        Self { provider }
-    }
+    pub fn new(config: Config) -> Self { Self { provider: create_provider(config) } }
 
     pub async fn detect_and_translate(&self, text: &str) -> Result<TranslationResult> {
         // Create a more unique request key that includes current timestamp to prevent issues

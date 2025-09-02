@@ -175,10 +175,7 @@
   </div>
 
   {#if isOpen}
-    <div
-      bind:this={dropdownElement}
-      class=""
-    >
+    <div bind:this={dropdownElement} class="">
       {#if searchResults.length === 0 && !showCustomOption}
         <div class="">
           <i class=""></i>
@@ -219,5 +216,5 @@
 </div>
 
 <style>
-  /* CSS moved to /src/app.css */
+  /* CSS goes in /src/styles.css */
 </style>
