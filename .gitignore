@@ -25,4 +25,5 @@ appsettings.json
 **/appsettings.json
 generate_icons.ps1
 CLAUDE.md
+AGENTS.md
 /.claude

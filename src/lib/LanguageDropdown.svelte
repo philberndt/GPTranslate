@@ -21,6 +21,8 @@
     placeholder = "",
   }: Props = $props()
 
+  const selectId = 'language-select-' + Math.random().toString(36).slice(2)
+
   // Get favorite languages and fallback to common suggestions
   const favorites = $derived.by(() => {
     const favLangs = favoriteLanguages
@@ -58,21 +60,22 @@
   }
 </script>
 
-<div>
+<div class="form-control w-full">
   {#if label}
-    <label for="language-select">{label}</label>
+    <label class="label" for={selectId}>
+      <span class="label-text">{label}</span>
+    </label>
   {/if}
 
   <select
-    id="language-select"
+    id={selectId}
+    class="select select-bordered w-full bg-base-200 border-base-300 focus:border-primary/30"
     value={selectedLanguage.code}
     onchange={handleLanguageChange}
     {disabled}
   >
     {#if placeholder}
-      <option value="" disabled selected={selectedLanguage.code === ""}
-        >{placeholder}</option
-      >
+      <option value="" disabled selected={selectedLanguage.code === ""}>{placeholder}</option>
     {/if}
 
     {#if includeAutoDetect}
@@ -85,9 +88,7 @@
     {#if favorites.length > 0}
       <optgroup label="Favorites">
         {#each favorites as language (language.code)}
-          <option value={language.code}>
-            {LanguageManager.formatDisplayName(language)}
-          </option>
+          <option value={language.code}>{LanguageManager.formatDisplayName(language)}</option>
         {/each}
       </optgroup>
     {/if}
@@ -95,9 +96,7 @@
     {#if otherLanguages.length > 0}
       <optgroup label="All Languages">
         {#each otherLanguages as language (language.code)}
-          <option value={language.code}>
-            {LanguageManager.formatDisplayName(language)}
-          </option>
+          <option value={language.code}>{LanguageManager.formatDisplayName(language)}</option>
         {/each}
       </optgroup>
     {/if}

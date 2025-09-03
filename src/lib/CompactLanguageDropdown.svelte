@@ -45,7 +45,7 @@
 
 <div class="form-control w-full max-w-xs">
   <select
-    class="select select-bordered select-sm w-full"
+    class="select select-bordered select-sm w-full bg-base-200 border-base-300 focus:border-primary/30 focus:bg-base-200"
     value={selectedLanguage.code}
     onchange={handleLanguageChange}
     {disabled}

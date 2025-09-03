@@ -156,7 +156,7 @@ export class LanguageManager {
 
   // Find languages by search term (searches english_name, native_name, and common_names)
   static search(query: string, includeAutoDetect = true): Language[] {
-    if (!query.trim()) {
+    if (!query || !query.trim()) {
       return includeAutoDetect
         ? LANGUAGES
         : LANGUAGES.filter((lang) => lang.code !== "auto");

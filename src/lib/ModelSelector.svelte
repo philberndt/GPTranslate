@@ -238,7 +238,7 @@
 
 <div class="dropdown relative">
   <button
-    class="btn btn-outline btn-sm gap-2"
+    class="btn btn-soft btn-sm gap-2"
     type="button"
     onclick={() => (isOpen = !isOpen)}
     aria-expanded={isOpen}
@@ -262,7 +262,7 @@
 
   {#if isOpen}
     <div
-      class="dropdown-content menu bg-base-100 rounded-box w-80 max-h-96 overflow-y-auto shadow-xl border border-base-300 z-50 absolute top-full left-0 mt-1"
+      class="dropdown-content menu bg-base-100 rounded-box w-80 max-h-96 overflow-y-auto shadow-lg border border-base-300/50 z-50 absolute top-full left-0 mt-1"
     >
       {#if config?.available_models}
         {#if hasAnyModels()}
@@ -303,7 +303,7 @@
                   <!-- Azure AI Translator doesn't use models -->
                   <li>
                     <button
-                      class="flex items-center justify-between p-3 text-left hover:bg-base-200"
+                      class="flex items-center justify-between p-3 text-left hover:bg-base-200 transition-colors duration-200"
                       type="button"
                       onclick={(e) => {
                         e.stopPropagation()
@@ -328,7 +328,7 @@
                   {#each getEnabledModelsForProvider(provider) as model (model.name)}
                     <li>
                       <button
-                        class="flex items-center justify-between p-3 text-left hover:bg-base-200"
+                        class="flex items-center justify-between p-3 text-left hover:bg-base-200 transition-colors duration-200"
                         type="button"
                         onclick={(e) => {
                           e.stopPropagation()

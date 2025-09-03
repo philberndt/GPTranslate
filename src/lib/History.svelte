@@ -1,6 +1,7 @@
 <script lang="ts">
   import { invoke } from "@tauri-apps/api/core"
   import { onMount } from "svelte"
+  import { XMarkIcon } from "heroicons-svelte/24/outline"
 
   // Theme provided by parent for forcing light/dark; default auto
   export let theme: string = "auto"
@@ -92,117 +93,95 @@
     return new Date(timestamp).toLocaleString()
   }
 
-  function truncateText(text: string, maxLength: number = 50): string {
-    if (text.length <= maxLength) return text
-    return text.substring(0, maxLength) + "..."
-  }
+
 </script>
 
-<div data-theme={theme}>
-  <div>
-    <h4>Translation History</h4>
-    <div>
-      <button
-        onclick={deduplicateHistory}
-        disabled={history.entries.length === 0}
-        title="Remove duplicate entries"
-      >
-        Deduplicate
-      </button>
-      <button
-        onclick={clearHistory}
-        disabled={history.entries.length === 0}
-        title="Clear all history"
-      >
-        Clear All
-      </button>
-      <button onclick={onClose} title="Close" aria-label="Close history">
-      </button>
+<div data-theme={theme} class="min-h-screen bg-base-100 p-6">
+  <div class="max-w-6xl mx-auto">
+    <!-- Header -->
+    <div class="flex items-center justify-between mb-6">
+      <h4 class="text-2xl font-bold text-base-content">Translation History</h4>
+      <div class="flex gap-2">
+        <button
+          class="btn btn-soft btn-sm"
+          onclick={deduplicateHistory}
+          disabled={history.entries.length === 0}
+          title="Remove duplicate entries"
+        >
+          Deduplicate
+        </button>
+        <button
+          class="btn btn-soft btn-warning btn-sm"
+          onclick={clearHistory}
+          disabled={history.entries.length === 0}
+          title="Clear all history"
+        >
+          Clear All
+        </button>
+        <button class="btn btn-soft btn-circle btn-sm" onclick={onClose} title="Close" aria-label="Close history">
+          <XMarkIcon class="w-5 h-5" />
+        </button>
+      </div>
     </div>
-  </div>
 
-  <div>
-    {#if isLoading}
-      <div>
-        <div>
-          <div role="status"></div>
-          Loading history...
-        </div>
-      </div>
-    {:else if error}
-      <div role="alert">
-        Error: {error}
-      </div>
-    {:else if history.entries.length === 0}
-      <div>
-        <div>
-          <p>No translation history found.</p>
-        </div>
-      </div>
-    {:else}
-      <div>
-        {#each history.entries as entry (entry.id)}
-          <div>
-            <div>
-              <div>
-                <span>{entry.detected_language}</span>
-
-                <span>{entry.target_language}</span>
-              </div>
-              <div>
-                <small>
-                  {formatDate(entry.timestamp)}
-                </small>
-                <button
-                  onclick={() => deleteHistoryEntry(entry.id)}
-                  title="Delete this entry"
-                  aria-label="Delete this entry"
-                >
-                </button>
-              </div>
-            </div>
-
-            <div>
-              <div>
-                <div>
-                  <div>
-                    <h6>Original</h6>
-                    <button
-                      onclick={() => copyToClipboard(entry.original_text)}
-                      title="Copy original text"
-                      aria-label="Copy original text"
-                    >
-                    </button>
-                  </div>
-                  <div title={entry.original_text}>
-                    {#each truncateText(entry.original_text, 100).split("\n") as line, i (i)}
-                      {#if i > 0}<br />{/if}{line}
-                    {/each}
-                  </div>
-                </div>
-
-                <div>
-                  <div>
-                    <h6>Translation</h6>
-                    <button
-                      onclick={() => copyToClipboard(entry.translated_text)}
-                      title="Copy translation"
-                      aria-label="Copy translation"
-                    >
-                    </button>
-                  </div>
-                  <div title={entry.translated_text}>
-                    {#each truncateText(entry.translated_text, 100).split("\n") as line, i (i)}
-                      {#if i > 0}<br />{/if}{line}
-                    {/each}
-                  </div>
-                </div>
-              </div>
-            </div>
+    <!-- Content -->
+    <div class="space-y-4">
+      {#if isLoading}
+        <div class="card bg-base-100 shadow-md border border-base-300/50">
+          <div class="card-body text-center">
+            <div class="loading loading-spinner loading-md" role="status"></div>
+            <p class="text-base-content/70">Loading history...</p>
           </div>
-        {/each}
-      </div>
-    {/if}
+        </div>
+      {:else if error}
+        <div class="alert alert-error" role="alert">
+          <span>Error: {error}</span>
+        </div>
+      {:else if history.entries.length === 0}
+        <div class="card bg-base-100 shadow-md border border-base-300/50">
+          <div class="card-body text-center">
+            <p class="text-base-content/70">No translation history found.</p>
+          </div>
+        </div>
+      {:else}
+        <div class="space-y-3">
+          {#each history.entries as entry (entry.id)}
+            <div class="card bg-base-100 shadow-md border border-base-300/50 hover:shadow-lg transition-shadow">
+              <div class="card-body p-4">
+                <div class="flex items-center justify-between mb-3">
+                  <div class="flex items-center gap-2">
+                    <span class="badge badge-outline badge-sm">{entry.detected_language}</span>
+                    <span class="text-base-content/50">→</span>
+                    <span class="badge badge-outline badge-sm">{entry.target_language}</span>
+                  </div>
+                  <div class="flex items-center gap-2">
+                    <span class="text-xs text-base-content/60">{formatDate(entry.timestamp)}</span>
+                    <div class="dropdown dropdown-end">
+                      <button class="btn btn-soft btn-xs">⋮</button>
+                      <ul class="dropdown-content menu p-2 shadow bg-base-100 rounded-box w-52">
+                        <li><button onclick={() => copyToClipboard(entry.original_text)}>Copy Original</button></li>
+                        <li><button onclick={() => copyToClipboard(entry.translated_text)}>Copy Translation</button></li>
+                        <li><button class="text-error" onclick={() => deleteHistoryEntry(entry.id)}>Delete</button></li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+                <div class="grid md:grid-cols-2 gap-4">
+                  <div>
+                    <h6 class="text-sm font-semibold text-base-content/70 mb-1">Original</h6>
+                    <p class="text-sm bg-base-200 p-3 rounded border border-base-300">{entry.original_text}</p>
+                  </div>
+                  <div>
+                    <h6 class="text-sm font-semibold text-base-content/70 mb-1">Translation</h6>
+                    <p class="text-sm bg-base-200 p-3 rounded border border-base-300">{entry.translated_text}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          {/each}
+        </div>
+      {/if}
+    </div>
   </div>
 </div>
 

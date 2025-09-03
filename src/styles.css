@@ -1,3 +1,112 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
+@plugin "daisyui" {
+  themes:
+    light --default,
+      --primary: 107 114 128; /* Muted gray-500 */
+  --secondary: 156 163 175; /* Gray-400 */
+  --accent: 139 92 246; /* Purple-500 for subtle accent */
+  --neutral: 55 65 81; /* Gray-700 */
+  --base-100: 243 243 243; /* #f3f3f3 - exact light background requested */
+  --base-200: 248 250 252; /* Lighter than background for inputs - very light gray */
+  --base-300: 229 231 235; /* Faint border color */
+  --base-content: 31 41 55; /* Dark text for contrast */
+  --info: 59 130 246;
+  --success: 16 185 129;
+  --warning: 245 158 11;
+  --error: 239 68 68;
+}
+
+@theme muted-dark {
+  --primary: 156 163 175; /* Gray-400 */
+  --secondary: 107 114 128; /* Gray-500 */
+  --accent: 139 92 246; /* Purple-500 for subtle accent */
+  --neutral: 209 213 219; /* Gray-300 */
+  --base-100: 32 32 32; /* #202020 - exact dark background requested */
+  --base-200: 45 45 45; /* Lighter than background for inputs */
+  --base-300: 55 65 81; /* Faint border color for dark mode */
+  --base-content: 249 250 251; /* Light text for contrast */
+  --info: 96 165 250;
+  --success: 52 211 153;
+  --warning: 251 191 36;
+  --error: 248 113 113;
+}
+
+/* Configure DaisyUI with our custom themes */
+@plugin "daisyui" {
+  themes:
+    muted-light --default,
+    muted-dark --prefersdark;
+}
+
+/* Custom styling enhancements for muted low-contrast design */
+.btn {
+  @apply transition-all duration-200 btn-soft;
+}
+
+.btn:hover {
+  @apply scale-[1.02] shadow-md;
+}
+
+.input,
+.textarea,
+.select {
+  @apply transition-all duration-200 bg-base-200 border border-base-300/60 rounded-lg;
+}
+
+.input:focus,
+.textarea:focus,
+.select:focus {
+  @apply bg-base-200 border-primary/40 shadow-sm ring-2 ring-primary/10;
+}
+
+.card {
+  @apply transition-all duration-200 border border-base-300/50 bg-base-100;
+}
+
+.card:hover {
+  @apply shadow-lg border-base-300;
+}
+
+/* Tab styling for radio tabs-lift */
+.tabs-lift .tab {
+  @apply bg-base-200 border-base-300 text-base-content/70;
+}
+
+.tabs-lift .tab:checked,
+.tabs-lift .tab-active {
+  @apply bg-base-100 text-base-content border-primary/30;
+}
+
+.tab-content {
+  @apply bg-base-100 border-base-300/50;
+}
+
+/* Improved spacing for the main container */
+.container {
+  @apply py-6;
+}
+
+/* Enhanced card bodies */
+.card-body {
+  @apply p-6;
+}
+
+/* Better toast positioning */
+.toast {
+  @apply z-50;
+}
+
+/* Smooth hover effects for interactive elements */
+.dropdown:hover .dropdown-content {
+  @apply shadow-lg;
+}
+
+/* Better focus states with muted colors */
+.btn:focus-visible {
+  @apply ring-2 ring-primary/30 ring-offset-2 ring-offset-base-100;
+}
+
+.input:focus-visible,
+.textarea:focus-visible {
+  @apply bg-base-200 border-primary/40 shadow-sm ring-2 ring-primary/10;
+}

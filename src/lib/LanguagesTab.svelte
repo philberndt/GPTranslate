@@ -12,6 +12,9 @@
 
   // Get current language objects from config
   const targetLanguage = $derived.by(() => {
+    if (!config?.target_language) {
+      return LanguageManager.findByCode('en') || LanguageManager.createCustomLanguage('English')
+    }
     const lang = LanguageManager.search(config.target_language, false).find(
       (l) =>
         l.english_name.toLowerCase() === config.target_language.toLowerCase()
@@ -20,6 +23,9 @@
   })
 
   const alternativeLanguage = $derived.by(() => {
+    if (!config?.alternative_target_language) {
+      return LanguageManager.findByCode('es') || LanguageManager.createCustomLanguage('Spanish')
+    }
     const lang = LanguageManager.search(
       config.alternative_target_language,
       false
@@ -59,17 +65,17 @@
   }
 </script>
 
-<div>
+<div class="space-y-6">
   <div>
-    <div>
-      <h4>Translation Languages</h4>
-    </div>
+    <h4 class="text-lg font-semibold text-base-content mb-4">Translation Languages</h4>
   </div>
 
   <!-- Primary Language Settings -->
-  <div>
-    <div>
-      <label for="primary-target"> Primary Target Language </label>
+  <div class="space-y-4">
+    <div class="form-control w-full">
+      <label class="label" for="primary-target">
+        <span class="label-text font-medium">Primary Target Language</span>
+      </label>
       <LanguageDropdown
         selectedLanguage={targetLanguage}
         favoriteLanguages={config.favorite_languages || []}
@@ -77,11 +83,15 @@
         onLanguageSelect={handleTargetLanguageChange}
         label=""
       />
-      <div>The main language you want to translate to.</div>
+      <div class="label">
+        <span class="label-text-alt text-base-content/70">The main language you want to translate to.</span>
+      </div>
     </div>
 
-    <div>
-      <label for="alternative-target"> Alternative Target Language </label>
+    <div class="form-control w-full">
+      <label class="label" for="alternative-target">
+        <span class="label-text font-medium">Alternative Target Language</span>
+      </label>
       <LanguageDropdown
         selectedLanguage={alternativeLanguage}
         favoriteLanguages={config.favorite_languages || []}
@@ -89,37 +99,39 @@
         onLanguageSelect={handleAlternativeLanguageChange}
         label=""
       />
-      <div>
-        Used when the detected language is the same as your primary target.
+      <div class="label">
+        <span class="label-text-alt text-base-content/70">Used when the detected language is the same as your primary target.</span>
       </div>
     </div>
   </div>
 
   <!-- Smart Translation Logic Explanation -->
-  <div>
-    <h6>How Smart Language Selection Works</h6>
-    <p>
-      GPTranslate automatically chooses the best target language based on what
-      it detects:
-    </p>
-    <ul>
-      <li>
-        <strong>If detected language ≠ primary target:</strong> Uses your primary
-        target language
-      </li>
-      <li>
-        <strong>If detected language = primary target:</strong> Uses your alternative
-        target language
-      </li>
-      <li>
-        <strong>Example:</strong> Detected Spanish + Primary English → Translates
-        to English
-      </li>
-      <li>
-        <strong>Example:</strong> Detected English + Primary English → Translates
-        to your alternative language
-      </li>
-    </ul>
+  <div class="alert alert-info">
+    <div>
+      <h6 class="font-semibold">How Smart Language Selection Works</h6>
+      <p class="text-sm mt-2">
+        GPTranslate automatically chooses the best target language based on what
+        it detects:
+      </p>
+      <ul class="list-disc list-inside text-sm mt-2 space-y-1">
+        <li>
+          <strong>If detected language ≠ primary target:</strong> Uses your primary
+          target language
+        </li>
+        <li>
+          <strong>If detected language = primary target:</strong> Uses your alternative
+          target language
+        </li>
+        <li>
+          <strong>Example:</strong> Detected Spanish + Primary English → Translates
+          to English
+        </li>
+        <li>
+          <strong>Example:</strong> Detected English + Primary English → Translates
+          to your alternative language
+        </li>
+      </ul>
+    </div>
   </div>
 
   <!-- Favorite Languages Management -->

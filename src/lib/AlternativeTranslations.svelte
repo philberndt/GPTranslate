@@ -199,7 +199,7 @@
 <!-- Translated text area with selection support -->
 <div
   bind:this={translatedTextElement}
-  class="textarea textarea-bordered textarea-lg w-full h-48 resize-none cursor-text p-4 whitespace-pre-wrap"
+  class="textarea textarea-bordered w-full h-full min-h-0 cursor-text p-1 whitespace-pre-wrap bg-base-200 border-base-300 focus:border-primary/30 focus:bg-base-200 overflow-auto"
   role="textbox"
   aria-readonly="true"
   tabindex="0"
@@ -219,7 +219,7 @@
 {#if showPopup}
   <div
     bind:this={popupElement}
-    class="card bg-base-100 shadow-2xl border border-base-300 w-80 fixed z-50"
+    class="card bg-base-100 shadow-lg border border-base-300/50 w-80 fixed z-50"
     style="left: {popupPosition.x}px; top: {popupPosition.y}px;"
   >
     <div class="card-body p-4">
@@ -243,7 +243,7 @@
             {#each alternatives as alternative, index (index)}
               <button
                 type="button"
-                class="btn btn-outline btn-sm w-full text-left justify-start"
+                class="btn btn-soft btn-sm w-full text-left justify-start"
                 onclick={() => replaceWithAlternative(alternative)}
                 title="Click to replace with this alternative"
               >
@@ -259,7 +259,7 @@
         {/if}
       </div>
       <div class="card-actions justify-end pt-2">
-        <button type="button" class="btn btn-ghost btn-sm" onclick={hidePopup}>
+        <button type="button" class="btn btn-soft btn-sm" onclick={hidePopup}>
           <XMarkIcon class="w-4 h-4" />
           Close
         </button>

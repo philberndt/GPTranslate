@@ -33,7 +33,7 @@
       LanguageManager.createCustomLanguage("English")
   )
 
-  // Active view state: 'translate' | 'settings' | 'history'
+  // Active view state: 'translate' | 'settings' | 'history'  
   let activeView = $state<"translate" | "settings" | "history">("translate")
   let currentTheme = $state("auto")
   // Notification system
@@ -118,6 +118,16 @@
         azure_api_version: "2024-02-01",
         user_source_language: "English",
         user_target_language: "Spanish",
+        target_language: "English",
+        alternative_target_language: "Spanish",
+        favorite_languages: ["en", "es", "fr", "de", "it"],
+        auto_copy_translation: false,
+        auto_copy_original: false,
+        keep_app_open: true,
+        startup_behavior: "tray",
+        hotkey_enabled: true,
+        hotkey_modifiers: ["ctrl", "shift"],
+        hotkey_key: "t",
         available_models: {
           openai: [],
         },
@@ -421,17 +431,46 @@
   }
 </script>
 
-<main class="container mx-auto p-4 max-w-7xl">
-  {#if activeView === "translate"}
-    <div data-view="translate" class="space-y-6">
+<main class="mx-auto p-3 md:p-4 h-screen overflow-hidden bg-base-100">
+  {#if activeView === "settings"}
+    <div data-view="settings" class="flex flex-col h-full overflow-hidden">
+      <Settings
+        config={config || {
+          api_provider: "openai",
+          theme: "auto", 
+          openai_api_key: "",
+          azure_api_key: "",
+          azure_endpoint: "",
+          azure_api_version: "2024-02-01",
+          user_source_language: "English",
+          user_target_language: "Spanish",
+          target_language: "English",
+          alternative_target_language: "Spanish",
+          favorite_languages: ["en", "es", "fr", "de"],
+          auto_copy_translation: false,
+          auto_copy_original: false,
+          keep_app_open: true,
+          startup_behavior: "tray",
+          hotkey_enabled: true,
+          hotkey_modifiers: ["ctrl", "shift"],
+          hotkey_key: "t",
+          available_models: { openai: [] }
+        }}
+        onClose={closeSettings}
+        theme={currentTheme}
+        onThemeChange={changeTheme}
+      />
+    </div>
+  {:else if activeView === "translate"}
+    <div data-view="translate" class="flex flex-col h-full overflow-hidden space-y-1">
       <!-- Translation Cards Grid -->
-      <div class="grid lg:grid-cols-2 gap-6">
+      <div class="grid grid-cols-2 items-stretch gap-1 md:gap-2 flex-1 overflow-hidden">
         <!-- Source Text Card -->
-        <div class="card bg-base-100 shadow-xl">
-          <div class="card-body">
-            <div class="card-title justify-between items-center">
-              <h5 class="text-lg font-semibold">Original Text</h5>
-              <div class="flex items-center gap-3">
+        <div class="card bg-base-100 border border-base-300/50 h-full">
+          <div class="card-body flex flex-col h-full p-2">
+            <div class="card-title justify-between items-center mb-1">
+              <h5 class="text-sm md:text-base font-semibold">Original Text</h5>
+              <div class="flex items-center gap-2">
                 {#if config}
                   <CompactLanguageDropdown
                     selectedLanguage={sourceLanguage}
@@ -450,7 +489,7 @@
               </div>
             </div>
             <textarea
-              class="textarea textarea-bordered textarea-lg w-full h-48 resize-none"
+              class="textarea textarea-bordered w-full flex-1 min-h-0 resize-none overflow-auto bg-base-200 border-base-300 focus:border-primary/30 focus:bg-base-200 p-1"
               bind:value={originalText}
               placeholder={`Enter text to translate or use ${config?.hotkey || "Ctrl+Alt+C"} to capture from clipboard...`}
               oninput={() => {
@@ -466,12 +505,11 @@
         </div>
 
         <!-- Translation Result Card -->
-        <!-- Translation Result Card -->
-        <div class="card bg-base-100 shadow-xl">
-          <div class="card-body">
-            <div class="card-title justify-between items-center">
+        <div class="card bg-base-100 border border-base-300/50 h-full">
+          <div class="card-body flex flex-col h-full p-2">
+            <div class="card-title justify-between items-center mb-1">
               <div class="flex items-center gap-2">
-                <span class="text-lg font-semibold">To:</span>
+                <span class="text-sm md:text-base font-semibold">To:</span>
                 {#if config}
                   <CompactLanguageDropdown
                     selectedLanguage={primaryTargetLanguage}
@@ -493,7 +531,7 @@
                 {/if}
               </div>
             </div>
-            <div class="space-y-4">
+            <div class="flex-1 min-h-0 overflow-auto">
               <AlternativeTranslations
                 {translatedText}
                 targetLanguage={targetLanguage ||
@@ -506,14 +544,14 @@
       </div>
 
       <!-- Control Panel -->
-      <div class="card bg-base-100 shadow-xl">
-        <div class="card-body py-4">
-          <div class="flex flex-wrap justify-between items-center gap-4">
+      <div class="card bg-base-100 border border-base-300/50 shrink-0">
+        <div class="card-body py-1">
+          <div class="flex flex-wrap justify-between items-center gap-1">
             <!-- Navigation icons on the left -->
             <div class="flex gap-2">
               <button
                 type="button"
-                class="btn btn-ghost btn-sm"
+                class="btn btn-soft btn-sm"
                 onclick={openHistory}
                 title="Translation History"
                 aria-label="Open translation history"
@@ -523,7 +561,7 @@
               </button>
               <button
                 type="button"
-                class="btn btn-ghost btn-sm"
+                class="btn btn-soft btn-sm"
                 onclick={openSettings}
                 title="Settings"
                 aria-label="Open settings"
@@ -533,7 +571,7 @@
               </button>
             </div>
 
-            <!-- Model selector -->
+            <!-- Model selector Dropup -->
             <div class="flex-1 max-w-xs">
               <ModelSelector {config} onModelChange={handleModelChange} />
             </div>
@@ -546,7 +584,7 @@
             >
               <button
                 type="button"
-                class="btn btn-primary"
+                class="btn btn-soft btn-primary btn-xs"
                 onclick={translateText}
                 disabled={!originalText.trim() || isTranslating}
                 title="Translate text"
@@ -556,7 +594,7 @@
               </button>
               <button
                 type="button"
-                class="btn btn-secondary"
+                class="btn btn-soft btn-secondary btn-xs"
                 onclick={() => {
                   copyToClipboard()
                   showCopyNotificationMessage()
@@ -569,7 +607,7 @@
               </button>
               <button
                 type="button"
-                class="btn btn-outline"
+                class="btn btn-soft btn-neutral btn-xs"
                 onclick={clearText}
                 title="Clear all text"
               >
@@ -582,26 +620,8 @@
       </div>
     </div>
   {:else if activeView === "history"}
-    <div class="min-h-screen" data-view="history">
+    <div data-view="history" class="flex flex-col h-full overflow-hidden">
       <History onClose={closeHistory} theme={currentTheme} />
-    </div>
-  {:else if activeView === "settings"}
-    <div class="min-h-screen" data-view="settings">
-      {#if config}
-        <Settings
-          {config}
-          onClose={closeSettings}
-          theme={currentTheme}
-          onThemeChange={changeTheme}
-        />
-      {:else}
-        <div class="p-8">
-          <div class="text-center">
-            <h2 class="text-xl font-bold mb-4">Loading Settings...</h2>
-            <p>Configuration is loading. Please wait.</p>
-          </div>
-        </div>
-      {/if}
     </div>
   {/if}
 </main>

@@ -1,6 +1,7 @@
 <script lang="ts">
   import { LanguageManager, type Language } from "./languages"
   import LanguageDropdown from "./LanguageDropdown.svelte"
+  import { ChevronUpIcon, ChevronDownIcon, XMarkIcon } from "heroicons-svelte/24/outline"
 
   interface Props {
     favoriteLanguageCodes: string[]
@@ -83,85 +84,83 @@
   }
 </script>
 
-<div>
-  <hr />
+<div class="space-y-6">
+  <h4 class="text-lg font-semibold text-base-content">Favorite Languages</h4>
 
-  <h5>Favorite Languages</h5>
-
-  <!-- Always visible Add Favorite Language section -->
-  <div>
-    <h6>Add Favorite Language</h6>
-    <div>
-      <div>
-        <LanguageDropdown
-          selectedLanguage={selectedLanguageForAdd}
-          favoriteLanguages={[]}
-          includeAutoDetect={false}
-          onLanguageSelect={handleLanguageSelection}
-          label=""
-          placeholder="Add a favorite language..."
-        />
-      </div>
-      <div>
-        <button
-          type="button"
-          onclick={handleAddButtonClick}
-          disabled={disabled ||
-            !selectedLanguageForAdd.code ||
-            favoriteLanguageCodes.includes(selectedLanguageForAdd.code)}
-        >
-          Add
-        </button>
-      </div>
+  <!-- Add Favorite Language -->
+  <div class="grid grid-cols-1 gap-3 sm:grid-cols-[1fr_auto] items-end">
+    <div class="form-control w-full">
+      <label class="label" for="add-favorite">
+        <span class="label-text font-medium">Add Favorite Language</span>
+      </label>
+      <LanguageDropdown
+        selectedLanguage={selectedLanguageForAdd}
+        favoriteLanguages={[]}
+        includeAutoDetect={false}
+        onLanguageSelect={handleLanguageSelection}
+        label=""
+        placeholder="Add a favorite language..."
+      />
+    </div>
+    <div class="sm:pb-1">
+      <button
+        type="button"
+        class="btn btn-soft btn-primary"
+        onclick={handleAddButtonClick}
+        disabled={disabled || !selectedLanguageForAdd.code || favoriteLanguageCodes.includes(selectedLanguageForAdd.code)}
+      >
+        Add
+      </button>
     </div>
   </div>
 
   {#if favoriteLanguages.length === 0}
-    <div>
-      <p>No favorite languages yet. Add some for quick access!</p>
+    <div class="alert alert-info">
+      <span>No favorite languages yet. Add some for quick access!</span>
     </div>
   {:else}
-    <div>
+    <div class="space-y-2">
       {#each favoriteLanguages as language, index (language.code)}
-        <div class:disabled>
-          <div>
-            <div>
-              <span>
-                {LanguageManager.formatDisplayName(language)}
-              </span>
-              {#if LanguageManager.isCustomLanguage(language)}
-                <span>Custom</span>
-              {/if}
-            </div>
+        <div class="flex items-center justify-between p-3 rounded-lg border border-base-300/50 bg-base-200/40" class:opacity-50={disabled} class:pointer-events-none={disabled}>
+          <div class="flex items-center gap-2">
+            <span class="badge badge-outline">{LanguageManager.formatDisplayName(language)}</span>
+            {#if LanguageManager.isCustomLanguage(language)}
+              <span class="badge badge-ghost badge-sm">Custom</span>
+            {/if}
           </div>
-
           <div>
-            <div role="group">
+            <div class="btn-group" role="group">
               <button
                 type="button"
+                class="btn btn-ghost btn-sm"
                 onclick={() => moveUp(index)}
                 disabled={disabled || index === 0}
                 title="Move up"
                 aria-label="Move up"
               >
+                <ChevronUpIcon class="w-4 h-4" />
               </button>
 
               <button
                 type="button"
+                class="btn btn-ghost btn-sm"
                 onclick={() => moveDown(index)}
                 disabled={disabled || index === favoriteLanguages.length - 1}
                 title="Move down"
                 aria-label="Move down"
               >
+                <ChevronDownIcon class="w-4 h-4" />
               </button>
 
               <button
                 type="button"
+                class="btn btn-ghost btn-sm text-error"
                 onclick={() => removeFavorite(language.code)}
                 {disabled}
                 title="Remove from favorites"
                 aria-label="Remove from favorites"
               >
+                <XMarkIcon class="w-4 h-4" />
               </button>
             </div>
           </div>
@@ -169,12 +168,9 @@
       {/each}
     </div>
 
-    <div>
-      <small>
-        Favorite languages appear first in language dropdowns for quick access.
-        Use the arrows to reorder them by preference.
-      </small>
-    </div>
+    <p class="text-xs text-base-content/70">
+      Favorite languages appear first in language dropdowns. Use arrows to reorder.
+    </p>
   {/if}
 </div>
 

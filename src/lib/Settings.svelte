@@ -9,7 +9,7 @@
   import AboutTab from "./AboutTab.svelte"
   import SettingsFooter from "./SettingsFooter.svelte"
   import pkg from "../../package.json"
-  import { XMarkIcon, SwatchIcon } from "heroicons-svelte/24/outline"
+  import { XMarkIcon, WrenchScrewdriverIcon, CpuChipIcon, GlobeAltIcon, CogIcon, InformationCircleIcon } from "heroicons-svelte/24/outline"
 
   // Props
   let { config, onClose, theme, onThemeChange } = $props<{
@@ -326,17 +326,17 @@
 </script>
 
 <!-- Settings View -->
-<div class="min-h-screen bg-base-100 p-4">
-  <div class="max-w-6xl mx-auto">
+<div class="h-full bg-base-100 p-6 overflow-hidden">
+  <div class="max-w-6xl mx-auto h-full flex flex-col overflow-hidden space-y-4">
     <!-- Header -->
     <div class="flex items-center justify-between mb-6">
       <div class="flex items-center gap-3">
         <AppIcon size={32} className="" />
-        <h1 class="text-2xl font-bold">Settings</h1>
+        <h1 class="text-2xl font-bold text-base-content">Settings</h1>
       </div>
       <button
         type="button"
-        class="btn btn-ghost btn-circle"
+        class="btn btn-soft btn-circle"
         onclick={onClose}
         aria-label="Close settings"
       >
@@ -344,197 +344,106 @@
       </button>
     </div>
 
-    <div>
-      <!-- Tab Navigation with DaisyUI tabs -->
-      <div class="tabs tabs-boxed mb-6">
-        <button
-          class="tab {activeTab === 'api' ? 'tab-active' : ''}"
-          type="button"
-          onclick={() => setActiveTab("api")}
-        >
-          API Configuration
-        </button>
-        <button
-          class="tab {activeTab === 'models' ? 'tab-active' : ''}"
-          type="button"
-          onclick={() => setActiveTab("models")}
-        >
-          Model Management
-        </button>
-        <button
-          class="tab {activeTab === 'languages' ? 'tab-active' : ''}"
-          type="button"
-          onclick={() => setActiveTab("languages")}
-        >
-          Languages
-        </button>
-        <button
-          class="tab {activeTab === 'behavior' ? 'tab-active' : ''}"
-          type="button"
-          onclick={() => setActiveTab("behavior")}
-        >
-          App Behavior
-        </button>
-        <button
-          class="tab {activeTab === 'theme' ? 'tab-active' : ''}"
-          type="button"
-          onclick={() => setActiveTab("theme")}
-        >
-          <SwatchIcon class="h-4 w-4 mr-1" />
-          Theme
-        </button>
-        <button
-          class="tab {activeTab === 'about' ? 'tab-active' : ''}"
-          type="button"
-          onclick={() => setActiveTab("about")}
-        >
-          About
-        </button>
+    <!-- Tab Navigation with Styled Tabs -->
+    <div class="tabs tabs-lift mb-2 shrink-0" role="tablist">
+      <button 
+        role="tab" 
+        class="tab {activeTab === 'api' ? 'tab-active' : ''}"
+        onclick={() => setActiveTab('api')}
+      >
+        <WrenchScrewdriverIcon class="w-4 h-4 mr-2" />
+        API Configuration
+      </button>
+      <button 
+        role="tab" 
+        class="tab {activeTab === 'models' ? 'tab-active' : ''}"
+        onclick={() => setActiveTab('models')}
+      >
+        <CpuChipIcon class="w-4 h-4 mr-2" />
+        Model Management
+      </button>
+      <button 
+        role="tab" 
+        class="tab {activeTab === 'languages' ? 'tab-active' : ''}"
+        onclick={() => setActiveTab('languages')}
+      >
+        <GlobeAltIcon class="w-4 h-4 mr-2" />
+        Languages
+      </button>
+      <button 
+        role="tab" 
+        class="tab {activeTab === 'behavior' ? 'tab-active' : ''}"
+        onclick={() => setActiveTab('behavior')}
+      >
+        <CogIcon class="w-4 h-4 mr-2" />
+        App Behavior
+      </button>
+      <button 
+        role="tab" 
+        class="tab {activeTab === 'about' ? 'tab-active' : ''}"
+        onclick={() => setActiveTab('about')}
+      >
+        <InformationCircleIcon class="w-4 h-4 mr-2" />
+        About
+      </button>
+    </div>
+
+    <!-- Scrollable content area -->
+    <div class="card bg-base-100 shadow-md border border-base-300/50 flex-1 min-h-0 overflow-auto">
+      <!-- inner scroll area stays within card-body -->
+      <div class="card-body">
+        {#if activeTab === 'api'}
+          <ApiConfiguration
+            {config}
+            {isValidatingApiKey}
+            {apiKeyValid}
+            {azureEndpointInfo}
+            onConfigChange={handleConfigChange}
+            {onApiProviderChange}
+            {onAzureEndpointChange}
+            {validateApiKey}
+          />
+        {:else if activeTab === 'models'}
+          <ModelManagement
+            {config}
+            availableModels={config.available_models}
+            onConfigChange={handleConfigChange}
+            onModelAdd={handleModelAdd}
+            onModelRemove={handleModelRemove}
+            onModelToggle={handleModelToggle}
+          />
+        {:else if activeTab === 'languages'}
+          <LanguagesTab
+            {config}
+            onConfigUpdate={async (newConfig) => {
+              config = { ...config, ...newConfig }
+              await saveSettings()
+            }}
+          />
+        {:else if activeTab === 'behavior'}
+          <AppBehavior
+            {config}
+            onConfigChange={handleConfigChange}
+            {theme}
+            {onThemeChange}
+          />
+        {:else if activeTab === 'about'}
+          <AboutTab {version} />
+        {/if}
       </div>
     </div>
 
-    <!-- Content area -->
-    <div class="bg-base-100">
-      {#if activeTab === "api"}
-        <!-- API Configuration Tab -->
-        <ApiConfiguration
-          {config}
-          {isValidatingApiKey}
-          {apiKeyValid}
-          {azureEndpointInfo}
-          onConfigChange={handleConfigChange}
-          {onApiProviderChange}
-          {onAzureEndpointChange}
-          {validateApiKey}
+
+    <!-- Settings Footer (sticky) -->
+    <div class="mt-4 sticky bottom-0 bg-base-100/90 backdrop-blur border-t border-base-300 z-10">
+      <div class="py-3">
+        <SettingsFooter
+          {isSaving}
+          {saveMessage}
+          onSave={saveSettings}
+          onReset={resetToDefaults}
         />
-      {:else if activeTab === "models"}
-        <!-- Model Management Tab -->
-        <ModelManagement
-          {config}
-          availableModels={config.available_models}
-          onConfigChange={handleConfigChange}
-          onModelAdd={handleModelAdd}
-          onModelRemove={handleModelRemove}
-          onModelToggle={handleModelToggle}
-        />
-      {:else if activeTab === "languages"}
-        <!-- Languages -->
-        <LanguagesTab
-          {config}
-          onConfigUpdate={async (newConfig) => {
-            config = { ...config, ...newConfig }
-            await saveSettings()
-          }}
-        />
-      {:else if activeTab === "behavior"}
-        <!-- App Behavior -->
-        <AppBehavior {config} onConfigChange={handleConfigChange} />
-      {:else if activeTab === "theme"}
-        <!-- Theme -->
-        <div class="space-y-6">
-          <h3 class="text-lg font-semibold mb-4">Theme Settings</h3>
-
-          <div class="form-control w-full max-w-xs">
-            <label class="label" for="theme-select">
-              <span class="label-text">Choose theme</span>
-            </label>
-            <select
-              id="theme-select"
-              class="select select-bordered w-full max-w-xs"
-              value={theme}
-              onchange={(e) => {
-                const target = e.target as HTMLSelectElement | null
-                if (target) onThemeChange(target.value)
-              }}
-            >
-              <option value="auto">Auto (System)</option>
-              <option value="light">Light</option>
-              <option value="dark">Dark</option>
-              <option value="cupcake">Cupcake</option>
-              <option value="bumblebee">Bumblebee</option>
-              <option value="emerald">Emerald</option>
-              <option value="corporate">Corporate</option>
-              <option value="synthwave">Synthwave</option>
-              <option value="retro">Retro</option>
-              <option value="cyberpunk">Cyberpunk</option>
-              <option value="valentine">Valentine</option>
-              <option value="halloween">Halloween</option>
-              <option value="garden">Garden</option>
-              <option value="forest">Forest</option>
-              <option value="aqua">Aqua</option>
-              <option value="lofi">Lo-fi</option>
-              <option value="pastel">Pastel</option>
-              <option value="fantasy">Fantasy</option>
-              <option value="wireframe">Wireframe</option>
-              <option value="black">Black</option>
-              <option value="luxury">Luxury</option>
-              <option value="dracula">Dracula</option>
-              <option value="cmyk">CMYK</option>
-              <option value="autumn">Autumn</option>
-              <option value="business">Business</option>
-              <option value="acid">Acid</option>
-              <option value="lemonade">Lemonade</option>
-              <option value="night">Night</option>
-              <option value="coffee">Coffee</option>
-              <option value="winter">Winter</option>
-              <option value="dim">Dim</option>
-              <option value="nord">Nord</option>
-              <option value="sunset">Sunset</option>
-            </select>
-            <label class="label" for="theme-select">
-              <span class="label-text-alt">Theme will apply immediately</span>
-            </label>
-          </div>
-
-          <div class="alert alert-info">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              fill="none"
-              viewBox="0 0 24 24"
-              class="h-6 w-6 shrink-0 stroke-current"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="m13 16 4-4m0 0-4-4m4 4H3"
-              ></path>
-            </svg>
-            <div>
-              <h4 class="font-bold">Theme Preview</h4>
-              <div class="text-xs">
-                The theme will be applied immediately when selected. Auto theme
-                follows your system's dark/light mode setting.
-              </div>
-            </div>
-          </div>
-
-          <!-- Theme Preview Card -->
-          <div class="card bg-base-100 shadow-xl">
-            <div class="card-body">
-              <h2 class="card-title">Theme Preview</h2>
-              <p>This card shows how the current theme looks.</p>
-              <div class="card-actions justify-end">
-                <button class="btn btn-primary">Primary</button>
-                <button class="btn btn-secondary">Secondary</button>
-              </div>
-            </div>
-          </div>
-        </div>
-      {:else if activeTab === "about"}
-        <!-- About -->
-        <AboutTab {version} />
-      {/if}
-    </div>
-
-    <!-- Settings Footer -->
-    <div class="mt-6">
-      <SettingsFooter
-        {isSaving}
-        {saveMessage}
-        onSave={saveSettings}
-        onReset={resetToDefaults}
-      />
+      </div>
     </div>
   </div>
 </div>
