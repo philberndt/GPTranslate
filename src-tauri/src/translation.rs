@@ -450,63 +450,36 @@ pub async fn get_alternative_translations(
     // Use the service to get alternatives
     match alternatives_service.translate(&selected_text).await {
         Ok(result) => {
-            // Parse the response to extract alternatives
             let response_text = result.translated_text.trim();
             log::info!("Raw AI response for alternatives: '{}'", response_text);
 
             // Try to parse as JSON first
-            log::info!("Attempting JSON parsing...");
             if let Ok(parsed) = serde_json::from_str::<serde_json::Value>(response_text) {
-                log::info!("Successfully parsed JSON: {}", serde_json::to_string_pretty(&parsed).unwrap_or_default());
-                
                 if let Some(alternatives_array) = parsed.get("alternatives").and_then(|a| a.as_array()) {
-                    log::info!("Found alternatives array with {} items", alternatives_array.len());
-                    
-                    let raw_alternatives: Vec<String> = alternatives_array
+                    let alternatives: Vec<String> = alternatives_array
                         .iter()
                         .filter_map(|v| v.as_str().map(|s| s.to_string()))
+                        .filter(|alt| alt.trim().to_lowercase() != selected_text.trim().to_lowercase())
                         .collect();
-                    log::info!("Raw alternatives before filtering: {:?}", raw_alternatives);
-                    
-                    let alternatives: Vec<String> = raw_alternatives
-                        .into_iter()
-                        .filter(|alt| {
-                            let is_different = alt.trim().to_lowercase() != selected_text.trim().to_lowercase();
-                            log::info!("Checking alternative '{}' vs original '{}': different = {}", alt, selected_text, is_different);
-                            is_different
-                        })
-                        .collect();
-                    log::info!("Filtered alternatives: {:?}", alternatives);
 
                     if !alternatives.is_empty() {
                         log::info!("Successfully parsed {} alternatives", alternatives.len());
                         return Ok(AlternativeTranslationsResult { alternatives });
-                    } else {
-                        log::info!("All alternatives were filtered out (same as original)");
                     }
-                } else {
-                    log::info!("No 'alternatives' array found in JSON response");
                 }
-            } else {
-                log::info!("Failed to parse as JSON");
             }
 
-            // Try to fix common JSON issues and parse again
-            log::info!("Attempting to fix and re-parse JSON...");
+            // Try to fix and re-parse JSON
             let fixed_json = response_text
-                .replace("\\n", "\n")  // Fix escaped newlines
-                .replace("\n", " ")    // Remove actual newlines that break JSON
-                .replace("  ", " ")    // Collapse multiple spaces
+                .replace("\\n", "\n")
+                .replace("\n", " ")
+                .replace("  ", " ")
                 .trim()
                 .to_string();
-            log::info!("Fixed JSON: '{}'", fixed_json);
 
-            // Try to complete incomplete JSON
             let completed_json = if !fixed_json.ends_with('}') && !fixed_json.ends_with(']') {
                 if fixed_json.contains("\"alternatives\": [") && !fixed_json.ends_with(']') {
-                    let completed = format!("{}]", fixed_json.trim_end_matches(','));
-                    log::info!("Completed incomplete JSON: '{}'", completed);
-                    completed
+                    format!("{}]}}", fixed_json.trim_end_matches(','))
                 } else {
                     fixed_json
                 }
@@ -515,104 +488,54 @@ pub async fn get_alternative_translations(
             };
 
             if let Ok(parsed) = serde_json::from_str::<serde_json::Value>(&completed_json) {
-                log::info!("Successfully parsed fixed JSON: {}", serde_json::to_string_pretty(&parsed).unwrap_or_default());
-                
                 if let Some(alternatives_array) = parsed.get("alternatives").and_then(|a| a.as_array()) {
-                    log::info!("Found alternatives array in fixed JSON with {} items", alternatives_array.len());
-                    
-                    let raw_alternatives: Vec<String> = alternatives_array
+                    let alternatives: Vec<String> = alternatives_array
                         .iter()
                         .filter_map(|v| v.as_str().map(|s| s.to_string()))
+                        .filter(|alt| alt.trim().to_lowercase() != selected_text.trim().to_lowercase())
                         .collect();
-                    log::info!("Raw alternatives from fixed JSON before filtering: {:?}", raw_alternatives);
-                    
-                    let alternatives: Vec<String> = raw_alternatives
-                        .into_iter()
-                        .filter(|alt| {
-                            let is_different = alt.trim().to_lowercase() != selected_text.trim().to_lowercase();
-                            log::info!("Checking fixed JSON alternative '{}' vs original '{}': different = {}", alt, selected_text, is_different);
-                            is_different
-                        })
-                        .collect();
-                    log::info!("Filtered alternatives from fixed JSON: {:?}", alternatives);
 
                     if !alternatives.is_empty() {
                         log::info!("Successfully parsed {} alternatives from fixed JSON", alternatives.len());
                         return Ok(AlternativeTranslationsResult { alternatives });
-                    } else {
-                        log::info!("All fixed JSON alternatives were filtered out (same as original)");
                     }
-                } else {
-                    log::info!("No 'alternatives' array found in fixed JSON response");
                 }
-            } else {
-                log::info!("Failed to parse fixed JSON");
             }
 
-            // Fallback: try to extract lines as alternatives
-            log::info!("Attempting fallback line parsing...");
-            let lines: Vec<&str> = response_text.lines().collect();
-            log::info!("Found {} lines in response", lines.len());
-            
+            // Fallback: extract lines as alternatives
             let alternatives: Vec<String> = response_text
                 .lines()
-                .enumerate()
-                .map(|(i, line)| {
-                    let trimmed = line.trim();
-                    log::info!("Line {}: '{}'", i, trimmed);
-                    trimmed
-                })
+                .map(|line| line.trim())
                 .filter(|line| {
-                    // Filter out empty lines, comments, and JSON syntax
-                    let keep = !line.is_empty() 
-                        && !line.starts_with('#') 
-                        && !line.starts_with('-')
-                        && !line.starts_with('{')
-                        && !line.starts_with('}')
-                        && !line.starts_with('[')
-                        && !line.starts_with(']')
+                    !line.is_empty() 
+                        && !line.starts_with(['#', '-', '{', '}', '[', ']'])
                         && !line.contains("detected_language")
                         && !line.contains("translated_text")
                         && !line.contains("alternatives")
-                        && !line.ends_with(':')
-                        && !line.ends_with(',')
-                        && *line != "translation failed";
-                    log::info!("Line '{}' passed initial filter: {}", line, keep);
-                    keep
+                        && !line.ends_with([':',','])
+                        && *line != "translation failed"
                 })
                 .map(|line| {
-                    // Clean up common prefixes and suffixes
-                    let cleaned = line.trim_start_matches(['1', '2', '3', '4', '5', '.', ')', '-', '*'])
+                    line.trim_start_matches(['1', '2', '3', '4', '5', '.', ')', '-', '*'])
                         .trim()
-                        .trim_matches('"')
-                        .trim_matches(',')
-                        .to_string();
-                    log::info!("Cleaned line '{}' to '{}'", line, cleaned);
-                    cleaned
+                        .trim_matches(['"', ','])
+                        .to_string()
                 })
                 .filter(|line| {
-                    // Final filtering: only keep lines that look like actual words/phrases
-                    // and exclude the original selected text
-                    let keep = !line.is_empty() 
+                    !line.is_empty() 
                         && line.len() > 1
                         && !line.chars().all(|c| c.is_ascii_punctuation())
-                        && line != "translation failed";
-                    let is_different = line.trim().to_lowercase() != selected_text.trim().to_lowercase();
-                    log::info!("Line '{}' passed final filter: {} (different from original: {})", line, keep && is_different, is_different);
-                    keep && is_different
+                        && line != "translation failed"
+                        && line.trim().to_lowercase() != selected_text.trim().to_lowercase()
                 })
                 .take(5)
                 .collect();
 
             if !alternatives.is_empty() {
-                log::info!(
-                    "Extracted {} alternatives from text lines: {:?}",
-                    alternatives.len(),
-                    alternatives
-                );
+                log::info!("Extracted {} alternatives from text lines", alternatives.len());
                 Ok(AlternativeTranslationsResult { alternatives })
             } else {
-                log::error!("No alternatives found in response after all parsing attempts");
+                log::warn!("No alternatives found in response");
                 Err(Error::ApiError(anyhow::anyhow!(
                     "No alternatives found in response"
                 )))

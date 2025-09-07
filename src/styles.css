@@ -28,7 +28,7 @@
   @apply bg-base-100 border-transparent outline-none shadow-none;
 }
 
-.card {
+.card:not(.card-border) {
   @apply transition-all duration-200 border-none bg-base-100;
 }
 
@@ -121,10 +121,16 @@ body {
 }
 
 /* Keep cards borderless per request */
-.card {
+.card:not(.card-border) {
   /* Cards should match the main app background in both light and dark modes */
   background-color: var(--color-app-bg) !important;
   border: none !important;
+}
+
+/* Opt-in card border utility */
+.card.card-border {
+  border: 1px solid var(--color-border-subtle) !important;
+  background-color: var(--color-field-bg) !important;
 }
 
 /* Settings sticky footer adjustments to remove unwanted top border and reduce padding */

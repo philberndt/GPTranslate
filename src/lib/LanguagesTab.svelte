@@ -2,6 +2,7 @@
   import { LanguageManager, type Language } from "./languages"
   import LanguageDropdown from "./LanguageDropdown.svelte"
   import FavoriteLanguagesManager from "./FavoriteLanguagesManager.svelte"
+  import { GlobeAltIcon, StarIcon } from "heroicons-svelte/24/outline"
 
   interface Props {
     config: any
@@ -13,7 +14,10 @@
   // Get current language objects from config
   const targetLanguage = $derived.by(() => {
     if (!config?.target_language) {
-      return LanguageManager.findByCode('en') || LanguageManager.createCustomLanguage('English')
+      return (
+        LanguageManager.findByCode("en") ||
+        LanguageManager.createCustomLanguage("English")
+      )
     }
     const lang = LanguageManager.search(config.target_language, false).find(
       (l) =>
@@ -24,7 +28,10 @@
 
   const alternativeLanguage = $derived.by(() => {
     if (!config?.alternative_target_language) {
-      return LanguageManager.findByCode('es') || LanguageManager.createCustomLanguage('Spanish')
+      return (
+        LanguageManager.findByCode("es") ||
+        LanguageManager.createCustomLanguage("Spanish")
+      )
     }
     const lang = LanguageManager.search(
       config.alternative_target_language,
@@ -67,7 +74,12 @@
 
 <div class="space-y-6">
   <div>
-    <h4 class="text-lg font-semibold text-base-content mb-4">Translation Languages</h4>
+    <h4
+      class="text-lg font-semibold text-base-content mb-4 flex items-center gap-2"
+    >
+      <GlobeAltIcon class="w-5 h-5" />
+      Translation Languages
+    </h4>
   </div>
 
   <!-- Primary Language Settings -->
@@ -84,7 +96,9 @@
         label=""
       />
       <div class="label">
-        <span class="label-text-alt text-base-content/70">The main language you want to translate to.</span>
+        <span class="label-text-alt text-base-content/70"
+          >The main language you want to translate to.</span
+        >
       </div>
     </div>
 
@@ -100,7 +114,9 @@
         label=""
       />
       <div class="label">
-        <span class="label-text-alt text-base-content/70">Used when the detected language is the same as your primary target.</span>
+        <span class="label-text-alt text-base-content/70"
+          >Used when the detected language is the same as your primary target.</span
+        >
       </div>
     </div>
   </div>
@@ -136,6 +152,12 @@
 
   <!-- Favorite Languages Management -->
   <div>
+    <div
+      class="mb-2 flex items-center gap-2 text-sm font-medium text-base-content/80"
+    >
+      <StarIcon class="w-4 h-4" />
+      Favourite Languages
+    </div>
     <FavoriteLanguagesManager
       favoriteLanguageCodes={config.favorite_languages || []}
       onFavoritesUpdate={handleFavoritesUpdate}

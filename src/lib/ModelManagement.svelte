@@ -1,28 +1,23 @@
 <script lang="ts">
-  interface ModelConfig {
+  import { CpuChipIcon, PlusIcon } from "heroicons-svelte/24/outline"
+  // Types
+  export interface ModelConfig {
     name: string
     display_name: string
     provider: string
     is_enabled: boolean
     description?: string
   }
-  interface Props {
-    config: any
+
+  // Props
+  let { availableModels, onModelAdd, onModelRemove, onModelToggle } = $props<{
     availableModels: Record<string, ModelConfig[]>
-    onConfigChange: (updates: any) => void
     onModelAdd: (provider: string, model: ModelConfig) => void
     onModelRemove: (provider: string, modelIndex: number) => void
     onModelToggle: (provider: string, modelIndex: number) => void
-  }
-  let {
-    // config,
-    availableModels,
-    // onConfigChange,
-    onModelAdd,
-    onModelRemove,
-    onModelToggle,
-  }: Props = $props()
+  }>()
 
+  // Local state
   let newModelName = $state("")
   let newModelDisplayName = $state("")
   let newModelDescription = $state("")
@@ -48,25 +43,41 @@
   }
 
   function getEnabledModelsForProvider(provider: string): ModelConfig[] {
-    return availableModels[provider]?.filter((m) => m.is_enabled) || []
+    return (
+      availableModels[provider]?.filter((m: ModelConfig) => m.is_enabled) || []
+    )
   }
+
+  // Typed entries for template usage
+  const providerEntries = $derived(
+    Object.entries(availableModels) as [string, ModelConfig[]][]
+  )
 </script>
 
-<!-- Model Management Section -->
 <div class="space-y-6">
-  <h4 class="text-lg font-semibold text-base-content">Model Management</h4>
+  <h4 class="text-lg font-semibold text-base-content flex items-center gap-2">
+    <CpuChipIcon class="w-5 h-5" />
+    Model Management
+  </h4>
 
   <!-- Add New Model -->
   <div class="card bg-base-100 border border-base-300/50">
     <div class="card-body">
-      <h5 class="card-title">Add New Model</h5>
-      
+      <h5 class="card-title flex items-center gap-2">
+        <PlusIcon class="w-4 h-4" />
+        Add New Model
+      </h5>
+
       <div class="grid md:grid-cols-2 gap-4">
         <div class="form-control w-full">
           <label class="label" for="provider-select">
             <span class="label-text font-medium">Provider</span>
           </label>
-          <select id="provider-select" class="select select-bordered bg-base-200" bind:value={selectedProvider}>
+          <select
+            id="provider-select"
+            class="select select-bordered bg-base-200 w-full block"
+            bind:value={selectedProvider}
+          >
             <option value="openai">OpenAI</option>
             <option value="azure_openai">Azure OpenAI</option>
             <option value="ollama">Ollama</option>
@@ -79,13 +90,13 @@
           <input
             id="model-name"
             type="text"
-            class="input input-bordered bg-base-200"
+            class="input input-bordered bg-base-200 min-w-0"
             bind:value={newModelName}
             placeholder="e.g., gpt-4o-mini"
           />
         </div>
       </div>
-      
+
       <div class="grid md:grid-cols-2 gap-4">
         <div class="form-control w-full">
           <label class="label" for="model-display">
@@ -94,7 +105,7 @@
           <input
             id="model-display"
             type="text"
-            class="input input-bordered bg-base-200"
+            class="input input-bordered bg-base-200 min-w-0"
             bind:value={newModelDisplayName}
             placeholder="e.g., GPT-4o Mini"
           />
@@ -106,13 +117,13 @@
           <input
             id="model-description"
             type="text"
-            class="input input-bordered bg-base-200"
+            class="input input-bordered bg-base-200 min-w-0"
             bind:value={newModelDescription}
             placeholder="e.g., Fast and cost-effective model"
           />
         </div>
       </div>
-      
+
       <div class="card-actions justify-end mt-4">
         <button
           class="btn btn-primary"
@@ -128,7 +139,7 @@
   <div class="divider"></div>
 
   <!-- Model Lists -->
-  {#each Object.entries(availableModels) as [provider, models] (provider)}
+  {#each providerEntries as [provider, models] (provider)}
     {#if models && models.length > 0 && provider !== "azure_translator"}
       <div class="card bg-base-100 border border-base-300/50">
         <div class="card-body">
@@ -144,40 +155,71 @@
             </span>
           </div>
 
-          <div class="space-y-3">
+          <div
+            class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-1"
+          >
             {#each models as model, index (model.name)}
-              <div class="flex items-center justify-between p-3 bg-base-200 rounded-lg border border-base-300/30">
-                <div class="flex-1">
-                  <div class="font-medium text-base-content">
+              <div class="card card-compact card-border rounded-md min-w-0">
+                <div class="card-body p-2 gap-1">
+                  <div
+                    class="text-xs font-medium truncate"
+                    title={model.display_name}
+                  >
                     {model.display_name}
                   </div>
-                  <div class="text-sm space-y-1">
-                    <code class="text-xs px-2 py-1 rounded bg-base-300/50 {model.is_enabled ? 'text-primary' : 'text-base-content/60'}"
-                      >{model.name}</code>
-                    {#if model.description}
-                      <div class="text-base-content/70">{model.description}</div>
+                  <div class="text-[11px] flex items-center gap-2 min-w-0">
+                    <code
+                      class="px-1.5 py-0.5 rounded bg-base-300/50 truncate max-w-full {(
+                        model.is_enabled
+                      ) ?
+                        'text-primary'
+                      : 'text-base-content/60'}"
+                      title={model.name}>{model.name}</code
+                    >
+                    {#if model.is_enabled}
+                      config: _config, onConfigChange: _onConfigChange,
+                      <span class="badge badge-success badge-xs">Enabled</span>
+                    {:else}
+                      <span class="badge badge-outline badge-xs">Disabled</span>
                     {/if}
                   </div>
-                </div>
-                <div class="flex items-center gap-2 ml-4">
-                  <button
-                    type="button"
-                    class="btn btn-sm {model.is_enabled ? 'btn-success' : 'btn-outline'}"
-                    onclick={() => onModelToggle(provider, index)}
-                    title={model.is_enabled ? "Disable model" : "Enable model"}
-                    aria-label={model.is_enabled ? "Disable model" : "Enable model"}
-                  >
-                    {model.is_enabled ? "Enabled" : "Disabled"}
-                  </button>
-                  <button
-                    type="button"
-                    class="btn btn-sm btn-error btn-outline"
-                    onclick={() => onModelRemove(provider, index)}
-                    title="Remove model"
-                    aria-label="Remove model"
-                  >
-                    Remove
-                  </button>
+                  config?: any onConfigChange?: (updates: any) => void
+                  {#if model.description}
+                    // Mark optional props as used to satisfy lint rules void
+                    _config void _onConfigChange
+                    <div
+                      class="text-[11px] text-base-content/70 truncate"
+                      title={model.description}
+                    >
+                      {model.description}
+                    </div>
+                  {/if}
+                  <div class="card-actions justify-between mt-1">
+                    <button
+                      type="button"
+                      class="btn btn-soft btn-xs"
+                      class:btn-success={model.is_enabled}
+                      class:btn-outline={!model.is_enabled}
+                      onclick={() => onModelToggle(provider, index)}
+                      title={model.is_enabled ? "Disable model" : (
+                        "Enable model"
+                      )}
+                      aria-label={model.is_enabled ? "Disable model" : (
+                        "Enable model"
+                      )}
+                    >
+                      {model.is_enabled ? "Enabled" : "Disabled"}
+                    </button>
+                    <button
+                      type="button"
+                      class="btn btn-ghost btn-error btn-xs"
+                      onclick={() => onModelRemove(provider, index)}
+                      title="Remove model"
+                      aria-label="Remove model"
+                    >
+                      Remove
+                    </button>
+                  </div>
                 </div>
               </div>
             {/each}
@@ -187,5 +229,3 @@
     {/if}
   {/each}
 </div>
-
-<!-- Custom CSS goes in /src/styles.css */ -->

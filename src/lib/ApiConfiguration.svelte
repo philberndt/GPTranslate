@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { Cog6ToothIcon, BoltIcon } from "heroicons-svelte/24/outline"
   interface Props {
     config: any
     isValidatingApiKey: boolean
@@ -52,10 +53,14 @@
 
 <div class="space-y-6 overflow-hidden">
   <h4 class="text-lg font-semibold flex items-center gap-2">
-    <i class="fas fa-cog"></i>API Configuration
+    <Cog6ToothIcon class="w-5 h-5" />
+    API Configuration
   </h4>
   <div class="form-control">
-    <h5 class="text-sm font-medium mb-3">API Provider</h5>
+    <h5 class="text-sm font-medium mb-3 flex items-center gap-2">
+      <BoltIcon class="w-4 h-4" />
+      API Provider
+    </h5>
     <div class="grid grid-cols-4 gap-2">
       <div class="form-control">
         <button

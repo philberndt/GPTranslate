@@ -223,10 +223,20 @@ impl TranslationProvider for OpenAITranslationService {
         let cleaned_text = clean_text_for_translation(text);
         log::info!("Cleaned text for translation: {}", cleaned_text);
 
-        let user_prompt = format!("Text to translate: \"{}\"", cleaned_text);
-        let smart_prompt = create_smart_prompt(&self.config, None);
-
-        log::info!("Using smart prompt with alternative language logic");
+        // Check if this is an alternatives request (custom_prompt contains "alternatives")
+        let is_alternatives_request = self.config.custom_prompt.contains("alternatives");
+        
+        let (user_prompt, system_prompt) = if is_alternatives_request {
+            // For alternatives requests, use the custom prompt directly as the system prompt
+            log::info!("Using alternatives prompt");
+            (format!("\"{}\"", cleaned_text), self.config.custom_prompt.clone())
+        } else {
+            // For regular translations, use the normal logic
+            let user_prompt = format!("Text to translate: \"{}\"", cleaned_text);
+            let smart_prompt = create_smart_prompt(&self.config, None);
+            log::info!("Using smart prompt with alternative language logic");
+            (user_prompt, smart_prompt)
+        };
 
         // Check if current model is a reasoning model
         let is_reasoning_model = self.is_reasoning_model();
@@ -250,14 +260,21 @@ impl TranslationProvider for OpenAITranslationService {
         } else {
             "system"
         };
-        let system_content = if is_reasoning_model {
+        let system_content = if is_alternatives_request {
+            // For alternatives requests, use the system prompt directly with minimal formatting
+            if is_reasoning_model {
+                format!("Formatting re-enabled - please respond with valid JSON.\n\n{}", system_prompt)
+            } else {
+                system_prompt
+            }
+        } else if is_reasoning_model {
             // For reasoning models, use much simpler instructions with formatting re-enabled
-            format!("Formatting re-enabled - please respond with valid JSON.\n\n{}\n\nRespond with JSON containing 'detected_language' and 'translated_text' fields.", smart_prompt)
+            format!("Formatting re-enabled - please respond with valid JSON.\n\n{}\n\nRespond with JSON containing 'detected_language' and 'translated_text' fields.", system_prompt)
         } else {
             // For non-reasoning models, use detailed instructions
             format!(
                 "{}\n\nIMPORTANT FORMATTING RULES:\n- Always respond with valid JSON containing 'detected_language' and 'translated_text' fields\n- Preserve line breaks and paragraph structure in the translation\n- Use actual newline characters (\\n) in the JSON string value, not escaped \\\\n\n- Do NOT escape newlines in the JSON response - use literal newlines\n\nExample response format:\n{{\n  \"detected_language\": \"English\",\n  \"translated_text\": \"Line 1\\nLine 2\\n\\nNew paragraph\"\n}}",
-                smart_prompt
+                system_prompt
             )
         };
 
@@ -318,7 +335,20 @@ impl TranslationProvider for OpenAITranslationService {
             .as_str()
             .ok_or_else(|| anyhow::anyhow!("No 'content' field in message or content is not a string. Message: {}", serde_json::to_string_pretty(message).unwrap_or_default()))?;
 
-        self.parse_response_content(content)
+        // Check if this is an alternatives request
+        let is_alternatives_request = self.config.custom_prompt.contains("alternatives");
+        if is_alternatives_request {
+            // For alternatives requests, return the raw content as translated_text
+            // The calling code will parse the JSON alternatives from it
+            log::info!("Returning raw alternatives response");
+            Ok(TranslationResult {
+                detected_language: "unknown".to_string(),
+                translated_text: content.to_string(),
+                target_language: "alternatives".to_string(),
+            })
+        } else {
+            self.parse_response_content(content)
+        }
     }
 }
 

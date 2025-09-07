@@ -415,15 +415,29 @@
             {validateApiKey}
           />
         {:else if activeTab === "models"}
+          <div class="space-y-2">
+            <h4
+              class="text-lg font-semibold text-base-content flex items-center gap-2"
+            >
+              <CpuChipIcon class="w-5 h-5" />
+              Model Management
+            </h4>
+          </div>
           <ModelManagement
-            {config}
             availableModels={config.available_models}
-            onConfigChange={handleConfigChange}
             onModelAdd={handleModelAdd}
             onModelRemove={handleModelRemove}
             onModelToggle={handleModelToggle}
           />
         {:else if activeTab === "languages"}
+          <div class="space-y-2">
+            <h4
+              class="text-lg font-semibold text-base-content mb-2 flex items-center gap-2"
+            >
+              <GlobeAltIcon class="w-5 h-5" />
+              Translation Languages
+            </h4>
+          </div>
           <LanguagesTab
             {config}
             onConfigUpdate={async (newConfig) => {

@@ -3,8 +3,8 @@
 // In the browser dev server (where window.__TAURI__ is undefined) they become safe no-ops
 // so the UI can run without a native backend and without noisy console errors.
 
-import * as tauriCore from "@tauri-apps/api/core"
-import * as tauriEvent from "@tauri-apps/api/event"
+import * as tauriCore from "@tauri-apps/api/core";
+import * as tauriEvent from "@tauri-apps/api/event";
 
 const hasTauri =
   typeof window !== "undefined" &&
@@ -16,7 +16,7 @@ const hasTauri =
     (window as any).__TAURI_INTERNALS__ !== undefined ||
     // Fallback: user agent hint when running inside the Tauri webview
     (typeof navigator !== "undefined" &&
-      navigator.userAgent?.includes("Tauri")))
+      navigator.userAgent?.includes("Tauri")));
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const invoke = (...args: any[]) => {
@@ -24,21 +24,21 @@ export const invoke = (...args: any[]) => {
     // Browser dev fallback: resolve with null and log once to help debugging
     console.warn(
       "Tauri invoke called in browser dev - returning null (no-op)",
-      args[0]
-    )
-    return Promise.resolve(null)
+      args[0],
+    );
+    return Promise.resolve(null);
   }
   // Forward to real implementation when available
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  return (tauriCore.invoke as any)(...args)
-}
+  return (tauriCore.invoke as any)(...args);
+};
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const listen = (event: string, cb: (...args: any[]) => void) => {
   if (!hasTauri) {
-    console.warn("Tauri listen called in browser dev - no-op", event)
-    return Promise.resolve(() => {})
+    console.warn("Tauri listen called in browser dev - no-op", event);
+    return Promise.resolve(() => {});
   }
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  return (tauriEvent.listen as any)(event, cb)
-}
+  return (tauriEvent.listen as any)(event, cb);
+};
