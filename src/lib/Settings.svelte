@@ -9,7 +9,14 @@
   import AboutTab from "./AboutTab.svelte"
   import SettingsFooter from "./SettingsFooter.svelte"
   import pkg from "../../package.json"
-  import { XMarkIcon, WrenchScrewdriverIcon, CpuChipIcon, GlobeAltIcon, CogIcon, InformationCircleIcon } from "heroicons-svelte/24/outline"
+  import {
+    XMarkIcon,
+    WrenchScrewdriverIcon,
+    CpuChipIcon,
+    GlobeAltIcon,
+    CogIcon,
+    InformationCircleIcon,
+  } from "heroicons-svelte/24/outline"
 
   // Props
   let { config, onClose, theme, onThemeChange } = $props<{
@@ -58,8 +65,8 @@
 
   // Configuration change handler
   function handleConfigChange(updates: any) {
-    // Update the parent config through callback or event
-    Object.assign(config, updates)
+    // Update the parent config through callback or event - create new object for reactivity
+    config = { ...config, ...updates }
   } // Model management functions
   async function handleModelAdd(provider: string, model: ModelConfig) {
     if (!config.available_models[provider]) {
@@ -326,10 +333,12 @@
 </script>
 
 <!-- Settings View -->
-<div class="h-full bg-base-100 p-6 overflow-hidden">
+<div class="h-full bg-base-100 overflow-hidden">
   <div class="max-w-6xl mx-auto h-full flex flex-col overflow-hidden space-y-4">
-    <!-- Header -->
-    <div class="flex items-center justify-between mb-6">
+    <!-- Header (constrained width) -->
+    <div
+      class="w-full max-w-3xl mx-auto flex items-center justify-between mb-6"
+    >
       <div class="flex items-center gap-3">
         <AppIcon size={32} className="" />
         <h1 class="text-2xl font-bold text-base-content">Settings</h1>
@@ -346,42 +355,42 @@
 
     <!-- Tab Navigation with Styled Tabs -->
     <div class="tabs tabs-lift mb-2 shrink-0" role="tablist">
-      <button 
-        role="tab" 
+      <button
+        role="tab"
         class="tab {activeTab === 'api' ? 'tab-active' : ''}"
-        onclick={() => setActiveTab('api')}
+        onclick={() => setActiveTab("api")}
       >
         <WrenchScrewdriverIcon class="w-4 h-4 mr-2" />
         API Configuration
       </button>
-      <button 
-        role="tab" 
+      <button
+        role="tab"
         class="tab {activeTab === 'models' ? 'tab-active' : ''}"
-        onclick={() => setActiveTab('models')}
+        onclick={() => setActiveTab("models")}
       >
         <CpuChipIcon class="w-4 h-4 mr-2" />
         Model Management
       </button>
-      <button 
-        role="tab" 
+      <button
+        role="tab"
         class="tab {activeTab === 'languages' ? 'tab-active' : ''}"
-        onclick={() => setActiveTab('languages')}
+        onclick={() => setActiveTab("languages")}
       >
         <GlobeAltIcon class="w-4 h-4 mr-2" />
         Languages
       </button>
-      <button 
-        role="tab" 
+      <button
+        role="tab"
         class="tab {activeTab === 'behavior' ? 'tab-active' : ''}"
-        onclick={() => setActiveTab('behavior')}
+        onclick={() => setActiveTab("behavior")}
       >
         <CogIcon class="w-4 h-4 mr-2" />
         App Behavior
       </button>
-      <button 
-        role="tab" 
+      <button
+        role="tab"
         class="tab {activeTab === 'about' ? 'tab-active' : ''}"
-        onclick={() => setActiveTab('about')}
+        onclick={() => setActiveTab("about")}
       >
         <InformationCircleIcon class="w-4 h-4 mr-2" />
         About
@@ -389,10 +398,12 @@
     </div>
 
     <!-- Scrollable content area -->
-    <div class="card bg-base-100 shadow-md border border-base-300/50 flex-1 min-h-0 overflow-auto">
+    <div
+      class="card bg-base-100 border border-base-300/50 flex-1 min-h-0 overflow-auto"
+    >
       <!-- inner scroll area stays within card-body -->
       <div class="card-body">
-        {#if activeTab === 'api'}
+        {#if activeTab === "api"}
           <ApiConfiguration
             {config}
             {isValidatingApiKey}
@@ -403,7 +414,7 @@
             {onAzureEndpointChange}
             {validateApiKey}
           />
-        {:else if activeTab === 'models'}
+        {:else if activeTab === "models"}
           <ModelManagement
             {config}
             availableModels={config.available_models}
@@ -412,7 +423,7 @@
             onModelRemove={handleModelRemove}
             onModelToggle={handleModelToggle}
           />
-        {:else if activeTab === 'languages'}
+        {:else if activeTab === "languages"}
           <LanguagesTab
             {config}
             onConfigUpdate={async (newConfig) => {
@@ -420,23 +431,24 @@
               await saveSettings()
             }}
           />
-        {:else if activeTab === 'behavior'}
+        {:else if activeTab === "behavior"}
           <AppBehavior
             {config}
             onConfigChange={handleConfigChange}
             {theme}
             {onThemeChange}
           />
-        {:else if activeTab === 'about'}
+        {:else if activeTab === "about"}
           <AboutTab {version} />
         {/if}
       </div>
     </div>
 
-
     <!-- Settings Footer (sticky) -->
-    <div class="mt-4 sticky bottom-0 bg-base-100/90 backdrop-blur border-t border-base-300 z-10">
-      <div class="py-3">
+    <div
+      class="mt-2 sticky bottom-0 bg-base-100/90 backdrop-blur z-10 settings-footer-sticky"
+    >
+      <div class="py-1">
         <SettingsFooter
           {isSaving}
           {saveMessage}

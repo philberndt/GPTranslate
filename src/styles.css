@@ -2,49 +2,17 @@
 @plugin "daisyui" {
   themes:
     light --default,
-      --primary: 107 114 128; /* Muted gray-500 */
-  --secondary: 156 163 175; /* Gray-400 */
-  --accent: 139 92 246; /* Purple-500 for subtle accent */
-  --neutral: 55 65 81; /* Gray-700 */
-  --base-100: 243 243 243; /* #f3f3f3 - exact light background requested */
-  --base-200: 248 250 252; /* Lighter than background for inputs - very light gray */
-  --base-300: 229 231 235; /* Faint border color */
-  --base-content: 31 41 55; /* Dark text for contrast */
-  --info: 59 130 246;
-  --success: 16 185 129;
-  --warning: 245 158 11;
-  --error: 239 68 68;
+    dark --prefersdark;
 }
 
-@theme muted-dark {
-  --primary: 156 163 175; /* Gray-400 */
-  --secondary: 107 114 128; /* Gray-500 */
-  --accent: 139 92 246; /* Purple-500 for subtle accent */
-  --neutral: 209 213 219; /* Gray-300 */
-  --base-100: 32 32 32; /* #202020 - exact dark background requested */
-  --base-200: 45 45 45; /* Lighter than background for inputs */
-  --base-300: 55 65 81; /* Faint border color for dark mode */
-  --base-content: 249 250 251; /* Light text for contrast */
-  --info: 96 165 250;
-  --success: 52 211 153;
-  --warning: 251 191 36;
-  --error: 248 113 113;
-}
-
-/* Configure DaisyUI with our custom themes */
-@plugin "daisyui" {
-  themes:
-    muted-light --default,
-    muted-dark --prefersdark;
-}
-
-/* Custom styling enhancements for muted low-contrast design */
+/* Custom styling enhancements */
 .btn {
   @apply transition-all duration-200 btn-soft;
 }
 
 .btn:hover {
-  @apply scale-[1.02] shadow-md;
+  /* Subtle color change only, no zoom or shadow */
+  @apply brightness-95 shadow-none scale-100;
 }
 
 .input,
@@ -56,15 +24,12 @@
 .input:focus,
 .textarea:focus,
 .select:focus {
-  @apply bg-base-200 border-primary/40 shadow-sm ring-2 ring-primary/10;
+  /* Slightly brighten the field on focus, avoid heavy border/ring or shadow */
+  @apply bg-base-100 border-transparent outline-none shadow-none;
 }
 
 .card {
-  @apply transition-all duration-200 border border-base-300/50 bg-base-100;
-}
-
-.card:hover {
-  @apply shadow-lg border-base-300;
+  @apply transition-all duration-200 border-none bg-base-100;
 }
 
 /* Tab styling for radio tabs-lift */
@@ -88,7 +53,8 @@
 
 /* Enhanced card bodies */
 .card-body {
-  @apply p-6;
+  @apply p-2;
+  background-color: var(--color-app-bg) !important;
 }
 
 /* Better toast positioning */
@@ -98,7 +64,7 @@
 
 /* Smooth hover effects for interactive elements */
 .dropdown:hover .dropdown-content {
-  @apply shadow-lg;
+  @apply shadow-sm;
 }
 
 /* Better focus states with muted colors */
@@ -107,6 +73,117 @@
 }
 
 .input:focus-visible,
-.textarea:focus-visible {
-  @apply bg-base-200 border-primary/40 shadow-sm ring-2 ring-primary/10;
+.textarea:focus-visible,
+.select:focus-visible {
+  /* Match non-visual-focus behavior: subtle brightness and gentle border */
+  @apply bg-base-100 border-transparent outline-none shadow-none;
+}
+
+/* Application theming tokens -------------------------------------------------- */
+:root {
+  /* Light mode tokens */
+  --color-app-bg: #f3f3f3;
+  --color-base-100: #f3f3f3;
+  --color-field-bg: #ffffff;
+  --color-border-subtle: #e6e6e6;
+  --color-muted: #6b7280;
+  --transition-fast: 150ms;
+  /* Enable subtle noise across components */
+  --noise: 1;
+}
+
+html[data-theme="dark"] {
+  /* Dark mode tokens */
+  --color-app-bg: #202020;
+  --color-field-bg: #262626;
+  --color-base-100: #202020;
+  --color-border-subtle: #2f2f2f;
+  --color-muted: #9ca3af;
+  /* Enable subtle noise in dark theme */
+  --noise: 1;
+}
+
+/* Apply the app background and subtle muted palette */
+body {
+  background-color: var(--color-app-bg);
+}
+
+/* Make form fields and card surfaces use the field tone and subtle border */
+.input,
+.textarea,
+.select,
+.tab-content {
+  background-color: var(--color-field-bg) !important;
+  border: 1px solid var(--color-border-subtle) !important;
+  transition:
+    background-color var(--transition-fast) ease,
+    border-color var(--transition-fast) ease;
+}
+
+/* Keep cards borderless per request */
+.card {
+  /* Cards should match the main app background in both light and dark modes */
+  background-color: var(--color-app-bg) !important;
+  border: none !important;
+}
+
+/* Settings sticky footer adjustments to remove unwanted top border and reduce padding */
+.settings-footer-sticky {
+  border-top: none !important;
+  padding-top: 0.25rem !important; /* smaller top padding */
+}
+
+/* Focus: slight brighten and a very subtle border color using the token */
+.input:focus,
+.textarea:focus,
+.select:focus,
+.input:focus-visible,
+.textarea:focus-visible,
+.select:focus-visible {
+  background-color: var(--color-field-bg) !important;
+  border-color: color-mix(
+    in srgb,
+    var(--color-border-subtle) 70%,
+    var(--daisyui-mcp) 30%
+  ) !important;
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+/* Muted text utility */
+.text-muted {
+  color: var(--color-muted) !important;
+}
+
+.btn {
+  transition:
+    transform var(--transition-fast) ease,
+    box-shadow var(--transition-fast) ease;
+}
+:is(
+  :focus,
+  :focus-visible,
+  .input:focus,
+  .textarea:focus,
+  .select:focus,
+  .input:focus-visible,
+  .textarea:focus-visible,
+  .select:focus-visible,
+  .btn:focus,
+  .btn:focus-visible,
+  .tab:focus,
+  .tab:focus-visible,
+  [tabindex]:focus,
+  [tabindex]:focus-visible
+) {
+  outline: none !important;
+  box-shadow: none !important;
+  /* Tailwind ring variables used by ring utilities */
+  --tw-ring-shadow: none !important;
+  --tw-ring-offset-shadow: none !important;
+  --tw-ring-opacity: 0 !important;
+}
+.btn:focus,
+.btn:focus-visible {
+  box-shadow: none !important;
 }

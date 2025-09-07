@@ -40,7 +40,7 @@ tokio = { version = "1.47.1", features = ["full"] }
 reqwest = { version = "0.12.23", features = ["json"] }
 dirs = "6.0.0"
 anyhow = "1.0.99"
-log = "0.4.27"
+log = "0.4.28"
 env_logger = "0.11.8"
 chrono = { version = "0.4.41", features = ["serde"] }
 uuid = { version = "1.18.1", features = ["v4", "serde"] }
@@ -48,7 +48,7 @@ lazy_static = "1.5.0"
 url = "2.5.7"
 ollama-rs = "0.3.2"
 async-trait = "0.1.89"
-image = "0.25.6"
+image = "0.25.8"
 
 [target.'cfg(windows)'.dependencies]
 winapi = { version = "0.3.9", features = ["winuser", "wingdi"] }

@@ -22,6 +22,7 @@
   let selectedText = $state("")
   let isLoading = $state(false)
   let alternatives = $state<string[]>([])
+  let error = $state<any>(null)
   let showPopup = $state(false)
   let popupPosition = $state({ x: 0, y: 0 })
   let selectionRange: Range | null = null
@@ -86,19 +87,59 @@
   async function loadAlternatives() {
     if (!selectedText || !targetLanguage) return
 
+    console.log(
+      `🔍 Loading alternatives for: "${selectedText}" (target: ${targetLanguage})`
+    )
     isLoading = true
     alternatives = []
+    error = null
 
     try {
+      // Use debug version to see detailed response
+      const debugResult = (await invoke("get_alternative_translations_debug", {
+        selectedText,
+        targetLanguage,
+      })) as any
+
+      console.log("🐞 DEBUG: Full debug result:", debugResult)
+      console.log("🐞 DEBUG: Raw response:", debugResult.raw_response)
+      console.log(
+        "🐞 DEBUG: JSON parse success:",
+        debugResult.json_parse_success
+      )
+      console.log("🐞 DEBUG: Parsed JSON:", debugResult.parsed_json)
+      console.log("🐞 DEBUG: Raw alternatives:", debugResult.raw_alternatives)
+      console.log(
+        "🐞 DEBUG: Filtered alternatives:",
+        debugResult.filtered_alternatives
+      )
+
+      // Also try the regular function
       const result = (await invoke("get_alternative_translations", {
         selectedText,
         targetLanguage,
       })) as { alternatives: string[] }
+
+      console.log("📥 Raw result from backend:", result)
+      console.log("📋 Result type:", typeof result)
+      console.log("📋 Result keys:", Object.keys(result))
+
+      if (result && typeof result === "object") {
+        console.log("📋 Result.alternatives:", result.alternatives)
+        console.log("📋 Alternatives type:", typeof result.alternatives)
+        console.log("📋 Alternatives length:", result.alternatives?.length)
+      }
+
       alternatives = result.alternatives || []
-      console.log("Loaded alternatives:", alternatives)
-    } catch (error) {
-      console.error("Failed to load alternatives:", error)
+      console.log("✅ Final alternatives array:", alternatives)
+      console.log("✅ Alternatives count:", alternatives.length)
+    } catch (err) {
+      console.error("❌ Failed to load alternatives:", err)
+      console.error("❌ Error type:", typeof err)
+      console.error("❌ Error message:", (err as any)?.message || err)
+      console.error("❌ Full error object:", err)
       alternatives = []
+      error = err
     } finally {
       isLoading = false
     }
@@ -205,7 +246,7 @@
   tabindex="0"
 >
   {#if translatedText}
-    {#each translatedText.split("\n") as line, i (i)}
+    {#each (translatedText || "").split("\n") as line, i (i)}
       {#if i > 0}<br />{/if}{line}
     {/each}
   {:else}
@@ -219,7 +260,7 @@
 {#if showPopup}
   <div
     bind:this={popupElement}
-    class="card bg-base-100 shadow-lg border border-base-300/50 w-80 fixed z-50"
+    class="card bg-base-100 border border-base-300/50 w-80 fixed z-50"
     style="left: {popupPosition.x}px; top: {popupPosition.y}px;"
   >
     <div class="card-body p-4">
@@ -254,7 +295,14 @@
         {:else}
           <div class="flex items-center gap-3 text-warning">
             <ExclamationTriangleIcon class="w-5 h-5" />
-            <div class="text-sm">No alternatives found</div>
+            <div class="text-sm">
+              {#if error && typeof error === "string" && error.includes("Azure Translator cannot generate alternatives")}
+                Azure Translator cannot generate alternatives. Please configure
+                a fallback AI provider in Settings → API Configuration.
+              {:else}
+                No alternatives found
+              {/if}
+            </div>
           </div>
         {/if}
       </div>

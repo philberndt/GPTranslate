@@ -1,8 +1,8 @@
 use crate::config::Config;
 use crate::provider_factory::create_provider;
-use crate::trans_openai::OpenAITranslationService;
 use crate::trans_azure::AzureOpenAITranslationService;
 use crate::trans_ollama::OllamaTranslationService;
+use crate::trans_openai::OpenAITranslationService;
 use anyhow::Result;
 use async_trait::async_trait;
 use lazy_static::lazy_static;
@@ -68,7 +68,11 @@ pub struct TranslationService {
 }
 
 impl TranslationService {
-    pub fn new(config: Config) -> Self { Self { provider: create_provider(config) } }
+    pub fn new(config: Config) -> Self {
+        Self {
+            provider: create_provider(config),
+        }
+    }
 
     pub async fn detect_and_translate(&self, text: &str) -> Result<TranslationResult> {
         // Create a more unique request key that includes current timestamp to prevent issues
@@ -219,13 +223,15 @@ pub async fn translate_text(
     }
 }
 
-/// Generate alternative translations for a given text
-pub async fn get_alternative_translations(
+/// Generate alternative translations for a given text (debug version with detailed output)
+pub async fn get_alternative_translations_debug(
     selected_text: String,
     target_language: String,
     config: tauri::State<'_, crate::AppState>,
-) -> Result<AlternativeTranslationsResult, Error> {
-    log::info!("get_alternative_translations called with text: '{}' target: '{}'", selected_text, target_language);
+) -> Result<serde_json::Value, Error> {
+    let mut debug_info = serde_json::Map::new();
+    debug_info.insert("selected_text".to_string(), serde_json::Value::String(selected_text.clone()));
+    debug_info.insert("target_language".to_string(), serde_json::Value::String(target_language.clone()));
 
     let config_guard = config.config.lock().await;
     let config_clone = config_guard.clone();
@@ -233,26 +239,178 @@ pub async fn get_alternative_translations(
 
     // Create a special prompt for alternative translations
     let alternatives_prompt = format!(
-        "Generate 3-5 alternative ways to express the following text in {}: \"{}\"\n\n# Instructions\n- Provide different phrasings that convey the same meaning\n- Focus on different word choices, sentence structures, or stylistic variations\n- Maintain the same tone and formality level\n- Each alternative should be distinct but equivalent in meaning\n- Return only the alternatives as a JSON array of strings\n\n# Output Format\nReturn valid JSON in this exact format:\n{{\"alternatives\": [\"alternative 1\", \"alternative 2\", \"alternative 3\", \"alternative 4\", \"alternative 5\"]}}",
-        target_language,
-        selected_text
+        "Provide up to 5 different word choices or synonyms for the following text when translated into {}. Return ONLY the alternative words/phrases as a JSON array under the key 'alternatives'. Do not include the original word. If no alternatives exist, return an empty array. Do not include any other text or explanation.\n\nText: \"{}\"\n\nRespond in JSON format like this:\n{{\"alternatives\": [\"Alternative 1\", \"Alternative 2\", \"Alternative 3\"]}}",
+        target_language, selected_text
     );
 
+    debug_info.insert("prompt".to_string(), serde_json::Value::String(alternatives_prompt.clone()));
+    debug_info.insert("api_provider".to_string(), serde_json::Value::String(config_clone.api_provider.clone()));
+    debug_info.insert("model".to_string(), serde_json::Value::String(config_clone.model.clone()));
+
     // Create a service with the alternatives prompt
-    let alternatives_service: Box<dyn TranslationProvider + Send + Sync> = if config_clone.api_provider == "azure_translator" {
+    let alternatives_service: Box<dyn TranslationProvider + Send + Sync> = if config_clone
+        .api_provider
+        == "azure_translator"
+    {
         // Azure Translator can't generate alternatives, use fallback
         if let Some((provider, model)) = config_clone.parse_alternatives_fallback() {
-            log::info!("Using fallback provider '{}' with model '{}' for alternatives", provider, model);
+            log::info!(
+                "Using fallback provider '{}' with model '{}' for alternatives",
+                provider,
+                model
+            );
             let mut alt_config = config_clone.clone();
             alt_config.api_provider = provider.clone();
             alt_config.model = model.clone();
             alt_config.custom_prompt = alternatives_prompt;
+            
+            // For Azure OpenAI, ensure deployment name matches model name
+            if provider == "azure_openai" {
+                log::info!("Setting Azure deployment name to: {}", model);
+                alt_config.azure_deployment_name = model.clone();
+            }
+            alt_config.ensure_azure_deployment_consistency();
+            
+            debug_info.insert("using_fallback".to_string(), serde_json::Value::Bool(true));
+            debug_info.insert("fallback_provider".to_string(), serde_json::Value::String(provider.clone()));
+            debug_info.insert("fallback_model".to_string(), serde_json::Value::String(model.clone()));
+            debug_info.insert("azure_deployment_name".to_string(), serde_json::Value::String(alt_config.azure_deployment_name.clone()));
+            
+            // Ensure Azure deployment consistency before creating service
+            alt_config.ensure_azure_deployment_consistency();
+            
             match alt_config.api_provider.as_str() {
                 "openai" => Box::new(OpenAITranslationService::new(alt_config)),
                 "azure_openai" => Box::new(AzureOpenAITranslationService::new(alt_config)),
                 "ollama" => Box::new(OllamaTranslationService::new(alt_config)),
                 _ => {
-                    log::warn!("Unknown alternatives provider '{}', defaulting to OpenAI", provider);
+                    debug_info.insert("fallback_error".to_string(), serde_json::Value::String("Unknown provider, defaulting to OpenAI".to_string()));
+                    alt_config.api_provider = "openai".to_string();
+                    Box::new(OpenAITranslationService::new(alt_config))
+                }
+            }
+        } else {
+            debug_info.insert("error".to_string(), serde_json::Value::String("Azure Translator cannot generate alternatives. Please configure a fallback provider in settings.".to_string()));
+            return Ok(serde_json::Value::Object(debug_info));
+        }
+    } else {
+        // Use the current provider for alternatives with custom prompt
+        debug_info.insert("using_fallback".to_string(), serde_json::Value::Bool(false));
+        let mut alt_config = config_clone.clone();
+        alt_config.custom_prompt = alternatives_prompt;
+        
+        // Ensure Azure deployment consistency before creating service
+        alt_config.ensure_azure_deployment_consistency();
+        
+        match alt_config.api_provider.as_str() {
+            "openai" => Box::new(OpenAITranslationService::new(alt_config)),
+            "azure_openai" => Box::new(AzureOpenAITranslationService::new(alt_config)),
+            "ollama" => Box::new(OllamaTranslationService::new(alt_config)),
+            _ => {
+                debug_info.insert("provider_error".to_string(), serde_json::Value::String("Unknown API provider, defaulting to OpenAI".to_string()));
+                alt_config.api_provider = "openai".to_string();
+                Box::new(OpenAITranslationService::new(alt_config))
+            }
+        }
+    };
+
+    // Use the service to get alternatives
+    match alternatives_service.translate(&selected_text).await {
+        Ok(result) => {
+            let response_text = result.translated_text.trim();
+            debug_info.insert("raw_response".to_string(), serde_json::Value::String(response_text.to_string()));
+            debug_info.insert("response_length".to_string(), serde_json::Value::Number(serde_json::Number::from(response_text.len())));
+
+            // Try to parse as JSON first
+            if let Ok(parsed) = serde_json::from_str::<serde_json::Value>(response_text) {
+                debug_info.insert("json_parse_success".to_string(), serde_json::Value::Bool(true));
+                debug_info.insert("parsed_json".to_string(), parsed.clone());
+                
+                if let Some(alternatives_array) = parsed.get("alternatives").and_then(|a| a.as_array()) {
+                    let raw_alternatives: Vec<String> = alternatives_array
+                        .iter()
+                        .filter_map(|v| v.as_str().map(|s| s.to_string()))
+                        .collect();
+                    debug_info.insert("raw_alternatives".to_string(), serde_json::Value::Array(raw_alternatives.iter().map(|s| serde_json::Value::String(s.clone())).collect()));
+                    
+                    let alternatives: Vec<String> = raw_alternatives
+                        .into_iter()
+                        .filter(|alt| alt.trim().to_lowercase() != selected_text.trim().to_lowercase())
+                        .collect();
+                    debug_info.insert("filtered_alternatives".to_string(), serde_json::Value::Array(alternatives.iter().map(|s| serde_json::Value::String(s.clone())).collect()));
+                    debug_info.insert("final_count".to_string(), serde_json::Value::Number(serde_json::Number::from(alternatives.len())));
+                } else {
+                    debug_info.insert("alternatives_array_found".to_string(), serde_json::Value::Bool(false));
+                }
+            } else {
+                debug_info.insert("json_parse_success".to_string(), serde_json::Value::Bool(false));
+                debug_info.insert("json_parse_error".to_string(), serde_json::Value::String("Failed to parse as JSON".to_string()));
+            }
+
+            Ok(serde_json::Value::Object(debug_info))
+        }
+        Err(e) => {
+            debug_info.insert("service_error".to_string(), serde_json::Value::String(e.to_string()));
+            Ok(serde_json::Value::Object(debug_info))
+        }
+    }
+}
+
+/// Generate alternative translations for a given text
+pub async fn get_alternative_translations(
+    selected_text: String,
+    target_language: String,
+    config: tauri::State<'_, crate::AppState>,
+) -> Result<AlternativeTranslationsResult, Error> {
+    log::info!(
+        "get_alternative_translations called with text: '{}' target: '{}'",
+        selected_text,
+        target_language
+    );
+
+    let config_guard = config.config.lock().await;
+    let config_clone = config_guard.clone();
+    drop(config_guard);
+
+    // Create a special prompt for alternative translations
+    let alternatives_prompt = format!(
+        "Provide up to 5 different word choices or synonyms for the following text when translated into {}. Return ONLY the alternative words/phrases as a JSON array under the key 'alternatives'. Do not include the original word. If no alternatives exist, return an empty array. Do not include any other text or explanation.\n\nText: \"{}\"\n\nRespond in JSON format like this:\n{{\"alternatives\": [\"Alternative 1\", \"Alternative 2\", \"Alternative 3\"]}}",
+        target_language, selected_text
+    );
+
+    // Create a service with the alternatives prompt
+    let alternatives_service: Box<dyn TranslationProvider + Send + Sync> = if config_clone
+        .api_provider
+        == "azure_translator"
+    {
+        // Azure Translator can't generate alternatives, use fallback
+        if let Some((provider, model)) = config_clone.parse_alternatives_fallback() {
+            log::info!(
+                "Using fallback provider '{}' with model '{}' for alternatives",
+                provider,
+                model
+            );
+            let mut alt_config = config_clone.clone();
+            alt_config.api_provider = provider.clone();
+            alt_config.model = model.clone();
+            alt_config.custom_prompt = alternatives_prompt;
+            
+            // For Azure OpenAI, ensure deployment name matches model name
+            if provider == "azure_openai" {
+                log::info!("Setting Azure deployment name to: {}", model);
+                alt_config.azure_deployment_name = model.clone();
+            }
+            alt_config.ensure_azure_deployment_consistency();
+            
+            match alt_config.api_provider.as_str() {
+                "openai" => Box::new(OpenAITranslationService::new(alt_config)),
+                "azure_openai" => Box::new(AzureOpenAITranslationService::new(alt_config)),
+                "ollama" => Box::new(OllamaTranslationService::new(alt_config)),
+                _ => {
+                    log::warn!(
+                        "Unknown alternatives provider '{}', defaulting to OpenAI",
+                        provider
+                    );
                     alt_config.api_provider = "openai".to_string();
                     Box::new(OpenAITranslationService::new(alt_config))
                 }
@@ -264,15 +422,25 @@ pub async fn get_alternative_translations(
         }
     } else {
         // Use the current provider for alternatives with custom prompt
-        log::info!("Using current provider '{}' for alternatives", config_clone.api_provider);
+        log::info!(
+            "Using current provider '{}' for alternatives",
+            config_clone.api_provider
+        );
         let mut alt_config = config_clone.clone();
         alt_config.custom_prompt = alternatives_prompt;
+        
+        // Ensure Azure deployment consistency before creating service
+        alt_config.ensure_azure_deployment_consistency();
+        
         match alt_config.api_provider.as_str() {
             "openai" => Box::new(OpenAITranslationService::new(alt_config)),
             "azure_openai" => Box::new(AzureOpenAITranslationService::new(alt_config)),
             "ollama" => Box::new(OllamaTranslationService::new(alt_config)),
             _ => {
-                log::warn!("Unknown API provider '{}', defaulting to OpenAI", alt_config.api_provider);
+                log::warn!(
+                    "Unknown API provider '{}', defaulting to OpenAI",
+                    alt_config.api_provider
+                );
                 alt_config.api_provider = "openai".to_string();
                 Box::new(OpenAITranslationService::new(alt_config))
             }
@@ -284,43 +452,170 @@ pub async fn get_alternative_translations(
         Ok(result) => {
             // Parse the response to extract alternatives
             let response_text = result.translated_text.trim();
-            
+            log::info!("Raw AI response for alternatives: '{}'", response_text);
+
             // Try to parse as JSON first
+            log::info!("Attempting JSON parsing...");
             if let Ok(parsed) = serde_json::from_str::<serde_json::Value>(response_text) {
+                log::info!("Successfully parsed JSON: {}", serde_json::to_string_pretty(&parsed).unwrap_or_default());
+                
                 if let Some(alternatives_array) = parsed.get("alternatives").and_then(|a| a.as_array()) {
-                    let alternatives: Vec<String> = alternatives_array
+                    log::info!("Found alternatives array with {} items", alternatives_array.len());
+                    
+                    let raw_alternatives: Vec<String> = alternatives_array
                         .iter()
                         .filter_map(|v| v.as_str().map(|s| s.to_string()))
                         .collect();
+                    log::info!("Raw alternatives before filtering: {:?}", raw_alternatives);
                     
+                    let alternatives: Vec<String> = raw_alternatives
+                        .into_iter()
+                        .filter(|alt| {
+                            let is_different = alt.trim().to_lowercase() != selected_text.trim().to_lowercase();
+                            log::info!("Checking alternative '{}' vs original '{}': different = {}", alt, selected_text, is_different);
+                            is_different
+                        })
+                        .collect();
+                    log::info!("Filtered alternatives: {:?}", alternatives);
+
                     if !alternatives.is_empty() {
                         log::info!("Successfully parsed {} alternatives", alternatives.len());
                         return Ok(AlternativeTranslationsResult { alternatives });
+                    } else {
+                        log::info!("All alternatives were filtered out (same as original)");
                     }
+                } else {
+                    log::info!("No 'alternatives' array found in JSON response");
                 }
+            } else {
+                log::info!("Failed to parse as JSON");
             }
-            
+
+            // Try to fix common JSON issues and parse again
+            log::info!("Attempting to fix and re-parse JSON...");
+            let fixed_json = response_text
+                .replace("\\n", "\n")  // Fix escaped newlines
+                .replace("\n", " ")    // Remove actual newlines that break JSON
+                .replace("  ", " ")    // Collapse multiple spaces
+                .trim()
+                .to_string();
+            log::info!("Fixed JSON: '{}'", fixed_json);
+
+            // Try to complete incomplete JSON
+            let completed_json = if !fixed_json.ends_with('}') && !fixed_json.ends_with(']') {
+                if fixed_json.contains("\"alternatives\": [") && !fixed_json.ends_with(']') {
+                    let completed = format!("{}]", fixed_json.trim_end_matches(','));
+                    log::info!("Completed incomplete JSON: '{}'", completed);
+                    completed
+                } else {
+                    fixed_json
+                }
+            } else {
+                fixed_json
+            };
+
+            if let Ok(parsed) = serde_json::from_str::<serde_json::Value>(&completed_json) {
+                log::info!("Successfully parsed fixed JSON: {}", serde_json::to_string_pretty(&parsed).unwrap_or_default());
+                
+                if let Some(alternatives_array) = parsed.get("alternatives").and_then(|a| a.as_array()) {
+                    log::info!("Found alternatives array in fixed JSON with {} items", alternatives_array.len());
+                    
+                    let raw_alternatives: Vec<String> = alternatives_array
+                        .iter()
+                        .filter_map(|v| v.as_str().map(|s| s.to_string()))
+                        .collect();
+                    log::info!("Raw alternatives from fixed JSON before filtering: {:?}", raw_alternatives);
+                    
+                    let alternatives: Vec<String> = raw_alternatives
+                        .into_iter()
+                        .filter(|alt| {
+                            let is_different = alt.trim().to_lowercase() != selected_text.trim().to_lowercase();
+                            log::info!("Checking fixed JSON alternative '{}' vs original '{}': different = {}", alt, selected_text, is_different);
+                            is_different
+                        })
+                        .collect();
+                    log::info!("Filtered alternatives from fixed JSON: {:?}", alternatives);
+
+                    if !alternatives.is_empty() {
+                        log::info!("Successfully parsed {} alternatives from fixed JSON", alternatives.len());
+                        return Ok(AlternativeTranslationsResult { alternatives });
+                    } else {
+                        log::info!("All fixed JSON alternatives were filtered out (same as original)");
+                    }
+                } else {
+                    log::info!("No 'alternatives' array found in fixed JSON response");
+                }
+            } else {
+                log::info!("Failed to parse fixed JSON");
+            }
+
             // Fallback: try to extract lines as alternatives
+            log::info!("Attempting fallback line parsing...");
+            let lines: Vec<&str> = response_text.lines().collect();
+            log::info!("Found {} lines in response", lines.len());
+            
             let alternatives: Vec<String> = response_text
                 .lines()
-                .map(|line| line.trim())
-                .filter(|line| !line.is_empty() && !line.starts_with('#') && !line.starts_with('-'))
+                .enumerate()
+                .map(|(i, line)| {
+                    let trimmed = line.trim();
+                    log::info!("Line {}: '{}'", i, trimmed);
+                    trimmed
+                })
+                .filter(|line| {
+                    // Filter out empty lines, comments, and JSON syntax
+                    let keep = !line.is_empty() 
+                        && !line.starts_with('#') 
+                        && !line.starts_with('-')
+                        && !line.starts_with('{')
+                        && !line.starts_with('}')
+                        && !line.starts_with('[')
+                        && !line.starts_with(']')
+                        && !line.contains("detected_language")
+                        && !line.contains("translated_text")
+                        && !line.contains("alternatives")
+                        && !line.ends_with(':')
+                        && !line.ends_with(',')
+                        && *line != "translation failed";
+                    log::info!("Line '{}' passed initial filter: {}", line, keep);
+                    keep
+                })
                 .map(|line| {
-                    // Clean up common prefixes
-                    line.trim_start_matches(['1', '2', '3', '4', '5', '.', ')', '-', '*'])
+                    // Clean up common prefixes and suffixes
+                    let cleaned = line.trim_start_matches(['1', '2', '3', '4', '5', '.', ')', '-', '*'])
                         .trim()
                         .trim_matches('"')
-                        .to_string()
+                        .trim_matches(',')
+                        .to_string();
+                    log::info!("Cleaned line '{}' to '{}'", line, cleaned);
+                    cleaned
                 })
-                .filter(|line| !line.is_empty())
+                .filter(|line| {
+                    // Final filtering: only keep lines that look like actual words/phrases
+                    // and exclude the original selected text
+                    let keep = !line.is_empty() 
+                        && line.len() > 1
+                        && !line.chars().all(|c| c.is_ascii_punctuation())
+                        && line != "translation failed";
+                    let is_different = line.trim().to_lowercase() != selected_text.trim().to_lowercase();
+                    log::info!("Line '{}' passed final filter: {} (different from original: {})", line, keep && is_different, is_different);
+                    keep && is_different
+                })
                 .take(5)
                 .collect();
 
             if !alternatives.is_empty() {
-                log::info!("Extracted {} alternatives from text lines", alternatives.len());
+                log::info!(
+                    "Extracted {} alternatives from text lines: {:?}",
+                    alternatives.len(),
+                    alternatives
+                );
                 Ok(AlternativeTranslationsResult { alternatives })
             } else {
-                Err(Error::ApiError(anyhow::anyhow!("No alternatives found in response")))
+                log::error!("No alternatives found in response after all parsing attempts");
+                Err(Error::ApiError(anyhow::anyhow!(
+                    "No alternatives found in response"
+                )))
             }
         }
         Err(e) => {

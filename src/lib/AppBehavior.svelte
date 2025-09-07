@@ -18,7 +18,7 @@
   <h3 class="text-lg font-semibold mb-4">App Behavior</h3>
 
   <!-- Theme Section -->
-  <div class="card bg-base-100 shadow-md border border-base-300/50">
+  <div class="card bg-base-100 border border-base-300/50">
     <div class="card-body">
       <h4 class="card-title text-lg">Theme Settings</h4>
 
@@ -40,14 +40,16 @@
           <option value="dark">Dark</option>
         </select>
         <div class="label">
-          <span class="label-text-alt text-base-content/70">Theme will apply immediately</span>
+          <span class="label-text-alt text-base-content/70"
+            >Theme will apply immediately</span
+          >
         </div>
       </div>
     </div>
   </div>
 
   <!-- Global Hotkey Section -->
-  <div class="card bg-base-100 shadow-md border border-base-300/50">
+  <div class="card bg-base-100 border border-base-300/50">
     <div class="card-body">
       <h4 class="card-title text-lg">Global Hotkey</h4>
 
@@ -74,7 +76,7 @@
   </div>
 
   <!-- AI Model Settings -->
-  <div class="card bg-base-100 shadow-md border border-base-300/50">
+  <div class="card bg-base-100 border border-base-300/50">
     <div class="card-body">
       <h4 class="card-title text-lg">AI Model Settings</h4>
 
@@ -108,13 +110,15 @@
   </div>
 
   <!-- Automatic Translation Settings -->
-  <div class="card bg-base-100 shadow-md border border-base-300/50">
+  <div class="card bg-base-100 border border-base-300/50">
     <div class="card-body">
       <h4 class="card-title text-lg">Automatic Translation</h4>
 
       <div class="form-control">
         <label class="label cursor-pointer">
-          <span class="label-text font-medium">Enable automatic translations</span>
+          <span class="label-text font-medium"
+            >Enable automatic translations</span
+          >
           <input
             id="auto-translate-enabled"
             type="checkbox"
@@ -152,7 +156,9 @@
             )}
         />
         <div class="label">
-          <span class="label-text-alt text-base-content/70">Delay after typing stops</span>
+          <span class="label-text-alt text-base-content/70"
+            >Delay after typing stops</span
+          >
         </div>
       </div>
 
@@ -178,7 +184,9 @@
 
       <div class="form-control">
         <label class="label cursor-pointer">
-          <span class="label-text font-medium">Translate automatically while typing</span>
+          <span class="label-text font-medium"
+            >Translate automatically while typing</span
+          >
           <input
             id="auto-translate-while-typing"
             type="checkbox"
@@ -197,7 +205,7 @@
   </div>
 
   <!-- Startup Settings -->
-  <div class="card bg-base-100 shadow-md border border-base-300/50">
+  <div class="card bg-base-100 border border-base-300/50">
     <div class="card-body">
       <h4 class="card-title text-lg">Startup & System</h4>
 
@@ -238,7 +246,7 @@
   </div>
 
   <!-- Custom Translation Prompt -->
-  <div class="card bg-base-100 shadow-md border border-base-300/50">
+  <div class="card bg-base-100 border border-base-300/50">
     <div class="card-body">
       <h4 class="card-title text-lg">Custom Translation Prompt</h4>
 
@@ -261,9 +269,13 @@
           <span class="label-text-alt text-base-content/70">
             Customize how the AI translates text. You can use these variables:<br
             />
-            <code class="text-xs bg-base-300/50 px-1 py-0.5 rounded">&#123;detected_language&#125;</code> - The automatically
-            detected source language<br />
-            <code class="text-xs bg-base-300/50 px-1 py-0.5 rounded">&#123;target_language&#125;</code> - Your configured target language
+            <code class="text-xs bg-base-300/50 px-1 py-0.5 rounded"
+              >&#123;detected_language&#125;</code
+            >
+            - The automatically detected source language<br />
+            <code class="text-xs bg-base-300/50 px-1 py-0.5 rounded"
+              >&#123;target_language&#125;</code
+            > - Your configured target language
           </span>
         </div>
       </div>

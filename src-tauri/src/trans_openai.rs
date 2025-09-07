@@ -227,19 +227,39 @@ impl TranslationProvider for OpenAITranslationService {
         let smart_prompt = create_smart_prompt(&self.config, None);
 
         log::info!("Using smart prompt with alternative language logic");
-        
+
         // Check if current model is a reasoning model
         let is_reasoning_model = self.is_reasoning_model();
-        log::info!("Model {} is reasoning: {}", self.config.model, is_reasoning_model);
+        log::info!(
+            "Model {} is reasoning: {}",
+            self.config.model,
+            is_reasoning_model
+        );
 
-        // GPT-5 series supports system messages, o-series may need developer messages
+        // Role selection based on reasoning model type:
+        // - GPT-5 models: Use "system" role (they support system messages)
+        // - O-series models (o1, o3, o4-mini): Use "developer" role
+        // - Non-reasoning models: Use "system" role
         let model_name = &self.config.model;
-        let system_role = if is_reasoning_model && (model_name.starts_with("o1") || model_name.starts_with("o3") || model_name.starts_with("o4-mini")) {
+        let system_role = if is_reasoning_model
+            && (model_name.starts_with("o1")
+                || model_name.starts_with("o3")
+                || model_name.starts_with("o4-mini"))
+        {
             "developer"
         } else {
             "system"
         };
-        let system_content = format!("{}\n\nIMPORTANT FORMATTING RULES:\n- Always respond with valid JSON containing 'detected_language' and 'translated_text' fields\n- Preserve line breaks and paragraph structure in the translation\n- Use actual newline characters (\\n) in the JSON string value, not escaped \\\\n\n- Do NOT escape newlines in the JSON response - use literal newlines\n\nExample response format:\n{{\n  \"detected_language\": \"English\",\n  \"translated_text\": \"Line 1\\nLine 2\\n\\nNew paragraph\"\n}}", smart_prompt);
+        let system_content = if is_reasoning_model {
+            // For reasoning models, use much simpler instructions with formatting re-enabled
+            format!("Formatting re-enabled - please respond with valid JSON.\n\n{}\n\nRespond with JSON containing 'detected_language' and 'translated_text' fields.", smart_prompt)
+        } else {
+            // For non-reasoning models, use detailed instructions
+            format!(
+                "{}\n\nIMPORTANT FORMATTING RULES:\n- Always respond with valid JSON containing 'detected_language' and 'translated_text' fields\n- Preserve line breaks and paragraph structure in the translation\n- Use actual newline characters (\\n) in the JSON string value, not escaped \\\\n\n- Do NOT escape newlines in the JSON response - use literal newlines\n\nExample response format:\n{{\n  \"detected_language\": \"English\",\n  \"translated_text\": \"Line 1\\nLine 2\\n\\nNew paragraph\"\n}}",
+                smart_prompt
+            )
+        };
 
         let mut request_body = json!({
             "model": self.config.model,
@@ -259,11 +279,19 @@ impl TranslationProvider for OpenAITranslationService {
         if is_reasoning_model {
             request_body["max_completion_tokens"] = json!(800);
             // Add reasoning object for reasoning models
-            let effort = self.config.reasoning_effort.as_deref().unwrap_or("medium");
+            let effort = self.config.reasoning_effort.as_deref().unwrap_or("low");
             request_body["reasoning"] = json!({
                 "effort": effort
             });
             log::info!("OpenAI - Using reasoning effort: {}", effort);
+            
+            // Add verbosity parameter for GPT-5 models
+            if self.config.model.starts_with("gpt-5") {
+                request_body["verbosity"] = json!("medium");
+                log::info!("OpenAI - Using verbosity: medium for GPT-5 model");
+            }
+            
+            // Note: Reasoning models don't support temperature, top_p, presence_penalty, frequency_penalty, logprobs, top_logprobs, logit_bias parameters
         } else {
             request_body["max_tokens"] = json!(800);
             request_body["temperature"] = json!(0.3);
@@ -272,9 +300,23 @@ impl TranslationProvider for OpenAITranslationService {
         log::info!("Using OpenAI model: {}", self.config.model);
 
         let response = self.call_openai(request_body).await?;
-        let content = response["choices"][0]["message"]["content"]
+        
+        // Better error handling for response structure
+        let choices = response["choices"].as_array()
+            .ok_or_else(|| anyhow::anyhow!("No 'choices' array in response. Full response: {}", serde_json::to_string_pretty(&response).unwrap_or_default()))?;
+            
+        if choices.is_empty() {
+            return Err(anyhow::anyhow!("Empty 'choices' array in response. Full response: {}", serde_json::to_string_pretty(&response).unwrap_or_default()));
+        }
+        
+        let message = &choices[0]["message"];
+        if message.is_null() {
+            return Err(anyhow::anyhow!("No 'message' object in first choice. Full response: {}", serde_json::to_string_pretty(&response).unwrap_or_default()));
+        }
+        
+        let content = message["content"]
             .as_str()
-            .ok_or_else(|| anyhow::anyhow!("No content in response"))?;
+            .ok_or_else(|| anyhow::anyhow!("No 'content' field in message or content is not a string. Message: {}", serde_json::to_string_pretty(message).unwrap_or_default()))?;
 
         self.parse_response_content(content)
     }

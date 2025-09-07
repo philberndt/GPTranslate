@@ -17,7 +17,7 @@
   }
 
   interface Config {
-    provider: string
+    api_provider: string
     model: string
     available_models: Record<string, ModelConfig[]>
     openai_api_key: string
@@ -47,18 +47,18 @@
     if (config) {
       let newSelectedModel = ""
       // Special case for Azure AI Translator - no model needed
-      if (config.provider === "azure_translator") {
+      if (config.api_provider === "azure_translator") {
         newSelectedModel = ""
       } else if (config.model && config.model.trim()) {
         newSelectedModel = config.model
       } else if (
-        config.provider === "azure_openai" &&
+        config.api_provider === "azure_openai" &&
         config.azure_deployment_name
       ) {
         newSelectedModel = config.azure_deployment_name
       } else {
         const firstEnabled = (
-          config.available_models?.[config.provider] || []
+          config.available_models?.[config.api_provider] || []
         ).find((m) => m.is_enabled)
         if (firstEnabled) newSelectedModel = firstEnabled.name
       }
@@ -142,7 +142,7 @@
         // Create a new config object to avoid mutating props
         const newConfig = {
           ...config,
-          provider: provider,
+          api_provider: provider,
           model: modelName,
           // Keep azure_deployment_name in sync with model for Azure
           azure_deployment_name:
@@ -178,14 +178,14 @@
     }
 
     // Special case for Azure AI Translator - check this FIRST
-    if (config.provider === "azure_translator") {
+    if (config.api_provider === "azure_translator") {
       return "Azure AI Translator"
     }
 
     const key =
       selectedModel ||
       config.model ||
-      (config.provider === "azure_openai" ?
+      (config.api_provider === "azure_openai" ?
         config.azure_deployment_name || ""
       : "")
 
@@ -195,7 +195,7 @@
     }
 
     // Try current provider first
-    const providerModels = config.available_models[config.provider] || []
+    const providerModels = config.available_models[config.api_provider] || []
     let currentModel = providerModels.find((m) => m.name === key)
 
     // If not found, search across all providers by name
@@ -230,8 +230,9 @@
     if (!config?.available_models) return false
     // Check if Azure AI Translator is configured
     if (isProviderConfigured("azure_translator")) return true
-    return Object.values(config.available_models).some(
-      (models) => models.length > 0
+    // Only count models that are enabled
+    return Object.values(config.available_models).some((models) =>
+      models.some((m) => m.is_enabled)
     )
   }
 </script>
@@ -250,9 +251,9 @@
         width="12"
         height="12"
         fill="currentColor"
-        viewBox={getProviderIcon(config.provider).viewBox}
+        viewBox={getProviderIcon(config.api_provider).viewBox}
       >
-        <path d={getProviderIcon(config.provider).path}></path>
+        <path d={getProviderIcon(config.api_provider).path}></path>
       </svg>
     {/if}
     <span class="text-sm truncate max-w-32">{getCurrentModelDisplayName()}</span
@@ -262,7 +263,7 @@
 
   {#if isOpen}
     <div
-      class="dropdown-content menu bg-base-100 rounded-box w-80 max-h-96 overflow-y-auto shadow-lg border border-base-300/50 z-50 absolute top-full left-0 mt-1"
+      class="dropdown-content menu bg-base-100 rounded-box w-80 max-h-96 overflow-y-auto border border-base-300/50 z-50 absolute bottom-full left-0 mb-1"
     >
       {#if config?.available_models}
         {#if hasAnyModels()}
@@ -319,7 +320,7 @@
                           Neural machine translation service
                         </div>
                       </div>
-                      {#if config.provider === provider}
+                      {#if config.api_provider === provider}
                         <CheckIcon class="w-4 h-4 text-success" />
                       {/if}
                     </button>
@@ -348,7 +349,7 @@
                             </div>
                           {/if}
                         </div>
-                        {#if config.provider === provider && config.model === model.name}
+                        {#if config.api_provider === provider && config.model === model.name}
                           <CheckIcon class="w-4 h-4 text-success" />
                         {/if}
                       </button>

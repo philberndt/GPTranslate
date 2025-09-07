@@ -127,7 +127,7 @@
     <!-- Content -->
     <div class="space-y-4">
       {#if isLoading}
-        <div class="card bg-base-100 shadow-md border border-base-300/50">
+        <div class="card bg-base-100 border border-base-300/50">
           <div class="card-body text-center">
             <div class="loading loading-spinner loading-md" role="status"></div>
             <p class="text-base-content/70">Loading history...</p>
@@ -138,7 +138,7 @@
           <span>Error: {error}</span>
         </div>
       {:else if history.entries.length === 0}
-        <div class="card bg-base-100 shadow-md border border-base-300/50">
+        <div class="card bg-base-100 border border-base-300/50">
           <div class="card-body text-center">
             <p class="text-base-content/70">No translation history found.</p>
           </div>
@@ -146,7 +146,7 @@
       {:else}
         <div class="space-y-3">
           {#each history.entries as entry (entry.id)}
-            <div class="card bg-base-100 shadow-md border border-base-300/50 hover:shadow-lg transition-shadow">
+            <div class="card bg-base-100 border border-base-300/50">
               <div class="card-body p-4">
                 <div class="flex items-center justify-between mb-3">
                   <div class="flex items-center gap-2">

@@ -57,7 +57,7 @@
   <h4 class="text-lg font-semibold text-base-content">Model Management</h4>
 
   <!-- Add New Model -->
-  <div class="card bg-base-100 shadow-md border border-base-300/50">
+  <div class="card bg-base-100 border border-base-300/50">
     <div class="card-body">
       <h5 class="card-title">Add New Model</h5>
       
@@ -130,7 +130,7 @@
   <!-- Model Lists -->
   {#each Object.entries(availableModels) as [provider, models] (provider)}
     {#if models && models.length > 0 && provider !== "azure_translator"}
-      <div class="card bg-base-100 shadow-md border border-base-300/50">
+      <div class="card bg-base-100 border border-base-300/50">
         <div class="card-body">
           <div class="flex items-center justify-between mb-4">
             <h5 class="card-title text-base">

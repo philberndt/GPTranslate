@@ -9,6 +9,7 @@ use winapi::um::winuser::{COLOR_WINDOW, GetSysColor};
 
 mod config;
 mod history;
+mod provider_factory;
 pub mod theme;
 mod trans_azure;
 mod trans_azure_translator;
@@ -16,14 +17,13 @@ mod trans_ollama;
 mod trans_openai;
 mod translation;
 mod tray;
-mod provider_factory;
 
 use config::Config;
 use history::{
     TranslationHistory, add_translation_to_history, clear_translation_history, deduplicate_history,
     delete_history_entry, fix_target_language_in_history, get_translation_history,
 };
-use translation::{TranslationResult, TranslationService, AlternativeTranslationsResult};
+use translation::{AlternativeTranslationsResult, TranslationResult, TranslationService};
 
 // Application state
 pub struct AppState {
@@ -205,6 +205,18 @@ async fn get_alternative_translations(
     }
 }
 
+#[tauri::command]
+async fn get_alternative_translations_debug(
+    selected_text: String,
+    target_language: String,
+    state: State<'_, AppState>,
+) -> Result<serde_json::Value, String> {
+    match translation::get_alternative_translations_debug(selected_text, target_language, state).await {
+        Ok(result) => Ok(result),
+        Err(e) => Err(e.to_string()),
+    }
+}
+
 fn extract_api_version_from_url(url: &str) -> Option<String> {
     // Try to extract api-version from URL query parameters
     if let Ok(parsed_url) = url::Url::parse(url) {
@@ -304,10 +316,10 @@ async fn validate_api_key(
                     .header("Content-Type", "application/json; charset=UTF-8");
 
                 // Add region header if provided
-                if let Some(region) = region {
-                    if !region.is_empty() {
-                        request = request.header("Ocp-Apim-Subscription-Region", &region);
-                    }
+                if let Some(region) = region
+                    && !region.is_empty()
+                {
+                    request = request.header("Ocp-Apim-Subscription-Region", &region);
                 }
 
                 let response = request
@@ -676,7 +688,8 @@ pub fn run() {
             delete_history_entry_cmd,
             fix_target_language_in_history_cmd,
             reset_detected_language,
-            get_alternative_translations
+            get_alternative_translations,
+            get_alternative_translations_debug
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

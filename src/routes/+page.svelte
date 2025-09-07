@@ -33,7 +33,7 @@
       LanguageManager.createCustomLanguage("English")
   )
 
-  // Active view state: 'translate' | 'settings' | 'history'  
+  // Active view state: 'translate' | 'settings' | 'history'
   let activeView = $state<"translate" | "settings" | "history">("translate")
   let currentTheme = $state("auto")
   // Notification system
@@ -299,18 +299,33 @@
     try {
       const result = (await invoke("translate", {
         text: originalText,
-      })) as {
-        translated_text: string
-        detected_language: string
-        target_language: string
-      }
+      })) as any
 
       console.log("Translation result:", result)
+      try {
+        console.log("Translation result keys:", Object.keys(result || {}))
+      } catch {
+        // Ignore errors when logging result keys
+      }
 
-      translatedText = result.translated_text
+      // Support multiple possible backend response shapes
+      const translated =
+        (result &&
+          (result.translated_text ??
+            result.translatedText ??
+            result.translation ??
+            result.output ??
+            result.text)) ??
+        ""
+
+      translatedText =
+        typeof translated === "string" ? translated : JSON.stringify(translated)
 
       // Set target language from the response
-      if (result.target_language && result.target_language.trim() !== "") {
+      if (
+        result?.target_language &&
+        String(result.target_language).trim() !== ""
+      ) {
         targetLanguage = result.target_language
         console.log("Set target language to:", result.target_language)
       } else {
@@ -319,10 +334,10 @@
 
       // Only set detectedLanguage if it's a valid, non-empty string and not "unknown" variants
       if (
-        result.detected_language &&
-        result.detected_language.trim() !== "" &&
-        result.detected_language.toLowerCase() !== "unknown" &&
-        result.detected_language.toLowerCase() !== "unknowm"
+        result?.detected_language &&
+        String(result.detected_language).trim() !== "" &&
+        String(result.detected_language).toLowerCase() !== "unknown" &&
+        String(result.detected_language).toLowerCase() !== "unknowm"
       ) {
         detectedLanguage = result.detected_language
         console.log("Set detected language to:", result.detected_language)
@@ -330,7 +345,7 @@
         detectedLanguage = ""
         console.log(
           "Cleared detected language, received:",
-          result.detected_language
+          result?.detected_language
         )
       }
 
@@ -437,7 +452,7 @@
       <Settings
         config={config || {
           api_provider: "openai",
-          theme: "auto", 
+          theme: "auto",
           openai_api_key: "",
           azure_api_key: "",
           azure_endpoint: "",
@@ -454,7 +469,7 @@
           hotkey_enabled: true,
           hotkey_modifiers: ["ctrl", "shift"],
           hotkey_key: "t",
-          available_models: { openai: [] }
+          available_models: { openai: [] },
         }}
         onClose={closeSettings}
         theme={currentTheme}
@@ -462,9 +477,14 @@
       />
     </div>
   {:else if activeView === "translate"}
-    <div data-view="translate" class="flex flex-col h-full overflow-hidden space-y-1">
+    <div
+      data-view="translate"
+      class="flex flex-col h-full overflow-hidden space-y-1"
+    >
       <!-- Translation Cards Grid -->
-      <div class="grid grid-cols-2 items-stretch gap-1 md:gap-2 flex-1 overflow-hidden">
+      <div
+        class="grid grid-cols-2 items-stretch gap-1 md:gap-2 flex-1 overflow-hidden"
+      >
         <!-- Source Text Card -->
         <div class="card bg-base-100 border border-base-300/50 h-full">
           <div class="card-body flex flex-col h-full p-2">
@@ -584,7 +604,7 @@
             >
               <button
                 type="button"
-                class="btn btn-soft btn-primary btn-xs"
+                class="btn btn-soft btn-primary btn-sm"
                 onclick={translateText}
                 disabled={!originalText.trim() || isTranslating}
                 title="Translate text"
@@ -594,7 +614,7 @@
               </button>
               <button
                 type="button"
-                class="btn btn-soft btn-secondary btn-xs"
+                class="btn btn-soft btn-secondary btn-sm"
                 onclick={() => {
                   copyToClipboard()
                   showCopyNotificationMessage()
@@ -607,7 +627,7 @@
               </button>
               <button
                 type="button"
-                class="btn btn-soft btn-neutral btn-xs"
+                class="btn btn-soft btn-neutral btn-sm"
                 onclick={clearText}
                 title="Clear all text"
               >

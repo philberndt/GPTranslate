@@ -13,7 +13,6 @@ pub struct AzureOpenAITranslationService {
 
 impl AzureOpenAITranslationService {
     pub fn new(config: Config) -> Self {
-
         log::info!(
             "Creating AzureOpenAITranslationService with endpoint: {}",
             config.azure_endpoint
@@ -33,17 +32,18 @@ impl AzureOpenAITranslationService {
             ""
         };
         let model_name = self.config.model.as_str();
-        
+
         // Check both deployment name and model name
-        let is_reasoning = is_reasoning_model_name(deployment_name) || is_reasoning_model_name(model_name);
-        
+        let is_reasoning =
+            is_reasoning_model_name(deployment_name) || is_reasoning_model_name(model_name);
+
         log::info!(
             "Azure - Reasoning model detection: deployment='{}', model='{}', is_reasoning={}",
             deployment_name,
             model_name,
             is_reasoning
         );
-        
+
         is_reasoning
     }
 
@@ -94,7 +94,11 @@ impl AzureOpenAITranslationService {
         if !response.status().is_success() {
             let status = response.status();
             let error_text = response.text().await?;
-            log::error!("Azure OpenAI API request failed: Status: {}, Error: {}", status, error_text);
+            log::error!(
+                "Azure OpenAI API request failed: Status: {}, Error: {}",
+                status,
+                error_text
+            );
             return Err(anyhow::anyhow!(
                 "Azure OpenAI API request failed ({}): {}",
                 status,
@@ -305,13 +309,29 @@ impl TranslationProvider for AzureOpenAITranslationService {
             self.config.model
         );
 
-        // GPT-5 series supports system messages, o-series may need developer messages
-        let system_role = if is_reasoning_model && (model_name.starts_with("o1") || model_name.starts_with("o3") || model_name.starts_with("o4-mini")) {
+        // Role selection based on reasoning model type:
+        // - GPT-5 models: Use "system" role (they support system messages)
+        // - O-series models (o1, o3, o4-mini): Use "developer" role
+        // - Non-reasoning models: Use "system" role
+        let system_role = if is_reasoning_model
+            && (model_name.starts_with("o1")
+                || model_name.starts_with("o3")
+                || model_name.starts_with("o4-mini"))
+        {
             "developer"
         } else {
             "system"
         };
-        let system_content = format!("{}\n\nIMPORTANT FORMATTING RULES:\n- Always respond with valid JSON containing 'detected_language' and 'translated_text' fields\n- Preserve line breaks and paragraph structure in the translation\n- Use actual newline characters (\\n) in the JSON string value, not escaped \\\\n\n- Do NOT escape newlines in the JSON response - use literal newlines\n\nExample response format:\n{{\n  \"detected_language\": \"English\",\n  \"translated_text\": \"Line 1\\nLine 2\\n\\nNew paragraph\"\n}}", smart_prompt);
+        let system_content = if is_reasoning_model {
+            // For reasoning models, use much simpler instructions with formatting re-enabled
+            format!("Formatting re-enabled - please respond with valid JSON.\n\n{}\n\nRespond with JSON containing 'detected_language' and 'translated_text' fields.", smart_prompt)
+        } else {
+            // For non-reasoning models, use detailed instructions
+            format!(
+                "{}\n\nIMPORTANT FORMATTING RULES:\n- Always respond with valid JSON containing 'detected_language' and 'translated_text' fields\n- Preserve line breaks and paragraph structure in the translation\n- Use actual newline characters (\\n) in the JSON string value, not escaped \\\\n\n- Do NOT escape newlines in the JSON response - use literal newlines\n\nExample response format:\n{{\n  \"detected_language\": \"English\",\n  \"translated_text\": \"Line 1\\nLine 2\\n\\nNew paragraph\"\n}}",
+                smart_prompt
+            )
+        };
 
         let mut request_body = json!({
             "messages": [
@@ -326,11 +346,6 @@ impl TranslationProvider for AzureOpenAITranslationService {
             ]
         });
 
-        // Add temperature only for non-reasoning models
-        if !is_reasoning_model {
-            request_body["temperature"] = json!(0.3);
-        }
-
         // Use appropriate token parameter based on model type
         if is_reasoning_model {
             request_body["max_completion_tokens"] = json!(800);
@@ -338,8 +353,17 @@ impl TranslationProvider for AzureOpenAITranslationService {
             let effort = self.config.reasoning_effort.as_deref().unwrap_or("medium");
             request_body["reasoning_effort"] = json!(effort);
             log::info!("Azure - Using reasoning effort: {}", effort);
+            
+            // Add verbosity parameter for GPT-5 models
+            if model_name.starts_with("gpt-5") {
+                request_body["verbosity"] = json!("medium");
+                log::info!("Azure - Using verbosity: medium for GPT-5 model");
+            }
+            
+            // Note: Reasoning models don't support temperature, top_p, presence_penalty, frequency_penalty, logprobs, top_logprobs, logit_bias parameters
         } else {
             request_body["max_tokens"] = json!(800);
+            request_body["temperature"] = json!(0.3);
         }
 
         // For Azure Models API endpoints, we need to include the model parameter
@@ -358,10 +382,23 @@ impl TranslationProvider for AzureOpenAITranslationService {
             "Azure API Response: {}",
             serde_json::to_string_pretty(&response).unwrap_or_default()
         );
+
+        // Better error handling for response structure
+        let choices = response["choices"].as_array()
+            .ok_or_else(|| anyhow::anyhow!("No 'choices' array in response. Full response: {}", serde_json::to_string_pretty(&response).unwrap_or_default()))?;
+            
+        if choices.is_empty() {
+            return Err(anyhow::anyhow!("Empty 'choices' array in response. Full response: {}", serde_json::to_string_pretty(&response).unwrap_or_default()));
+        }
         
-        let content = response["choices"][0]["message"]["content"]
+        let message = &choices[0]["message"];
+        if message.is_null() {
+            return Err(anyhow::anyhow!("No 'message' object in first choice. Full response: {}", serde_json::to_string_pretty(&response).unwrap_or_default()));
+        }
+        
+        let content = message["content"]
             .as_str()
-            .ok_or_else(|| anyhow::anyhow!("No content in response"))?;
+            .ok_or_else(|| anyhow::anyhow!("No 'content' field in message or content is not a string. Message: {}", serde_json::to_string_pretty(message).unwrap_or_default()))?;
 
         log::info!("Azure API Response Content: {}", content);
         self.parse_response_content(content)

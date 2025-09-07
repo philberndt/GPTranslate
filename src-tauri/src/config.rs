@@ -87,6 +87,92 @@ impl Default for Config {
 }
 
 impl Config {
+    /// Parse the alternative translations fallback provider setting and resolve it to
+    /// a concrete `(provider, model)` pair using the currently configured models.
+    ///
+    /// Supported formats:
+    /// - "provider:model" (e.g., "openai:gpt-4o-mini", "azure_openai:my-deployment")
+    /// - "provider" (no model): resolves to the first enabled model for that provider,
+    ///   or provider-specific defaults (e.g., `azure_deployment_name`) or current `model`.
+    pub fn parse_alternatives_fallback(&self) -> Option<(String, String)> {
+        let raw = self.alternatives_fallback_provider.as_deref()?.trim();
+        if raw.is_empty() {
+            return None;
+        }
+
+        let (provider, mut model) = match raw.split_once(':') {
+            Some((p, m)) => (p.trim().to_lowercase(), m.trim().to_string()),
+            None => (raw.to_lowercase(), String::new()),
+        };
+
+        // Validate provider
+        match provider.as_str() {
+            "openai" | "azure_openai" | "ollama" => {}
+            other => {
+                log::warn!("Unknown alternatives fallback provider '{}'", other);
+                return None;
+            }
+        }
+
+        // If model not specified, try to resolve a sensible default
+        if model.is_empty() {
+            // Prefer a currently configured, enabled model for that provider
+            if let Some(models) = self.available_models.get(&provider) {
+                if let Some(first_enabled) = models.iter().find(|m| m.is_enabled) {
+                    model = first_enabled.name.clone();
+                } else if let Some(first_any) = models.first() {
+                    model = first_any.name.clone();
+                }
+            }
+
+            // Azure OpenAI: if still empty, use deployment name
+            if model.is_empty()
+                && provider == "azure_openai"
+                && !self.azure_deployment_name.is_empty()
+            {
+                model = self.azure_deployment_name.clone();
+            }
+
+            // If still empty and the current global model matches the provider, use it
+            if model.is_empty() && self.api_provider == provider && !self.model.is_empty() {
+                model = self.model.clone();
+            }
+        } else {
+            // Model was provided; if it's an Azure OpenAI provider and model looks empty,
+            // fall back to deployment name
+            if provider == "azure_openai"
+                && model.is_empty()
+                && !self.azure_deployment_name.is_empty()
+            {
+                model = self.azure_deployment_name.clone();
+            }
+        }
+
+        if model.is_empty() {
+            log::warn!(
+                "Could not resolve a model for alternatives fallback provider '{}'. Check Settings → Model Management.",
+                provider
+            );
+            return None;
+        }
+
+        Some((provider, model))
+    }
+
+    /// Ensures that for Azure OpenAI, the deployment name matches the model name
+    pub fn ensure_azure_deployment_consistency(&mut self) {
+        if self.api_provider == "azure_openai" && !self.model.is_empty() {
+            if self.azure_deployment_name != self.model {
+                log::info!(
+                    "Updating Azure deployment name from '{}' to '{}' to match model",
+                    self.azure_deployment_name,
+                    self.model
+                );
+                self.azure_deployment_name = self.model.clone();
+            }
+        }
+    }
+
     pub fn get_config_dir() -> Result<PathBuf> {
         let home_dir =
             dirs::home_dir().ok_or_else(|| anyhow::anyhow!("Could not find home directory"))?;
@@ -193,7 +279,8 @@ impl Config {
                             value["auto_translate_enabled"] = serde_json::Value::Bool(true);
                         }
                         if value.get("auto_translate_debounce_ms").is_none() {
-                            value["auto_translate_debounce_ms"] = serde_json::Value::Number(serde_json::Number::from(500));
+                            value["auto_translate_debounce_ms"] =
+                                serde_json::Value::Number(serde_json::Number::from(500));
                         }
                         if value.get("auto_translate_on_paste").is_none() {
                             value["auto_translate_on_paste"] = serde_json::Value::Bool(true);
@@ -230,18 +317,6 @@ impl Config {
             default_config.save()?;
             Ok(default_config)
         }
-    }
-
-    /// Parse the alternatives fallback provider string into (provider, model)
-    pub fn parse_alternatives_fallback(&self) -> Option<(String, String)> {
-        if let Some(fallback) = &self.alternatives_fallback_provider {
-            if let Some(colon_pos) = fallback.find(':') {
-                let provider = fallback[..colon_pos].to_string();
-                let model = fallback[colon_pos + 1..].to_string();
-                return Some((provider, model));
-            }
-        }
-        None
     }
 
     pub fn save(&self) -> Result<()> {
