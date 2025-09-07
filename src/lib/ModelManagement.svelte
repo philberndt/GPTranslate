@@ -55,11 +55,6 @@
 </script>
 
 <div class="space-y-6">
-  <h4 class="text-lg font-semibold text-base-content flex items-center gap-2">
-    <CpuChipIcon class="w-5 h-5" />
-    Model Management
-  </h4>
-
   <!-- Add New Model -->
   <div class="card bg-base-100 border border-base-300/50">
     <div class="card-body">

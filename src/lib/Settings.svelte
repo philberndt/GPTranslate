@@ -354,10 +354,13 @@
     </div>
 
     <!-- Tab Navigation with Styled Tabs -->
-    <div class="tabs tabs-lift mb-2 shrink-0" role="tablist">
+    <div
+      class="tabs tabs-lift mb-2 shrink-0 settings-tabs bg-transparent w-full justify-center"
+      role="tablist"
+    >
       <button
         role="tab"
-        class="tab {activeTab === 'api' ? 'tab-active' : ''}"
+        class="tab text-base {activeTab === 'api' ? 'tab-active' : ''}"
         onclick={() => setActiveTab("api")}
       >
         <WrenchScrewdriverIcon class="w-4 h-4 mr-2" />
@@ -365,7 +368,7 @@
       </button>
       <button
         role="tab"
-        class="tab {activeTab === 'models' ? 'tab-active' : ''}"
+        class="tab text-base {activeTab === 'models' ? 'tab-active' : ''}"
         onclick={() => setActiveTab("models")}
       >
         <CpuChipIcon class="w-4 h-4 mr-2" />
@@ -373,7 +376,7 @@
       </button>
       <button
         role="tab"
-        class="tab {activeTab === 'languages' ? 'tab-active' : ''}"
+        class="tab text-base {activeTab === 'languages' ? 'tab-active' : ''}"
         onclick={() => setActiveTab("languages")}
       >
         <GlobeAltIcon class="w-4 h-4 mr-2" />
@@ -381,7 +384,7 @@
       </button>
       <button
         role="tab"
-        class="tab {activeTab === 'behavior' ? 'tab-active' : ''}"
+        class="tab text-base {activeTab === 'behavior' ? 'tab-active' : ''}"
         onclick={() => setActiveTab("behavior")}
       >
         <CogIcon class="w-4 h-4 mr-2" />
@@ -389,7 +392,7 @@
       </button>
       <button
         role="tab"
-        class="tab {activeTab === 'about' ? 'tab-active' : ''}"
+        class="tab text-base {activeTab === 'about' ? 'tab-active' : ''}"
         onclick={() => setActiveTab("about")}
       >
         <InformationCircleIcon class="w-4 h-4 mr-2" />
@@ -399,7 +402,7 @@
 
     <!-- Scrollable content area -->
     <div
-      class="card bg-base-100 border border-base-300/50 flex-1 min-h-0 overflow-auto"
+      class="card bg-base-100 border border-base-300/50 flex-1 min-h-0 overflow-auto scrollbar-stable"
     >
       <!-- inner scroll area stays within card-body -->
       <div class="card-body">
@@ -415,14 +418,6 @@
             {validateApiKey}
           />
         {:else if activeTab === "models"}
-          <div class="space-y-2">
-            <h4
-              class="text-lg font-semibold text-base-content flex items-center gap-2"
-            >
-              <CpuChipIcon class="w-5 h-5" />
-              Model Management
-            </h4>
-          </div>
           <ModelManagement
             availableModels={config.available_models}
             onModelAdd={handleModelAdd}
@@ -430,14 +425,6 @@
             onModelToggle={handleModelToggle}
           />
         {:else if activeTab === "languages"}
-          <div class="space-y-2">
-            <h4
-              class="text-lg font-semibold text-base-content mb-2 flex items-center gap-2"
-            >
-              <GlobeAltIcon class="w-5 h-5" />
-              Translation Languages
-            </h4>
-          </div>
           <LanguagesTab
             {config}
             onConfigUpdate={async (newConfig) => {

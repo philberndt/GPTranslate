@@ -15,8 +15,6 @@
 
 <!-- App Behavior Section -->
 <div class="space-y-6">
-  <h3 class="text-lg font-semibold mb-4">App Behavior</h3>
-
   <!-- Theme Section -->
   <div class="card bg-base-100 border border-base-300/50">
     <div class="card-body">

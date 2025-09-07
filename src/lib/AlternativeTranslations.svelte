@@ -14,9 +14,15 @@
     translatedText: string
     targetLanguage: string
     onTextUpdate: (newText: string) => void
+    isTranslating?: boolean
   }
 
-  let { translatedText, targetLanguage, onTextUpdate }: Props = $props()
+  let {
+    translatedText,
+    targetLanguage,
+    onTextUpdate,
+    isTranslating = false,
+  }: Props = $props()
 
   // State
   let selectedText = $state("")
@@ -275,7 +281,7 @@
 <!-- Translated text area with selection support -->
 <div
   bind:this={translatedTextElement}
-  class="textarea textarea-bordered w-full h-full min-h-0 cursor-text p-1 whitespace-pre-wrap bg-base-200 border-base-300 focus:border-primary/30 focus:bg-base-200 overflow-auto relative"
+  class="textarea textarea-bordered w-full h-full min-h-0 cursor-text p-3 whitespace-pre-wrap bg-base-200 border-base-300 focus:border-primary/30 focus:bg-base-200 overflow-auto relative"
   role="textbox"
   aria-readonly="true"
   tabindex="0"
@@ -288,6 +294,15 @@
     <span class="text-base-content/60 italic"
       >Translation will appear here...</span
     >
+  {/if}
+
+  <!-- Loading indicator overlay -->
+  {#if isTranslating}
+    <div
+      class="absolute inset-0 flex items-center justify-center bg-base-200/80 z-10"
+    >
+      <div class="loading loading-ring loading-lg"></div>
+    </div>
   {/if}
   <!-- Overlay container for highlight effects -->
   <div

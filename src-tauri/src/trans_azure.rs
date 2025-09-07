@@ -124,14 +124,15 @@ impl AzureOpenAITranslationService {
             log::info!("Cleaned content: {}", cleaned_content);
         }
 
-        // Try to parse as JSON, but handle cases where the AI might have returned plain text
+        // IMPORTANT: For reasoning models, the content is often just the JSON text itself
+        // First try direct JSON parsing
         let parsed: Value = match serde_json::from_str(&cleaned_content) {
             Ok(json) => {
-                log::info!("Successfully parsed JSON response");
+                log::info!("Successfully parsed JSON response directly");
                 json
             }
             Err(parse_error) => {
-                log::warn!("Failed to parse as JSON: {}", parse_error);
+                log::warn!("Failed to parse as JSON directly: {}", parse_error);
 
                 // Try to find and extract valid JSON from the response
                 if let Some(start_idx) = cleaned_content.find('{') {
@@ -185,37 +186,43 @@ impl AzureOpenAITranslationService {
             }
         };
 
-        // Extract detected language and translated text from parsed JSON
-        let detected_language = match parsed["detected_language"].as_str() {
-            Some(lang) if !lang.is_empty() => lang.to_string(),
-            _ => {
-                // If detected_language field is missing or empty, try to look deeper in JSON structure
-                if let Some(lang) = parsed.get("detected_language").and_then(|v| v.as_str()) {
-                    lang.to_string()
-                } else {
-                    "unknown".to_string()
-                }
+        // Extract detected language from parsed JSON with better error handling
+        let detected_language = if let Some(lang) = parsed["detected_language"].as_str() {
+            if !lang.is_empty() && lang.to_lowercase() != "unknown" {
+                log::info!("✅ Successfully extracted detected_language from JSON: {}", lang);
+                lang.to_string()
+            } else {
+                log::warn!("⚠️ detected_language field found but is empty or 'unknown': {}", lang);
+                "unknown".to_string()
             }
+        } else {
+            log::error!("❌ No 'detected_language' field found in JSON. Available keys: {:?}", parsed.as_object().map(|obj| obj.keys().collect::<Vec<_>>()));
+            "unknown".to_string()
         };
-        let translated_text = match parsed["translated_text"].as_str() {
-            Some(text) => {
+        let translated_text = if let Some(text) = parsed["translated_text"].as_str() {
+            if !text.is_empty() {
+                log::info!("✅ Successfully extracted translated_text from JSON (length: {})", text.len());
                 // Properly handle escaped newlines that Azure might return
                 text.replace("\\n", "\n")
                     .replace("\\r\\n", "\n")
                     .replace("\\r", "\n")
                     .replace("\\t", "\t")
+            } else {
+                log::error!("❌ translated_text field found but is empty");
+                "translation failed".to_string()
             }
-            None => {
-                // If translated_text field is missing, check if the whole response is just text
-                if parsed.is_string() {
-                    let text = parsed.as_str().unwrap_or("translation failed");
-                    text.replace("\\n", "\n")
-                        .replace("\\r\\n", "\n")
-                        .replace("\\r", "\n")
-                        .replace("\\t", "\t")
-                } else {
-                    "translation failed".to_string()
-                }
+        } else {
+            log::error!("❌ No 'translated_text' field found in JSON. Available keys: {:?}", parsed.as_object().map(|obj| obj.keys().collect::<Vec<_>>()));
+            // If translated_text field is missing, check if the whole response is just text
+            if parsed.is_string() {
+                let text = parsed.as_str().unwrap_or("translation failed");
+                log::info!("📝 Using whole response as translated text (length: {})", text.len());
+                text.replace("\\n", "\n")
+                    .replace("\\r\\n", "\n")
+                    .replace("\\r", "\n")
+                    .replace("\\t", "\t")
+            } else {
+                "translation failed".to_string()
             }
         };
 
@@ -336,13 +343,19 @@ impl TranslationProvider for AzureOpenAITranslationService {
         let system_content = if is_alternatives_request {
             // For alternatives requests, use the system prompt directly with minimal formatting
             if is_reasoning_model {
-                format!("Formatting re-enabled - please respond with valid JSON.\n\n{}", system_prompt)
+                format!("Please respond with valid JSON.\n\n{}", system_prompt)
             } else {
                 system_prompt
             }
         } else if is_reasoning_model {
-            // For reasoning models, use much simpler instructions with formatting re-enabled
-            format!("Formatting re-enabled - please respond with valid JSON.\n\n{}\n\nRespond with JSON containing 'detected_language' and 'translated_text' fields.", system_prompt)
+            // For reasoning models, use simplified instructions
+            if model_name.starts_with("gpt-5") {
+                // GPT-5 specific: even more simplified
+                format!("{}\n\nPlease respond with valid JSON containing 'detected_language' and 'translated_text' fields.", system_prompt)
+            } else {
+                // Other reasoning models
+                format!("Please respond with valid JSON.\n\n{}\n\nRespond with JSON containing 'detected_language' and 'translated_text' fields.", system_prompt)
+            }
         } else {
             // For non-reasoning models, use detailed instructions
             format!(
@@ -366,17 +379,29 @@ impl TranslationProvider for AzureOpenAITranslationService {
 
         // Use appropriate token parameter based on model type
         if is_reasoning_model {
-            request_body["max_completion_tokens"] = json!(800);
-            // Add reasoning_effort parameter for Azure reasoning models
-            let effort = self.config.reasoning_effort.as_deref().unwrap_or("medium");
-            request_body["reasoning_effort"] = json!(effort);
-            log::info!("Azure - Using reasoning effort: {}", effort);
-            
-            // Add verbosity parameter for GPT-5 models
+            // GPT-5 models support "minimal" reasoning effort which is optimal
             if model_name.starts_with("gpt-5") {
-                request_body["verbosity"] = json!("medium");
-                log::info!("Azure - Using verbosity: medium for GPT-5 model");
+                request_body["max_completion_tokens"] = json!(1000);
+                request_body["reasoning_effort"] = json!("minimal");
+                log::info!("Azure - GPT-5 specific config: max_completion_tokens=1000, reasoning_effort=minimal");
+            } else if model_name.starts_with("gpt-4.1") {
+                // GPT-4.1 should use low reasoning effort
+                request_body["max_completion_tokens"] = json!(800);
+                request_body["reasoning_effort"] = json!("low");
+                log::info!("Azure - GPT-4.1 specific config: max_completion_tokens=800, reasoning_effort=low");
+            } else {
+                // Other reasoning models (o1, o3, etc.) - use config or default to low
+                request_body["max_completion_tokens"] = json!(800);
+                let effort = self.config.reasoning_effort.as_deref().unwrap_or("low");
+                request_body["reasoning_effort"] = json!(effort);
+                log::info!("Azure - Using reasoning effort: {}", effort);
             }
+            
+            // Add JSON mode for reasoning models to ensure proper JSON response
+            request_body["response_format"] = json!({
+                "type": "json_object"
+            });
+            log::info!("Azure - Added JSON mode for reasoning model");
             
             // Note: Reasoning models don't support temperature, top_p, presence_penalty, frequency_penalty, logprobs, top_logprobs, logit_bias parameters
         } else {
@@ -401,6 +426,17 @@ impl TranslationProvider for AzureOpenAITranslationService {
             serde_json::to_string_pretty(&response).unwrap_or_default()
         );
 
+        // Additional debugging for GPT-5 models
+        if model_name.starts_with("gpt-5") {
+            log::error!("GPT-5 DEBUG - Full response structure: {}", serde_json::to_string_pretty(&response).unwrap_or_default());
+            if let Some(choices) = response["choices"].as_array() {
+                log::error!("GPT-5 DEBUG - Choices length: {}", choices.len());
+                if !choices.is_empty() {
+                    log::error!("GPT-5 DEBUG - First choice: {}", serde_json::to_string_pretty(&choices[0]).unwrap_or_default());
+                }
+            }
+        }
+
         // Better error handling for response structure
         let choices = response["choices"].as_array()
             .ok_or_else(|| anyhow::anyhow!("No 'choices' array in response. Full response: {}", serde_json::to_string_pretty(&response).unwrap_or_default()))?;
@@ -419,6 +455,12 @@ impl TranslationProvider for AzureOpenAITranslationService {
             .ok_or_else(|| anyhow::anyhow!("No 'content' field in message or content is not a string. Message: {}", serde_json::to_string_pretty(message).unwrap_or_default()))?;
 
         log::info!("Azure API Response Content: {}", content);
+        
+        // Additional debugging for empty content
+        if content.is_empty() {
+            log::error!("EMPTY CONTENT DEBUG - Model: {}, Content length: {}", model_name, content.len());
+            log::error!("EMPTY CONTENT DEBUG - Full message object: {}", serde_json::to_string_pretty(message).unwrap_or_default());
+        }
         
         // Check if this is an alternatives request
         let is_alternatives_request = self.config.custom_prompt.contains("alternatives");

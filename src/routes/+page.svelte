@@ -446,7 +446,10 @@
   }
 </script>
 
-<main class="mx-auto p-3 md:p-4 h-screen overflow-hidden bg-base-100">
+<main
+  class="mx-auto p-3 md:p-4 h-screen overflow-hidden bg-base-100"
+  style="height: 96vh;"
+>
   {#if activeView === "settings"}
     <div data-view="settings" class="flex flex-col h-full overflow-hidden">
       <Settings
@@ -509,7 +512,7 @@
               </div>
             </div>
             <textarea
-              class="textarea textarea-bordered w-full flex-1 min-h-0 resize-none overflow-auto bg-base-200 border-base-300 focus:border-primary/30 focus:bg-base-200 p-1"
+              class="textarea textarea-bordered w-full flex-1 min-h-0 resize-none overflow-auto bg-base-200 border-base-300 focus:border-primary/30 focus:bg-base-200 p-3"
               bind:value={originalText}
               placeholder={`Enter text to translate or use ${config?.hotkey || "Ctrl+Alt+C"} to capture from clipboard...`}
               oninput={() => {
@@ -529,7 +532,9 @@
           <div class="card-body flex flex-col h-full p-2">
             <div class="card-title justify-between items-center mb-1">
               <div class="flex items-center gap-2">
-                <span class="text-sm md:text-base font-semibold">To:</span>
+                <span class="text-sm md:text-base font-semibold"
+                  >Translation:</span
+                >
                 {#if config}
                   <CompactLanguageDropdown
                     selectedLanguage={primaryTargetLanguage}
@@ -551,12 +556,13 @@
                 {/if}
               </div>
             </div>
-            <div class="flex-1 min-h-0 overflow-auto">
+            <div class="flex-1 min-h-0 overflow-hidden">
               <AlternativeTranslations
                 {translatedText}
                 targetLanguage={targetLanguage ||
                   primaryTargetLanguage.english_name}
                 onTextUpdate={handleTranslatedTextUpdate}
+                {isTranslating}
               />
             </div>
           </div>
@@ -571,23 +577,21 @@
             <div class="flex gap-2">
               <button
                 type="button"
-                class="btn btn-soft btn-sm"
+                class="btn btn-circle btn-sm"
                 onclick={openHistory}
                 title="Translation History"
                 aria-label="Open translation history"
               >
                 <ClockIcon class="w-5 h-5" />
-                History
               </button>
               <button
                 type="button"
-                class="btn btn-soft btn-sm"
+                class="btn btn-circle btn-sm"
                 onclick={openSettings}
                 title="Settings"
                 aria-label="Open settings"
               >
                 <CogIcon class="w-5 h-5" />
-                Settings
               </button>
             </div>
 
@@ -614,7 +618,7 @@
               </button>
               <button
                 type="button"
-                class="btn btn-soft btn-secondary btn-sm"
+                class="btn btn-soft btn-accent btn-sm"
                 onclick={() => {
                   copyToClipboard()
                   showCopyNotificationMessage()
@@ -627,7 +631,7 @@
               </button>
               <button
                 type="button"
-                class="btn btn-soft btn-neutral btn-sm"
+                class="btn btn-soft btn-secondary btn-sm"
                 onclick={clearText}
                 title="Clear all text"
               >

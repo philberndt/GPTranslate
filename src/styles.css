@@ -46,6 +46,22 @@
   @apply bg-base-100 border-base-300/50;
 }
 
+/* Settings tabs: ensure inactive tabs stay neutral gray in dark mode */
+html[data-theme="dark"] .settings-tabs .tab:not(.tab-active) {
+  background-color: #1b1b1b !important; /* requested darker gray */
+  color: oklch(85% 0.02 240) !important;
+  border-color: var(--color-border-subtle) !important;
+}
+
+html[data-theme="dark"] .settings-tabs .tab.tab-active {
+  background-color: var(--color-base-100) !important;
+}
+
+/* subtle hover for inactive settings tabs */
+html[data-theme="dark"] .settings-tabs .tab:not(.tab-active):hover {
+  background-color: #222222 !important;
+}
+
 /* Improved spacing for the main container */
 .container {
   @apply py-6;
@@ -92,6 +108,18 @@
   --noise: 1;
 }
 
+html,
+body {
+  /* Ensure the viewport scroll container reserves gutter space */
+  scrollbar-gutter: stable;
+  /* Make sure the scroll container is the body, not the root element */
+  overflow-y: auto;
+}
+
+/* Optional utility for inner scroll areas that toggle overflow */
+.scrollbar-stable {
+  scrollbar-gutter: stable;
+}
 html[data-theme="dark"] {
   /* Dark mode tokens */
   --color-app-bg: #202020;
@@ -192,4 +220,129 @@ body {
 .btn:focus,
 .btn:focus-visible {
   box-shadow: none !important;
+}
+
+/* Improve button contrast in dark mode */
+html[data-theme="dark"] .btn-neutral {
+  background-color: oklch(30% 0.05 240);
+  color: oklch(90% 0.02 240);
+}
+
+html[data-theme="dark"] .btn-neutral:hover {
+  background-color: oklch(35% 0.05 240);
+}
+
+/* Ensure textareas maintain proper height and scrolling */
+.textarea {
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+}
+
+/* Fix grid layout to prevent overflow */
+.grid {
+  min-height: 0;
+}
+
+.grid > * {
+  min-height: 0;
+  min-width: 0;
+}
+
+/* WebView2 floating overlay scrollbars */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(156, 163, 175, 0.3) transparent;
+}
+
+html[data-theme="dark"] * {
+  scrollbar-color: rgba(229, 231, 235, 0.3) transparent;
+}
+
+/* Webkit scrollbar styling for WebView2 */
+::-webkit-scrollbar {
+  width: 12px;
+  height: 12px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+  margin: 2px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(156, 163, 175, 0.3);
+  border-radius: 6px;
+  border: 3px solid transparent;
+  background-clip: padding-box;
+  min-height: 20px;
+  transition: background-color 0.2s ease;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(156, 163, 175, 0.5);
+  background-clip: padding-box;
+}
+
+::-webkit-scrollbar-thumb:active {
+  background: rgba(156, 163, 175, 0.7);
+  background-clip: padding-box;
+}
+
+::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+/* Dark mode scrollbar colors */
+html[data-theme="dark"] ::-webkit-scrollbar-thumb {
+  background: rgba(229, 231, 235, 0.3);
+  background-clip: padding-box;
+}
+
+html[data-theme="dark"] ::-webkit-scrollbar-thumb:hover {
+  background: rgba(229, 231, 235, 0.4);
+  background-clip: padding-box;
+}
+
+html[data-theme="dark"] ::-webkit-scrollbar-thumb:active {
+  background: rgba(229, 231, 235, 0.6);
+  background-clip: padding-box;
+}
+
+/* Hide scrollbars completely for elements that request it */
+.scrollbar-none {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.scrollbar-none::-webkit-scrollbar {
+  display: none;
+}
+
+/* Floating scrollbars - only show on hover */
+.scrollbar-floating {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.scrollbar-floating::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.scrollbar-floating::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.scrollbar-floating::-webkit-scrollbar-thumb {
+  background: transparent;
+  border-radius: 4px;
+  transition: background-color 0.2s ease;
+}
+
+.scrollbar-floating:hover::-webkit-scrollbar-thumb {
+  background: rgba(156, 163, 175, 0.4);
+}
+
+html[data-theme="dark"] .scrollbar-floating:hover::-webkit-scrollbar-thumb {
+  background: rgba(229, 231, 235, 0.4);
 }

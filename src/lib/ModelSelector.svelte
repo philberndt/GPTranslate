@@ -35,8 +35,8 @@
 
   let { config, onModelChange }: Props = $props()
 
-  let isOpen = $state(false)
   let selectedModel = $state("")
+  let selectionValue = $state("")
 
   // Update selectedModel when config changes
   $effect(() => {
@@ -163,7 +163,7 @@
           console.log("⚠️ No onModelChange callback provided")
         }
 
-        isOpen = false
+        // closed state no longer needed for native select
       }
     } catch (e) {
       console.error("Failed to save model selection:", e)
@@ -235,175 +235,71 @@
       models.some((m) => m.is_enabled)
     )
   }
+  function readableProviderName(provider: string): string {
+    if (provider === "azure_openai") return "Azure OpenAI"
+    if (provider === "azure_translator") return "Azure AI Translator"
+    return provider.replace("_", " ").replace(/\b\w/g, (l) => l.toUpperCase())
+  }
+
+  function computeSelectionValue(): string {
+    if (!config) return ""
+    if (config.api_provider === "azure_translator") return "azure_translator::"
+
+    const key =
+      selectedModel ||
+      config.model ||
+      (config.api_provider === "azure_openai" ?
+        config.azure_deployment_name || ""
+      : "")
+
+    return `${config.api_provider}::${key || ""}`
+  }
+
+  $effect(() => {
+    selectionValue = computeSelectionValue()
+  })
+
+  function handleSelectChange(value: string) {
+    const [provider, modelName = ""] = value.split("::")
+    // Guard: if provider missing, ignore
+    if (!provider) return
+    selectModel(provider, modelName)
+  }
 </script>
 
-<div class="dropdown relative">
-  <button
-    class="btn btn-soft btn-sm gap-2"
-    type="button"
-    onclick={() => (isOpen = !isOpen)}
-    aria-expanded={isOpen}
-    title="Select AI Model"
+{#if config}
+  <select
+    class="select select-ghost"
+    value={selectionValue}
+    onchange={(e) => handleSelectChange((e.target as HTMLSelectElement).value)}
+    aria-label="Select AI model"
+    title="Select AI model"
   >
-    {#if config}
-      <svg
-        xmlns="http://www.w3.org/2000/svg"
-        width="12"
-        height="12"
-        fill="currentColor"
-        viewBox={getProviderIcon(config.api_provider).viewBox}
-      >
-        <path d={getProviderIcon(config.api_provider).path}></path>
-      </svg>
-    {/if}
-    <span class="text-sm truncate max-w-32">{getCurrentModelDisplayName()}</span
-    >
-    <ChevronDownIcon class="w-4 h-4" />
-  </button>
-
-  {#if isOpen}
-    <div
-      class="dropdown-content menu bg-base-100 rounded-box w-80 max-h-96 overflow-y-auto border border-base-300/50 z-50 absolute bottom-full left-0 mb-1"
-    >
-      {#if config?.available_models}
-        {#if hasAnyModels()}
-          <!-- Include all providers that have models OR are special cases like Azure AI Translator -->
-          {#each [...Object.keys(config.available_models), "azure_translator"].filter((provider, index, arr) => arr.indexOf(provider) === index) as provider (provider)}
-            {#if hasEnabledModels(provider)}
-              <div class="menu-title">
-                <div class="flex items-center gap-2 px-3 py-2">
-                  <span class="w-4 h-4">
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      width="14"
-                      height="14"
-                      fill="currentColor"
-                      viewBox={getProviderIcon(provider).viewBox}
-                    >
-                      <path d={getProviderIcon(provider).path}></path>
-                    </svg>
-                  </span>
-                  <span class="font-semibold text-sm"
-                    >{provider === "azure_openai" ? "Azure OpenAI"
-                    : provider === "azure_translator" ? "Azure AI Translator"
-                    : provider
-                        .replace("_", " ")
-                        .replace(/\b\w/g, (l) => l.toUpperCase())}</span
-                  >
-
-                  {#if !isProviderConfigured(provider)}
-                    <span class="badge badge-warning badge-xs"
-                      >Not Configured</span
-                    >
-                  {/if}
-                </div>
-              </div>
-
-              {#if isProviderConfigured(provider)}
-                {#if provider === "azure_translator"}
-                  <!-- Azure AI Translator doesn't use models -->
-                  <li>
-                    <button
-                      class="flex items-center justify-between p-3 text-left hover:bg-base-200 transition-colors duration-200"
-                      type="button"
-                      onclick={(e) => {
-                        e.stopPropagation()
-                        console.log(`🖱️ Azure AI Translator selected`)
-                        selectModel(provider, "")
-                      }}
-                    >
-                      <div class="flex-1">
-                        <div class="font-medium text-sm">
-                          Azure AI Translator
-                        </div>
-                        <div class="text-xs text-base-content/60">
-                          Neural machine translation service
-                        </div>
-                      </div>
-                      {#if config.api_provider === provider}
-                        <CheckIcon class="w-4 h-4 text-success" />
-                      {/if}
-                    </button>
-                  </li>
-                {:else}
-                  {#each getEnabledModelsForProvider(provider) as model (model.name)}
-                    <li>
-                      <button
-                        class="flex items-center justify-between p-3 text-left hover:bg-base-200 transition-colors duration-200"
-                        type="button"
-                        onclick={(e) => {
-                          e.stopPropagation()
-                          console.log(
-                            `🖱️ Model button clicked: ${model.name} from provider ${provider}`
-                          )
-                          selectModel(provider, model.name)
-                        }}
-                      >
-                        <div class="flex-1">
-                          <div class="font-medium text-sm">
-                            {model.display_name}
-                          </div>
-                          {#if model.description}
-                            <div class="text-xs text-base-content/60">
-                              {model.description}
-                            </div>
-                          {/if}
-                        </div>
-                        {#if config.api_provider === provider && config.model === model.name}
-                          <CheckIcon class="w-4 h-4 text-success" />
-                        {/if}
-                      </button>
-                    </li>
-                  {/each}
-                {/if}
-              {:else}
-                <li>
-                  <div class="p-3 text-xs text-base-content/60">
-                    Configure this provider in settings to use its models.
-                  </div>
-                </li>
-              {/if}
-            {/if}
-          {/each}
-        {:else}
-          <li>
-            <div class="p-4 text-center">
-              <InformationCircleIcon class="w-8 h-8 mx-auto mb-2 text-info" />
-              <div class="font-medium text-sm">No models configured</div>
-              <div class="text-xs text-base-content/60 mt-1">
-                Please add models in Settings → Model Management to get started.
-              </div>
-            </div>
-          </li>
-        {/if}
-      {:else}
-        <li>
-          <div class="p-4 text-center">
-            <div
-              class="loading loading-spinner loading-md"
-              role="status"
-              aria-hidden="true"
-            ></div>
-            <div class="text-sm mt-2">Loading models...</div>
-          </div>
-        </li>
+    {#if hasAnyModels()}
+      {#if isProviderConfigured("azure_translator")}
+        <optgroup label={readableProviderName("azure_translator")}>
+          <option value="azure_translator::">Azure AI Translator</option>
+        </optgroup>
       {/if}
-    </div>
-  {/if}
-</div>
-
-<!-- Click outside to close -->
-{#if isOpen}
-  <div
-    class="fixed inset-0 z-40"
-    onclick={() => (isOpen = false)}
-    onkeydown={(e) => {
-      if (e.key === "Escape") isOpen = false
-    }}
-    role="button"
-    tabindex="-1"
-    aria-label="Close model selector"
-  ></div>
+      {#each Object.keys(config.available_models) as provider (provider)}
+        {#if getEnabledModelsForProvider(provider).length > 0}
+          <optgroup label={readableProviderName(provider)}>
+            {#each getEnabledModelsForProvider(provider) as model (model.name)}
+              <option value={`${provider}::${model.name}`}>
+                {model.display_name}
+              </option>
+            {/each}
+          </optgroup>
+        {/if}
+      {/each}
+    {:else}
+      <option disabled selected>No models configured</option>
+    {/if}
+  </select>
+{:else}
+  <select class="select select-ghost" disabled>
+    <option>Loading models...</option>
+  </select>
 {/if}
 
 <!-- Custom CSS goes in /src/styles.css */ -->
