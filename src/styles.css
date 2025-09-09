@@ -4,6 +4,16 @@
     light --default,
     dark --prefersdark;
 }
+@plugin "daisyui/theme" {
+  name: "light";
+  default: true;
+  color-scheme: light;
+}
+@plugin "daisyui/theme" {
+  name: "dark";
+  prefersdark: true;
+  color-scheme: dark;
+}
 
 /* Custom styling enhancements */
 .btn {
@@ -104,16 +114,12 @@ html[data-theme="dark"] .settings-tabs .tab:not(.tab-active):hover {
   --color-border-subtle: #e6e6e6;
   --color-muted: #6b7280;
   --transition-fast: 150ms;
-  /* Enable subtle noise across components */
-  --noise: 1;
 }
 
 html,
 body {
-  /* Ensure the viewport scroll container reserves gutter space */
-  scrollbar-gutter: stable;
-  /* Make sure the scroll container is the body, not the root element */
-  overflow-y: auto;
+  /* The main app should never scroll; no reserved gutter at window level */
+  overflow: hidden;
 }
 
 /* Optional utility for inner scroll areas that toggle overflow */
@@ -127,8 +133,6 @@ html[data-theme="dark"] {
   --color-base-100: #202020;
   --color-border-subtle: #2f2f2f;
   --color-muted: #9ca3af;
-  /* Enable subtle noise in dark theme */
-  --noise: 1;
 }
 
 /* Apply the app background and subtle muted palette */
@@ -243,18 +247,23 @@ html[data-theme="dark"] .btn-neutral:hover {
   min-height: 0;
 }
 
-.grid > * {
+.grid > div,
+.grid > span,
+.grid > article,
+.grid > section {
   min-height: 0;
   min-width: 0;
 }
 
 /* WebView2 floating overlay scrollbars */
-* {
+::-webkit-scrollbar,
+.scrollable-content {
   scrollbar-width: thin;
   scrollbar-color: rgba(156, 163, 175, 0.3) transparent;
 }
 
-html[data-theme="dark"] * {
+html[data-theme="dark"] ::-webkit-scrollbar,
+html[data-theme="dark"] .scrollable-content {
   scrollbar-color: rgba(229, 231, 235, 0.3) transparent;
 }
 

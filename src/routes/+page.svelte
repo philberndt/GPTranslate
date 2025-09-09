@@ -446,10 +446,7 @@
   }
 </script>
 
-<main
-  class="mx-auto p-3 md:p-4 h-screen overflow-hidden bg-base-100"
-  style="height: 96vh;"
->
+<main class="mx-auto p-3 md:p-4 h-screen overflow-hidden bg-base-100">
   {#if activeView === "settings"}
     <div data-view="settings" class="flex flex-col h-full overflow-hidden">
       <Settings
