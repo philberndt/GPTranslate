@@ -92,14 +92,15 @@
   function formatDate(timestamp: string): string {
     return new Date(timestamp).toLocaleString()
   }
-
-
 </script>
 
-<div data-theme={theme} class="min-h-screen bg-base-100 p-6">
-  <div class="max-w-6xl mx-auto">
+<div
+  data-theme={theme}
+  class="h-full bg-base-100 flex flex-col overflow-hidden"
+>
+  <div class="max-w-6xl mx-auto w-full h-full flex flex-col p-6">
     <!-- Header -->
-    <div class="flex items-center justify-between mb-6">
+    <div class="flex items-center justify-between mb-6 flex-shrink-0">
       <h4 class="text-2xl font-bold text-base-content">Translation History</h4>
       <div class="flex gap-2">
         <button
@@ -118,71 +119,125 @@
         >
           Clear All
         </button>
-        <button class="btn btn-soft btn-circle btn-sm" onclick={onClose} title="Close" aria-label="Close history">
+        <button
+          class="btn btn-soft btn-circle btn-sm"
+          onclick={onClose}
+          title="Close"
+          aria-label="Close history"
+        >
           <XMarkIcon class="w-5 h-5" />
         </button>
       </div>
     </div>
 
     <!-- Content -->
-    <div class="space-y-4">
-      {#if isLoading}
-        <div class="card bg-base-100 border border-base-300/50">
-          <div class="card-body text-center">
-            <div class="loading loading-spinner loading-md" role="status"></div>
-            <p class="text-base-content/70">Loading history...</p>
+    <div class="flex-1 overflow-y-auto scrollbar-stable">
+      <div class="space-y-4 pb-6">
+        {#if isLoading}
+          <div class="card bg-base-100 border border-base-300/50">
+            <div class="card-body text-center">
+              <div
+                class="loading loading-spinner loading-md"
+                role="status"
+              ></div>
+              <p class="text-base-content/70">Loading history...</p>
+            </div>
           </div>
-        </div>
-      {:else if error}
-        <div class="alert alert-error" role="alert">
-          <span>Error: {error}</span>
-        </div>
-      {:else if history.entries.length === 0}
-        <div class="card bg-base-100 border border-base-300/50">
-          <div class="card-body text-center">
-            <p class="text-base-content/70">No translation history found.</p>
+        {:else if error}
+          <div class="alert alert-error" role="alert">
+            <span>Error: {error}</span>
           </div>
-        </div>
-      {:else}
-        <div class="space-y-3">
-          {#each history.entries as entry (entry.id)}
-            <div class="card bg-base-100 border border-base-300/50">
-              <div class="card-body p-4">
-                <div class="flex items-center justify-between mb-3">
-                  <div class="flex items-center gap-2">
-                    <span class="badge badge-outline badge-sm">{entry.detected_language}</span>
-                    <span class="text-base-content/50">→</span>
-                    <span class="badge badge-outline badge-sm">{entry.target_language}</span>
+        {:else if history.entries.length === 0}
+          <div class="card bg-base-100 border border-base-300/50">
+            <div class="card-body text-center">
+              <p class="text-base-content/70">No translation history found.</p>
+            </div>
+          </div>
+        {:else}
+          <div class="space-y-3">
+            {#each history.entries as entry (entry.id)}
+              <div class="card bg-base-100 border border-base-300/50">
+                <div class="card-body p-4">
+                  <div class="flex items-center justify-between mb-3">
+                    <div class="flex items-center gap-2">
+                      <span class="badge badge-soft badge-info badge-sm"
+                        >{entry.detected_language}</span
+                      >
+                      <span class="text-base-content/50">→</span>
+                      <span class="badge badge-soft badge-success badge-sm"
+                        >{entry.target_language}</span
+                      >
+                    </div>
+                    <div class="flex items-center gap-2">
+                      <span class="text-xs text-base-content/60"
+                        >{formatDate(entry.timestamp)}</span
+                      >
+                      <div class="dropdown dropdown-end">
+                        <button class="btn btn-soft btn-xs">⋮</button>
+                        <ul
+                          class="dropdown-content menu p-2 shadow bg-base-100 rounded-box w-52"
+                        >
+                          <li>
+                            <button
+                              onclick={() =>
+                                copyToClipboard(entry.original_text)}
+                              >Copy Original</button
+                            >
+                          </li>
+                          <li>
+                            <button
+                              onclick={() =>
+                                copyToClipboard(entry.translated_text)}
+                              >Copy Translation</button
+                            >
+                          </li>
+                          <li>
+                            <button
+                              class="text-error"
+                              onclick={() => deleteHistoryEntry(entry.id)}
+                              >Delete</button
+                            >
+                          </li>
+                        </ul>
+                      </div>
+                    </div>
                   </div>
-                  <div class="flex items-center gap-2">
-                    <span class="text-xs text-base-content/60">{formatDate(entry.timestamp)}</span>
-                    <div class="dropdown dropdown-end">
-                      <button class="btn btn-soft btn-xs">⋮</button>
-                      <ul class="dropdown-content menu p-2 shadow bg-base-100 rounded-box w-52">
-                        <li><button onclick={() => copyToClipboard(entry.original_text)}>Copy Original</button></li>
-                        <li><button onclick={() => copyToClipboard(entry.translated_text)}>Copy Translation</button></li>
-                        <li><button class="text-error" onclick={() => deleteHistoryEntry(entry.id)}>Delete</button></li>
-                      </ul>
+                  <div class="grid md:grid-cols-2 gap-4">
+                    <div>
+                      <h6
+                        class="text-sm font-semibold text-base-content/70 mb-1"
+                      >
+                        Original
+                      </h6>
+                      <div
+                        class="text-sm p-3 rounded border border-base-300 max-h-[160px] overflow-hidden break-words"
+                        style="background-color: var(--color-field-bg);"
+                      >
+                        {entry.original_text}
+                      </div>
+                    </div>
+                    <div>
+                      <h6
+                        class="text-sm font-semibold text-base-content/70 mb-1"
+                      >
+                        Translation
+                      </h6>
+                      <div
+                        class="text-sm p-3 rounded border border-base-300 max-h-[160px] overflow-hidden break-words"
+                        style="background-color: var(--color-field-bg);"
+                      >
+                        {entry.translated_text}
+                      </div>
                     </div>
                   </div>
                 </div>
-                <div class="grid md:grid-cols-2 gap-4">
-                  <div>
-                    <h6 class="text-sm font-semibold text-base-content/70 mb-1">Original</h6>
-                    <p class="text-sm bg-base-200 p-3 rounded border border-base-300">{entry.original_text}</p>
-                  </div>
-                  <div>
-                    <h6 class="text-sm font-semibold text-base-content/70 mb-1">Translation</h6>
-                    <p class="text-sm bg-base-200 p-3 rounded border border-base-300">{entry.translated_text}</p>
-                  </div>
-                </div>
               </div>
-            </div>
-          {/each}
-        </div>
-      {/if}
+            {/each}
+          </div>
+        {/if}
+      </div>
     </div>
   </div>
 </div>
 
-<!-- Custom CSS goes in /src/styles.css */ -->
+<!-- Custom CSS goes in /src/styles.css -->

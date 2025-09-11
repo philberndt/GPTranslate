@@ -405,7 +405,7 @@
       class="card bg-base-100 border border-base-300/50 flex-1 min-h-0 overflow-auto scrollbar-stable"
     >
       <!-- inner scroll area stays within card-body -->
-      <div class="card-body">
+      <div class="card-body px-8 md:px-12 lg:px-16">
         {#if activeTab === "api"}
           <ApiConfiguration
             {config}

@@ -164,24 +164,16 @@
                   </div>
                   <div class="text-[11px] flex items-center gap-2 min-w-0">
                     <code
-                      class="px-1.5 py-0.5 rounded bg-base-300/50 truncate max-w-full {(
-                        model.is_enabled
-                      ) ?
-                        'text-primary'
-                      : 'text-base-content/60'}"
+                      class="px-1.5 py-0.5 rounded bg-base-300/50 truncate max-w-full text-primary"
                       title={model.name}>{model.name}</code
                     >
                     {#if model.is_enabled}
-                      config: _config, onConfigChange: _onConfigChange,
                       <span class="badge badge-success badge-xs">Enabled</span>
                     {:else}
                       <span class="badge badge-outline badge-xs">Disabled</span>
                     {/if}
                   </div>
-                  config?: any onConfigChange?: (updates: any) => void
                   {#if model.description}
-                    // Mark optional props as used to satisfy lint rules void
-                    _config void _onConfigChange
                     <div
                       class="text-[11px] text-base-content/70 truncate"
                       title={model.description}

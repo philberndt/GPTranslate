@@ -269,7 +269,7 @@
 
 {#if config}
   <select
-    class="select select-ghost"
+    class="select select-ghost select-sm"
     value={selectionValue}
     onchange={(e) => handleSelectChange((e.target as HTMLSelectElement).value)}
     aria-label="Select AI model"
@@ -297,7 +297,7 @@
     {/if}
   </select>
 {:else}
-  <select class="select select-ghost" disabled>
+  <select class="select select-ghost select-sm" disabled>
     <option>Loading models...</option>
   </select>
 {/if}

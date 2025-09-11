@@ -489,7 +489,13 @@
         <div class="card bg-base-100 border border-base-300/50 h-full">
           <div class="card-body flex flex-col h-full p-2">
             <div class="card-title justify-between items-center mb-1">
-              <h5 class="text-sm md:text-base font-semibold">Original Text</h5>
+              <div class="flex items-center gap-2">
+                {#if detectedLanguage && sourceLanguage.code === "auto"}
+                  <div class="badge badge-soft badge-info">
+                    <span>{detectedLanguage}</span>
+                  </div>
+                {/if}
+              </div>
               <div class="flex items-center gap-2">
                 {#if config}
                   <CompactLanguageDropdown
@@ -499,12 +505,6 @@
                     onLanguageSelect={handleSourceLanguageChange}
                     label=""
                   />
-                {/if}
-                {#if detectedLanguage && sourceLanguage.code === "auto"}
-                  <div class="badge badge-outline badge-sm">
-                    <GlobeAltIcon class="w-3 h-3 mr-1" />
-                    <span>{detectedLanguage}</span>
-                  </div>
                 {/if}
               </div>
             </div>
@@ -529,9 +529,6 @@
           <div class="card-body flex flex-col h-full p-2">
             <div class="card-title justify-between items-center mb-1">
               <div class="flex items-center gap-2">
-                <span class="text-sm md:text-base font-semibold"
-                  >Translation:</span
-                >
                 {#if config}
                   <CompactLanguageDropdown
                     selectedLanguage={primaryTargetLanguage}
@@ -544,12 +541,9 @@
               </div>
               <div class="flex items-center gap-2">
                 {#if targetLanguage}
-                  <span class="badge badge-secondary">{targetLanguage}</span>
-                {/if}
-                {#if isTranslating}
-                  <div class="loading loading-spinner loading-sm" role="status">
-                    <span class="sr-only">Translating...</span>
-                  </div>
+                  <span class="badge badge-soft badge-success"
+                    >{targetLanguage}</span
+                  >
                 {/if}
               </div>
             </div>
@@ -593,7 +587,7 @@
             </div>
 
             <!-- Model selector Dropup -->
-            <div class="flex-1 max-w-xs">
+            <div class="flex-shrink-0 max-w-[200px]">
               <ModelSelector {config} onModelChange={handleModelChange} />
             </div>
 

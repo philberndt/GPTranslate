@@ -299,7 +299,8 @@
   <!-- Loading indicator overlay -->
   {#if isTranslating}
     <div
-      class="absolute inset-0 flex items-center justify-center bg-base-200/80 z-10"
+      class="absolute inset-0 flex items-center justify-center z-10"
+      style="background-color: var(--color-field-bg);"
     >
       <div class="loading loading-ring loading-lg"></div>
     </div>
