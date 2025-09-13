@@ -16,7 +16,6 @@
     ArrowsRightLeftIcon,
     ClipboardDocumentIcon,
     TrashIcon,
-    GlobeAltIcon,
     CheckCircleIcon,
   } from "heroicons-svelte/24/outline"
   let originalText = $state("")

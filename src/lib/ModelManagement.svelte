@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { CpuChipIcon, PlusIcon } from "heroicons-svelte/24/outline"
+  import { PlusIcon } from "heroicons-svelte/24/outline"
   // Types
   export interface ModelConfig {
     name: string

@@ -2,7 +2,7 @@
   import { LanguageManager, type Language } from "./languages"
   import LanguageDropdown from "./LanguageDropdown.svelte"
   import FavoriteLanguagesManager from "./FavoriteLanguagesManager.svelte"
-  import { GlobeAltIcon, StarIcon } from "heroicons-svelte/24/outline"
+  import { StarIcon } from "heroicons-svelte/24/outline"
 
   interface Props {
     config: any

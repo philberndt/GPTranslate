@@ -1,5 +1,4 @@
 <script lang="ts">
-  import { Cog6ToothIcon, BoltIcon } from "heroicons-svelte/24/outline"
   interface Props {
     config: any
     isValidatingApiKey: boolean
