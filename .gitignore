@@ -27,3 +27,5 @@ generate_icons.ps1
 CLAUDE.md
 AGENTS.md
 /.claude
+package-lock.json
+src-tauri/cargo.lock
