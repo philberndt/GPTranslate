@@ -7,6 +7,9 @@ import { vitePreprocess } from "@sveltejs/vite-plugin-svelte";
 /** @type {import('@sveltejs/kit').Config} */
 const config = {
   preprocess: vitePreprocess(),
+  compilerOptions: {
+    dev: process.env.NODE_ENV !== "production",
+  },
   kit: {
     adapter: adapter({
       fallback: "index.html",
@@ -14,7 +17,6 @@ const config = {
     }),
     prerender: {
       handleHttpError: ({ path, referrer, message }) => {
-        // ignore deliberate link to shiny 404 page
         if (
           path === "/not-found" &&
           referrer === "/blog/how-is-sveltekit-so-fast"

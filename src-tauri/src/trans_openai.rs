@@ -23,6 +23,11 @@ impl OpenAITranslationService {
         }
     }
 
+    fn is_reasoning_model(&self) -> bool {
+        // Automatic detection based on known reasoning model name patterns
+        is_reasoning_model_name(self.config.model.as_str())
+    }
+
     async fn call_openai(&self, request_body: Value) -> Result<Value> {
         let url = "https://api.openai.com/v1/chat/completions";
 
@@ -218,37 +223,145 @@ impl TranslationProvider for OpenAITranslationService {
         let cleaned_text = clean_text_for_translation(text);
         log::info!("Cleaned text for translation: {}", cleaned_text);
 
-        let user_prompt = format!("Text to translate: \"{}\"", cleaned_text);
-        let smart_prompt = create_smart_prompt(&self.config);
+        // Check if this is an alternatives request (custom_prompt contains "alternatives")
+        let is_alternatives_request = self.config.custom_prompt.contains("alternatives");
+        
+        let (user_prompt, system_prompt) = if is_alternatives_request {
+            // For alternatives requests, use the custom prompt directly as the system prompt
+            log::info!("Using alternatives prompt");
+            (format!("\"{}\"", cleaned_text), self.config.custom_prompt.clone())
+        } else {
+            // For regular translations, use the normal logic
+            let user_prompt = format!("Text to translate: \"{}\"", cleaned_text);
+            let smart_prompt = create_smart_prompt(&self.config, None);
+            log::info!("Using smart prompt with alternative language logic");
+            (user_prompt, smart_prompt)
+        };
 
-        log::info!("Using smart prompt with alternative language logic");
-        let request_body = json!({
+        // Check if current model is a reasoning model
+        let is_reasoning_model = self.is_reasoning_model();
+        log::info!(
+            "Model {} is reasoning: {}",
+            self.config.model,
+            is_reasoning_model
+        );
+
+        // Role selection based on reasoning model type:
+        // - GPT-5 models: Use "system" role (they support system messages)
+        // - O-series models (o1, o3, o4-mini): Use "developer" role
+        // - Non-reasoning models: Use "system" role
+        let model_name = &self.config.model;
+        let system_role = if is_reasoning_model
+            && (model_name.starts_with("o1")
+                || model_name.starts_with("o3")
+                || model_name.starts_with("o4-mini"))
+        {
+            "developer"
+        } else {
+            "system"
+        };
+        let system_content = if is_alternatives_request {
+            // For alternatives requests, use the system prompt directly with minimal formatting
+            if is_reasoning_model {
+                format!("Formatting re-enabled - please respond with valid JSON.\n\n{}", system_prompt)
+            } else {
+                system_prompt
+            }
+        } else if is_reasoning_model {
+            // For reasoning models, use much simpler instructions with formatting re-enabled
+            format!("Formatting re-enabled - please respond with valid JSON.\n\n{}\n\nRespond with JSON containing 'detected_language' and 'translated_text' fields.", system_prompt)
+        } else {
+            // For non-reasoning models, use detailed instructions
+            format!(
+                "{}\n\nIMPORTANT FORMATTING RULES:\n- Always respond with valid JSON containing 'detected_language' and 'translated_text' fields\n- Preserve line breaks and paragraph structure in the translation\n- Use actual newline characters (\\n) in the JSON string value, not escaped \\\\n\n- Do NOT escape newlines in the JSON response - use literal newlines\n\nExample response format:\n{{\n  \"detected_language\": \"English\",\n  \"translated_text\": \"Line 1\\nLine 2\\n\\nNew paragraph\"\n}}",
+                system_prompt
+            )
+        };
+
+        let mut request_body = json!({
             "model": self.config.model,
             "messages": [
                 {
-                    "role": "system",
-                    "content": [                        {
-                            "type": "text",
-                            "text": format!("{}\n\nIMPORTANT FORMATTING RULES:\n- Always respond with valid JSON containing 'detected_language' and 'translated_text' fields\n- Preserve line breaks and paragraph structure in the translation\n- Use actual newline characters (\\n) in the JSON string value, not escaped \\\\n\n- Do NOT escape newlines in the JSON response - use literal newlines\n\nExample response format:\n{{\n  \"detected_language\": \"English\",\n  \"translated_text\": \"Line 1\\nLine 2\\n\\nNew paragraph\"\n}}", smart_prompt)
-                        }
-                    ]
+                    "role": system_role,
+                    "content": system_content
                 },
                 {
                     "role": "user",
                     "content": user_prompt
                 }
             ],
-            "max_tokens": 800,
-            "temperature": 0.3
         });
+
+        // Use appropriate token parameter based on model type
+        if is_reasoning_model {
+            request_body["max_completion_tokens"] = json!(800);
+            // Add reasoning object for reasoning models
+            let effort = self.config.reasoning_effort.as_deref().unwrap_or("low");
+            request_body["reasoning"] = json!({
+                "effort": effort
+            });
+            log::info!("OpenAI - Using reasoning effort: {}", effort);
+            
+            // Add verbosity parameter for GPT-5 models
+            if self.config.model.starts_with("gpt-5") {
+                request_body["verbosity"] = json!("medium");
+                log::info!("OpenAI - Using verbosity: medium for GPT-5 model");
+            }
+            
+            // Note: Reasoning models don't support temperature, top_p, presence_penalty, frequency_penalty, logprobs, top_logprobs, logit_bias parameters
+        } else {
+            request_body["max_tokens"] = json!(800);
+            request_body["temperature"] = json!(0.3);
+        }
 
         log::info!("Using OpenAI model: {}", self.config.model);
 
         let response = self.call_openai(request_body).await?;
-        let content = response["choices"][0]["message"]["content"]
+        
+        // Better error handling for response structure
+        let choices = response["choices"].as_array()
+            .ok_or_else(|| anyhow::anyhow!("No 'choices' array in response. Full response: {}", serde_json::to_string_pretty(&response).unwrap_or_default()))?;
+            
+        if choices.is_empty() {
+            return Err(anyhow::anyhow!("Empty 'choices' array in response. Full response: {}", serde_json::to_string_pretty(&response).unwrap_or_default()));
+        }
+        
+        let message = &choices[0]["message"];
+        if message.is_null() {
+            return Err(anyhow::anyhow!("No 'message' object in first choice. Full response: {}", serde_json::to_string_pretty(&response).unwrap_or_default()));
+        }
+        
+        let content = message["content"]
             .as_str()
-            .ok_or_else(|| anyhow::anyhow!("No content in response"))?;
+            .ok_or_else(|| anyhow::anyhow!("No 'content' field in message or content is not a string. Message: {}", serde_json::to_string_pretty(message).unwrap_or_default()))?;
 
-        self.parse_response_content(content)
+        // Check if this is an alternatives request
+        let is_alternatives_request = self.config.custom_prompt.contains("alternatives");
+        if is_alternatives_request {
+            // For alternatives requests, return the raw content as translated_text
+            // The calling code will parse the JSON alternatives from it
+            log::info!("Returning raw alternatives response");
+            Ok(TranslationResult {
+                detected_language: "unknown".to_string(),
+                translated_text: content.to_string(),
+                target_language: "alternatives".to_string(),
+            })
+        } else {
+            self.parse_response_content(content)
+        }
     }
+}
+
+fn is_reasoning_model_name(name: &str) -> bool {
+    let n = name.to_lowercase();
+    // Known OpenAI reasoning model families and variants based on Microsoft documentation
+    // GPT-5 series: gpt-5, gpt-5-mini, gpt-5-nano, gpt-5-chat, gpt-5-thinking
+    n.starts_with("gpt-5") ||
+    n.starts_with("gpt5") ||
+    // O-series models: o1, o1-mini, o3, o3-mini, o3-pro, o4-mini
+    n.starts_with("o1") ||
+    n.starts_with("o3") ||
+    n.starts_with("o4-mini") ||
+    // Codex reasoning model
+    n.starts_with("codex-mini")
 }

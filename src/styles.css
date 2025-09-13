@@ -1,0 +1,357 @@
+@import "tailwindcss";
+@plugin "daisyui" {
+  themes:
+    light --default,
+    dark --prefersdark;
+}
+@plugin "daisyui/theme" {
+  name: "light";
+  default: true;
+  color-scheme: light;
+}
+@plugin "daisyui/theme" {
+  name: "dark";
+  prefersdark: true;
+  color-scheme: dark;
+}
+
+/* Custom styling enhancements */
+.btn {
+  @apply transition-all duration-200 btn-soft;
+}
+
+.btn:hover {
+  /* Subtle color change only, no zoom or shadow */
+  @apply brightness-95 shadow-none scale-100;
+}
+
+.input,
+.textarea,
+.select {
+  @apply transition-all duration-200 bg-base-200 border border-base-300/60 rounded-lg;
+}
+
+.input:focus,
+.textarea:focus,
+.select:focus {
+  /* Slightly brighten the field on focus, avoid heavy border/ring or shadow */
+  @apply bg-base-100 border-transparent outline-none shadow-none;
+}
+
+.card:not(.card-border) {
+  @apply transition-all duration-200 border-none bg-base-100;
+}
+
+/* Tab styling for radio tabs-lift */
+.tabs-lift .tab {
+  @apply bg-base-200 border-base-300 text-base-content/70;
+}
+
+.tabs-lift .tab:checked,
+.tabs-lift .tab-active {
+  @apply bg-base-100 text-base-content border-primary/30;
+}
+
+.tab-content {
+  @apply bg-base-100 border-base-300/50;
+}
+
+/* Settings tabs: ensure inactive tabs stay neutral gray in dark mode */
+html[data-theme="dark"] .settings-tabs .tab:not(.tab-active) {
+  background-color: #1b1b1b !important; /* requested darker gray */
+  color: oklch(85% 0.02 240) !important;
+  border-color: var(--color-border-subtle) !important;
+}
+
+html[data-theme="dark"] .settings-tabs .tab.tab-active {
+  background-color: var(--color-base-100) !important;
+}
+
+/* subtle hover for inactive settings tabs */
+html[data-theme="dark"] .settings-tabs .tab:not(.tab-active):hover {
+  background-color: #222222 !important;
+}
+
+/* Improved spacing for the main container */
+.container {
+  @apply py-6;
+}
+
+/* Enhanced card bodies */
+.card-body {
+  @apply p-2;
+  background-color: var(--color-app-bg) !important;
+}
+
+/* Better toast positioning */
+.toast {
+  @apply z-50;
+}
+
+/* Smooth hover effects for interactive elements */
+.dropdown:hover .dropdown-content {
+  @apply shadow-sm;
+}
+
+/* Better focus states with muted colors */
+.btn:focus-visible {
+  @apply ring-2 ring-primary/30 ring-offset-2 ring-offset-base-100;
+}
+
+.input:focus-visible,
+.textarea:focus-visible,
+.select:focus-visible {
+  /* Match non-visual-focus behavior: subtle brightness and gentle border */
+  @apply bg-base-100 border-transparent outline-none shadow-none;
+}
+
+/* Application theming tokens -------------------------------------------------- */
+:root {
+  /* Light mode tokens */
+  --color-app-bg: #f3f3f3;
+  --color-base-100: #f3f3f3;
+  --color-field-bg: #ffffff;
+  --color-border-subtle: #e6e6e6;
+  --color-muted: #6b7280;
+  --transition-fast: 150ms;
+}
+
+html,
+body {
+  /* The main app should never scroll; no reserved gutter at window level */
+  overflow: hidden;
+}
+
+/* Optional utility for inner scroll areas that toggle overflow */
+.scrollbar-stable {
+  scrollbar-gutter: stable;
+}
+html[data-theme="dark"] {
+  /* Dark mode tokens */
+  --color-app-bg: #202020;
+  --color-field-bg: #262626;
+  --color-base-100: #202020;
+  --color-border-subtle: #2f2f2f;
+  --color-muted: #9ca3af;
+}
+
+/* Apply the app background and subtle muted palette */
+body {
+  background-color: var(--color-app-bg);
+}
+
+/* Make form fields and card surfaces use the field tone and subtle border */
+.input,
+.textarea,
+.select,
+.tab-content {
+  background-color: var(--color-field-bg) !important;
+  border: 1px solid var(--color-border-subtle) !important;
+  transition:
+    background-color var(--transition-fast) ease,
+    border-color var(--transition-fast) ease;
+}
+
+/* Keep cards borderless per request */
+.card:not(.card-border) {
+  /* Cards should match the main app background in both light and dark modes */
+  background-color: var(--color-app-bg) !important;
+  border: none !important;
+}
+
+/* Opt-in card border utility */
+.card.card-border {
+  border: 1px solid var(--color-border-subtle) !important;
+  background-color: var(--color-field-bg) !important;
+}
+
+/* Settings sticky footer adjustments to remove unwanted top border and reduce padding */
+.settings-footer-sticky {
+  border-top: none !important;
+  padding-top: 0.25rem !important; /* smaller top padding */
+}
+
+/* Focus: slight brighten and a very subtle border color using the token */
+.input:focus,
+.textarea:focus,
+.select:focus,
+.input:focus-visible,
+.textarea:focus-visible,
+.select:focus-visible {
+  background-color: var(--color-field-bg) !important;
+  border-color: color-mix(
+    in srgb,
+    var(--color-border-subtle) 70%,
+    var(--daisyui-mcp) 30%
+  ) !important;
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+/* Muted text utility */
+.text-muted {
+  color: var(--color-muted) !important;
+}
+
+.btn {
+  transition:
+    transform var(--transition-fast) ease,
+    box-shadow var(--transition-fast) ease;
+}
+:is(
+  :focus,
+  :focus-visible,
+  .input:focus,
+  .textarea:focus,
+  .select:focus,
+  .input:focus-visible,
+  .textarea:focus-visible,
+  .select:focus-visible,
+  .btn:focus,
+  .btn:focus-visible,
+  .tab:focus,
+  .tab:focus-visible,
+  [tabindex]:focus,
+  [tabindex]:focus-visible
+) {
+  outline: none !important;
+  box-shadow: none !important;
+  /* Tailwind ring variables used by ring utilities */
+  --tw-ring-shadow: none !important;
+  --tw-ring-offset-shadow: none !important;
+  --tw-ring-opacity: 0 !important;
+}
+.btn:focus,
+.btn:focus-visible {
+  box-shadow: none !important;
+}
+
+/* Improve button contrast in dark mode */
+html[data-theme="dark"] .btn-neutral {
+  background-color: oklch(30% 0.05 240);
+  color: oklch(90% 0.02 240);
+}
+
+html[data-theme="dark"] .btn-neutral:hover {
+  background-color: oklch(35% 0.05 240);
+}
+
+/* Ensure textareas maintain proper height and scrolling */
+.textarea {
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+}
+
+/* Fix grid layout to prevent overflow */
+.grid {
+  min-height: 0;
+}
+
+.grid > div,
+.grid > span,
+.grid > article,
+.grid > section {
+  min-height: 0;
+  min-width: 0;
+}
+
+/* WebView2 floating overlay scrollbars */
+::-webkit-scrollbar,
+.scrollable-content {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(156, 163, 175, 0.3) transparent;
+}
+
+html[data-theme="dark"] ::-webkit-scrollbar,
+html[data-theme="dark"] .scrollable-content {
+  scrollbar-color: rgba(229, 231, 235, 0.3) transparent;
+}
+
+/* Webkit scrollbar styling for WebView2 */
+::-webkit-scrollbar {
+  width: 12px;
+  height: 12px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+  margin: 2px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(156, 163, 175, 0.3);
+  border-radius: 6px;
+  border: 3px solid transparent;
+  background-clip: padding-box;
+  min-height: 20px;
+  transition: background-color 0.2s ease;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(156, 163, 175, 0.5);
+  background-clip: padding-box;
+}
+
+::-webkit-scrollbar-thumb:active {
+  background: rgba(156, 163, 175, 0.7);
+  background-clip: padding-box;
+}
+
+::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+/* Dark mode scrollbar colors */
+html[data-theme="dark"] ::-webkit-scrollbar-thumb {
+  background: rgba(229, 231, 235, 0.3);
+  background-clip: padding-box;
+}
+
+html[data-theme="dark"] ::-webkit-scrollbar-thumb:hover {
+  background: rgba(229, 231, 235, 0.4);
+  background-clip: padding-box;
+}
+
+html[data-theme="dark"] ::-webkit-scrollbar-thumb:active {
+  background: rgba(229, 231, 235, 0.6);
+  background-clip: padding-box;
+}
+
+/* Hide scrollbars completely for elements that request it */
+.scrollbar-none {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.scrollbar-none::-webkit-scrollbar {
+  display: none;
+}
+
+/* Floating scrollbars - only show on hover */
+.scrollbar-floating {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.scrollbar-floating::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.scrollbar-floating::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.scrollbar-floating::-webkit-scrollbar-thumb {
+  background: transparent;
+  border-radius: 4px;
+  transition: background-color 0.2s ease;
+}
+
+.scrollbar-floating:hover::-webkit-scrollbar-thumb {
+  background: rgba(156, 163, 175, 0.4);
+}
+
+html[data-theme="dark"] .scrollbar-floating:hover::-webkit-scrollbar-thumb {
+  background: rgba(229, 231, 235, 0.4);
+}

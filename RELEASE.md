@@ -5,6 +5,7 @@ This document outlines the complete release process for GPTranslate, including v
 ## 📋 Pre-Release Checklist
 
 ### 1. Code Quality & Testing
+
 - [ ] Run all linting and formatting checks
 - [ ] Fix all Rust clippy warnings: `cargo clippy -- -D warnings`
 - [ ] Format Rust code: `cargo fmt`
@@ -15,12 +16,15 @@ This document outlines the complete release process for GPTranslate, including v
 - [ ] Test global hotkeys and system tray integration
 
 ### 2. Version Updates
+
 Update version numbers in the following files:
+
 - [ ] `package.json` - Update `version` field
 - [ ] `src-tauri/Cargo.toml` - Update `version` field
 - [ ] `src-tauri/tauri.conf.json` - Update `version` field
 
 ### 3. Build and Validation
+
 - [ ] Clean build: `npm run build`
 - [ ] Rust compilation check: `cd src-tauri && cargo build --release`
 - [ ] Integration tests with actual translation services
@@ -28,6 +32,7 @@ Update version numbers in the following files:
 ## 🚀 Release Process
 
 ### Step 1: Prepare Release
+
 ```powershell
 # Update versions (done manually in files above)
 # Run quality checks
@@ -37,15 +42,18 @@ cd src-tauri && cargo fmt && cargo clippy -- -D warnings
 ```
 
 ### Step 2: Build Application
+
 ```powershell
 # Build the application with installers
 npm run tauri build
 ```
 
 This creates:
+
 - `src-tauri/target/release/bundle/nsis/GPTranslate_X.X.X_x64-setup.exe` (NSIS installer)
 
 ### Step 3: Create Git Tag and Commit
+
 ```powershell
 # Commit all changes
 git add .
@@ -58,6 +66,7 @@ git push origin X.X.X
 ```
 
 ### Step 4: Create GitHub Release
+
 ```powershell
 # Create GitHub release with installers
 gh release create X.X.X \
@@ -67,12 +76,15 @@ gh release create X.X.X \
 ```
 
 ### Step 5: Create Winget Manifests
+
 1. **Get installer SHA256 hash:**
+
    ```powershell
    Get-FileHash "src-tauri/target/release/bundle/nsis/GPTranslate_X.X.X_x64-setup.exe" -Algorithm SHA256
    ```
 
 2. **Create manifest directory:**
+
    ```powershell
    mkdir "manifests/p/PhilBerndt/GPTranslate/X.X.X"
    ```
@@ -83,12 +95,14 @@ gh release create X.X.X \
    - `PhilBerndt.GPTranslate.locale.en-US.yaml`
 
 4. **Validate manifests:**
+
    ```powershell
    cd "manifests/p/PhilBerndt/GPTranslate/X.X.X"
    winget validate .
    ```
 
 ### Step 6: Submit to Winget
+
 ```powershell
 # Submit to Microsoft's winget-pkgs repository
 # This process typically involves creating a Pull Request to:
@@ -102,15 +116,19 @@ wingetcreate update PhilBerndt.GPTranslate -u https://github.com/philberndt/GPTr
 
 ```markdown
 ## 🚀 New Features & Enhancements
+
 [List major new features and improvements]
 
 ## 🔧 Bug Fixes
+
 [List bug fixes and resolved issues]
 
 ## 🏗️ Development
+
 [List technical improvements, dependency updates, etc.]
 
 ## 📦 Installation
+
 - **Windows Installer (NSIS)**: GPTranslate_X.X.X_x64-setup.exe
 
 [Brief summary of what this release brings to users]
@@ -119,11 +137,13 @@ wingetcreate update PhilBerndt.GPTranslate -u https://github.com/philberndt/GPTr
 ## 🔧 Troubleshooting
 
 ### Common Build Issues
+
 - **Cargo build failures**: Ensure all dependencies are up to date
 - **Frontend build issues**: Clear node_modules and reinstall: `rm -rf node_modules && npm install`
 - **Tauri build issues**: Update Tauri CLI: `npm install -g @tauri-apps/cli@latest`
 
 ### Release Issues
+
 - **GitHub release upload failures**: Check file paths and ensure files exist
 - **Winget validation failures**: Verify YAML syntax and required fields
 - **Hash mismatches**: Regenerate SHA256 hash after any file changes
@@ -131,10 +151,12 @@ wingetcreate update PhilBerndt.GPTranslate -u https://github.com/philberndt/GPTr
 ## 📦 Distribution Channels
 
 ### Primary
+
 - **GitHub Releases**: Main distribution channel with installers
 - **Winget**: Microsoft's package manager for Windows
 
 ### Future Considerations
+
 - **Microsoft Store**: Native Windows store distribution
 
 ## 🔒 Security Considerations
@@ -155,6 +177,7 @@ wingetcreate update PhilBerndt.GPTranslate -u https://github.com/philberndt/GPTr
 ## 🔄 Automation Opportunities
 
 Future improvements to consider:
+
 - GitHub Actions for automated builds on tag push
 - Automated winget manifest generation
 - Automated release notes generation from commit messages
@@ -163,4 +186,3 @@ Future improvements to consider:
 ---
 
 **Last Updated**: 22/06/2025
-**Next Review**: After implementing CI/CD automation
