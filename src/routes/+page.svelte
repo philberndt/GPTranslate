@@ -37,10 +37,15 @@
   // Active view state: 'translate' | 'settings' | 'history'
   let activeView = $state<"translate" | "settings" | "history">("translate")
   let currentTheme = $state("auto")
-  
+
   // Check if any API provider is configured
   let hasConfiguredProvider = $derived(isAnyProviderConfigured(config))
-  
+  // TEMP: override to disable welcome screen during testing. Set to true to force normal UI.
+  const DISABLE_NO_CONFIG_SCREEN = true
+  if (DISABLE_NO_CONFIG_SCREEN) {
+    hasConfiguredProvider = true
+  }
+
   // Notification system
   let showCopyNotification = $state(false)
   let notificationTimer: ReturnType<typeof setTimeout> | null = null // Debouncing variables

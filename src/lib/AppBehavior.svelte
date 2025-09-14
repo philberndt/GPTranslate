@@ -25,24 +25,21 @@
 
 <div class="ml-10 mr-10 overflow-hidden">
   <div class="card bg-base-100 border border-base-300/50">
-    <div class="card-body space-y-8">
-      <h5 class="card-title flex items-center gap-2 mb-2">
+    <div class="card-body space-y-6">
+      <h5 class="card-title flex items-center gap-2 mb-4">
         <AdjustmentsHorizontalIcon class="w-5 h-5" />
         App Behavior
       </h5>
 
-      <div class="grid md:grid-cols-3 gap-8">
+      <div class="grid md:grid-cols-3 gap-4 mx-8">
         <!-- Theme Settings -->
         <div class="space-y-4">
           <h5 class="flex items-center gap-2 font-medium">
             <SunIcon class="w-5 h-5" />
             Theme Settings
           </h5>
-          <div class="space-y-4 mx-8">
+          <div class="space-y-4">
             <div class="form-control w-full">
-              <label class="label" for="theme">
-                <span class="label-text font-medium">Theme</span>
-              </label>
               <select
                 id="theme"
                 class="select select-bordered bg-base-200 w-full"
@@ -56,11 +53,6 @@
                 <option value="light">Light</option>
                 <option value="dark">Dark</option>
               </select>
-              <div class="label">
-                <span class="label-text-alt text-base-content/70"
-                  >Theme will apply immediately</span
-                >
-              </div>
             </div>
           </div>
         </div>
@@ -71,11 +63,8 @@
             <KeyIcon class="w-5 h-5" />
             Global Hotkey
           </h5>
-          <div class="space-y-4 mx-8">
+          <div class="space-y-4">
             <div class="form-control w-full">
-              <label class="label" for="hotkey">
-                <span class="label-text font-medium">Hotkey Combination</span>
-              </label>
               <input
                 id="hotkey"
                 type="text"
@@ -85,11 +74,6 @@
                 oninput={(e) =>
                   updateConfig("hotkey", (e.target as HTMLInputElement).value)}
               />
-              <div class="label">
-                <span class="label-text-alt text-base-content/70"
-                  >Example: Ctrl+Alt+C, Alt+Shift+T, etc.</span
-                >
-              </div>
             </div>
           </div>
         </div>
@@ -98,13 +82,10 @@
         <div class="space-y-4">
           <h5 class="flex items-center gap-2 font-medium">
             <Cog6ToothIcon class="w-5 h-5" />
-            AI Model Settings
+            Reasoning Effort
           </h5>
-          <div class="space-y-4 mx-8">
+          <div class="space-y-4">
             <div class="form-control w-full">
-              <label class="label" for="reasoning-effort">
-                <span class="label-text font-medium">Reasoning Effort</span>
-              </label>
               <select
                 id="reasoning-effort"
                 class="select select-bordered bg-base-200 w-full"
@@ -120,18 +101,13 @@
                 <option value="medium">Medium</option>
                 <option value="high">High</option>
               </select>
-              <div class="label">
-                <span class="label-text-alt text-base-content/70"
-                  >Applies to reasoning models (o1/o3/o4-mini/GPT-5)</span
-                >
-              </div>
             </div>
           </div>
         </div>
       </div>
 
       <!-- Secondary grid: Automatic Translation + Startup & System (2 columns) -->
-      <div class="grid md:grid-cols-2 gap-8">
+      <div class="grid md:grid-cols-2 gap-12">
         <!-- Automatic Translation -->
         <div class="space-y-4">
           <h5 class="flex items-center gap-2 font-medium">
@@ -155,26 +131,28 @@
                       (e.target as HTMLInputElement).checked
                     )}
                 />
-                <span class="label-text font-medium"
+                <span class="label-text font-medium text-wrap"
                   >Enable automatic translations</span
                 >
               </label>
             </div>
             <div class="form-control w-full">
               <label class="label" for="debounce-ms">
-                <span class="label-text font-medium">Debounce delay</span>
                 <span class="label-text-alt text-base-content/70"
-                  >{config.auto_translate_debounce_ms} ms</span
+                  >Debounce delay</span
                 >
+                <span class="label-text-alt font-black text-base-content/70"
+                  >{config.auto_translate_debounce_ms}</span
+                ><span class="label-text-alt text-base-content/70"> ms</span>
               </label>
               <input
                 id="debounce-ms"
                 type="range"
-                class="range range-xs"
+                class="range range-xs [--range-fill:0]"
                 style="--range-shdw:0 0;"
                 min="100"
                 max="2000"
-                step="50"
+                step="100"
                 disabled={!config.auto_translate_enabled}
                 value={config.auto_translate_debounce_ms}
                 oninput={(e) =>
@@ -184,7 +162,7 @@
                   )}
               />
               <div class="label">
-                <span class="label-text-alt text-base-content/70"
+                <span class="label-text-alt text-base-content/30"
                   >Delay after typing stops</span
                 >
               </div>
@@ -206,7 +184,7 @@
                       (e.target as HTMLInputElement).checked
                     )}
                 />
-                <span class="label-text font-medium"
+                <span class="label-text font-medium text-wrap"
                   >Translate automatically when text is pasted</span
                 >
               </label>
@@ -228,7 +206,7 @@
                       (e.target as HTMLInputElement).checked
                     )}
                 />
-                <span class="label-text font-medium"
+                <span class="label-text font-medium text-wrap"
                   >Translate automatically while typing</span
                 >
               </label>
@@ -259,7 +237,9 @@
                       (e.target as HTMLInputElement).checked
                     )}
                 />
-                <span class="label-text font-medium">Start with Windows</span>
+                <span class="label-text font-medium text-wrap"
+                  >Start with Windows</span
+                >
               </label>
             </div>
             <div class="form-control">
@@ -278,7 +258,7 @@
                       (e.target as HTMLInputElement).checked
                     )}
                 />
-                <span class="label-text font-medium"
+                <span class="label-text font-medium text-wrap"
                   >Minimize to system tray</span
                 >
               </label>
@@ -291,22 +271,22 @@
 
       <!-- Custom Translation Prompt (Full Width) -->
       <div class="space-y-4 w-full">
-        <h5 class="card-title flex items-center gap-2 mb-2">
+        <h5 class="card-title flex items-center gap-2 mb-4">
           <PencilSquareIcon class="w-5 h-5" />
           Custom Translation Prompt
         </h5>
         <div class="space-y-4 mx-8">
           <div class="form-control w-full">
             <label class="label" for="custom-prompt">
-              <span class="label-text font-medium"
+              <span class="label-text font-medium mb-2"
                 >Translation Instructions</span
               >
             </label>
             <textarea
               id="custom-prompt"
-              class="textarea textarea-bordered bg-base-200 h-48 w-full max-w-none resize-y"
+              class="textarea textarea-bordered bg-base-200 h-48 w-full max-w-none resize-none mb-2"
               value={config.custom_prompt}
-              placeholder="Enter custom instructions for the AI translator..."
+              placeholder="Enter custom prompt (instructions) for the translator..."
               oninput={(e) =>
                 updateConfig(
                   "custom_prompt",

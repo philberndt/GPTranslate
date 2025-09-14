@@ -87,7 +87,7 @@
         <div class="grid md:grid-cols-3 gap-4">
           <div class="form-control w-full">
             <label class="label" for="source-language">
-              <span class="label-text font-medium">Source Language</span>
+              <span class="label-text font-medium mb-2">Source Language</span>
             </label>
             <LanguageDropdown
               selectedLanguage={config.user_source_language ?
@@ -121,7 +121,8 @@
           </div>
           <div class="form-control w-full">
             <label class="label" for="primary-target">
-              <span class="label-text font-medium">Primary Target Language</span
+              <span class="label-text font-medium mb-2"
+                >Primary Target Language</span
               >
             </label>
             <LanguageDropdown
@@ -139,7 +140,7 @@
           </div>
           <div class="form-control w-full">
             <label class="label" for="alternative-target">
-              <span class="label-text font-medium"
+              <span class="label-text font-medium mb-2"
                 >Alternative Target Language</span
               >
             </label>
@@ -162,11 +163,13 @@
       <!-- Smart Translation Logic Explanation -->
       <div class="alert alert-soft mt-6">
         <div class="space-y-2 w-full">
-          <h5 class="flex items-center gap-2 font-semibold">
+          <h5
+            class="flex items-center gap-2 font-semibold text-base-content/70"
+          >
             <InformationCircleIcon class="w-5 h-5" />
             How Smart Language Selection Works
           </h5>
-          <div class="mx-8 space-y-2">
+          <div class="mx-8 space-y-2 text-base-content/50">
             <p class="text-sm">
               GPTranslate automatically chooses the best target language based
               on what it detects:
