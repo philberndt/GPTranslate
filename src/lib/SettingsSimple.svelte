@@ -107,7 +107,7 @@
     <div class="card bg-base-100 border border-base-content/20">
       <div class="card-body p-6">
         {#if activeTab === "api"}
-          <div class="space-y-4">
+          <div class="space-y-6">
             <h2 class="text-xl font-semibold text-base-content">
               API Configuration
             </h2>
@@ -138,7 +138,7 @@
             </div>
           </div>
         {:else if activeTab === "models"}
-          <div class="space-y-4">
+          <div class="space-y-6">
             <h2 class="text-xl font-semibold text-base-content">
               Model Management
             </h2>
@@ -151,7 +151,7 @@
             </div>
           </div>
         {:else if activeTab === "languages"}
-          <div class="space-y-4">
+          <div class="space-y-6">
             <h2 class="text-xl font-semibold text-base-content">
               Language Settings
             </h2>
@@ -187,7 +187,7 @@
             </div>
           </div>
         {:else if activeTab === "behavior"}
-          <div class="space-y-4">
+          <div class="space-y-6">
             <h2 class="text-xl font-semibold text-base-content">
               App Behavior
             </h2>
@@ -196,28 +196,28 @@
             </p>
 
             <div class="form-control">
-              <label class="cursor-pointer label">
+              <label class="label" for="auto-copy">
                 <span class="label-text">Auto-copy translations</span>
-                <input type="checkbox" class="toggle toggle-primary" />
               </label>
+              <input id="auto-copy" type="checkbox" class="toggle toggle-primary" />
             </div>
 
             <div class="form-control">
-              <label class="cursor-pointer label">
+              <label class="label" for="keep-open">
                 <span class="label-text">Keep app open after translation</span>
-                <input type="checkbox" class="toggle toggle-primary" checked />
               </label>
+              <input id="keep-open" type="checkbox" class="toggle toggle-primary" checked />
             </div>
 
             <div class="form-control">
-              <label class="cursor-pointer label">
+              <label class="label" for="enable-hotkey">
                 <span class="label-text">Enable global hotkey</span>
-                <input type="checkbox" class="toggle toggle-primary" checked />
               </label>
+              <input id="enable-hotkey" type="checkbox" class="toggle toggle-primary" checked />
             </div>
           </div>
         {:else if activeTab === "about"}
-          <div class="space-y-4">
+          <div class="space-y-6">
             <h2 class="text-xl font-semibold text-base-content">
               About GPTranslate
             </h2>

@@ -5,9 +5,11 @@
   import Settings from "../lib/Settings.svelte"
   import ModelSelector from "../lib/ModelSelector.svelte"
   import AlternativeTranslations from "../lib/AlternativeTranslations.svelte"
+  import NoConfigScreen from "../lib/NoConfigScreen.svelte"
 
   import CompactLanguageDropdown from "../lib/CompactLanguageDropdown.svelte"
   import { LanguageManager, type Language } from "../lib/languages"
+  import { isAnyProviderConfigured } from "../lib/utils/configUtils"
 
   // Import Heroicons
   import {
@@ -16,7 +18,6 @@
     ArrowsRightLeftIcon,
     ClipboardDocumentIcon,
     TrashIcon,
-    GlobeAltIcon,
     CheckCircleIcon,
   } from "heroicons-svelte/24/outline"
   let originalText = $state("")
@@ -36,6 +37,10 @@
   // Active view state: 'translate' | 'settings' | 'history'
   let activeView = $state<"translate" | "settings" | "history">("translate")
   let currentTheme = $state("auto")
+  
+  // Check if any API provider is configured
+  let hasConfiguredProvider = $derived(isAnyProviderConfigured(config))
+  
   // Notification system
   let showCopyNotification = $state(false)
   let notificationTimer: ReturnType<typeof setTimeout> | null = null // Debouncing variables
@@ -447,7 +452,10 @@
 </script>
 
 <main class="mx-auto p-3 md:p-4 h-screen overflow-hidden bg-base-100">
-  {#if activeView === "settings"}
+  {#if !hasConfiguredProvider}
+    <!-- Show fullscreen no-config message -->
+    <NoConfigScreen onOpenSettings={openSettings} />
+  {:else if activeView === "settings"}
     <div data-view="settings" class="flex flex-col h-full overflow-hidden">
       <Settings
         config={config || {

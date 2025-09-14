@@ -2,7 +2,10 @@
   import { LanguageManager, type Language } from "./languages"
   import LanguageDropdown from "./LanguageDropdown.svelte"
   import FavoriteLanguagesManager from "./FavoriteLanguagesManager.svelte"
-  import { GlobeAltIcon, StarIcon } from "heroicons-svelte/24/outline"
+  import {
+    LanguageIcon,
+    InformationCircleIcon,
+  } from "heroicons-svelte/24/outline"
 
   interface Props {
     config: any
@@ -72,96 +75,131 @@
   }
 </script>
 
-<div class="space-y-6">
+<div class="ml-10 mr-10 overflow-hidden">
   <!-- Primary Language Settings -->
   <div class="card bg-base-100 border border-base-300/50">
-    <div class="card-body">
-      <h5 class="card-title flex items-center gap-2">Target Languages</h5>
-      <div class="space-y-4">
-        <div class="form-control w-full">
-          <label class="label" for="primary-target">
-            <span class="label-text font-medium">Primary Target Language</span>
-          </label>
-          <LanguageDropdown
-            selectedLanguage={targetLanguage}
-            favoriteLanguages={config.favorite_languages || []}
-            includeAutoDetect={false}
-            onLanguageSelect={handleTargetLanguageChange}
-            label=""
-          />
-          <div class="label">
-            <span class="label-text-alt text-base-content/70"
-              >The main language you want to translate to.</span
-            >
+    <div class="card-body space-y-6">
+      <h5 class="card-title flex items-center gap-2 mb-2">
+        <LanguageIcon class="w-5 h-5" />
+        Languages
+      </h5>
+      <div class="space-y-6 mt-4 mx-8">
+        <div class="grid md:grid-cols-3 gap-4">
+          <div class="form-control w-full">
+            <label class="label" for="source-language">
+              <span class="label-text font-medium">Source Language</span>
+            </label>
+            <LanguageDropdown
+              selectedLanguage={config.user_source_language ?
+                LanguageManager.search(config.user_source_language, false).find(
+                  (l) =>
+                    l.english_name.toLowerCase() ===
+                    config.user_source_language.toLowerCase()
+                ) ||
+                LanguageManager.createCustomLanguage(
+                  config.user_source_language
+                )
+              : LanguageManager.getAutoDetect()}
+              favoriteLanguages={config.favorite_languages || []}
+              includeAutoDetect={true}
+              onLanguageSelect={async (lang) => {
+                const newConfig = {
+                  ...config,
+                  user_source_language:
+                    lang.code === "auto" ? null : lang.english_name,
+                }
+                await onConfigUpdate(newConfig)
+              }}
+              label=""
+            />
+            <div class="label">
+              <span class="label-text-alt text-wrap text-base-content/30">
+                Language of the text you enter. Leave on Auto-detect unless you
+                need to force a specific language.
+              </span>
+            </div>
           </div>
-        </div>
-
-        <div class="form-control w-full">
-          <label class="label" for="alternative-target">
-            <span class="label-text font-medium"
-              >Alternative Target Language</span
-            >
-          </label>
-          <LanguageDropdown
-            selectedLanguage={alternativeLanguage}
-            favoriteLanguages={config.favorite_languages || []}
-            includeAutoDetect={false}
-            onLanguageSelect={handleAlternativeLanguageChange}
-            label=""
-          />
-          <div class="label">
-            <span class="label-text-alt text-base-content/70"
-              >Used when the detected language is the same as your primary
-              target.</span
-            >
+          <div class="form-control w-full">
+            <label class="label" for="primary-target">
+              <span class="label-text font-medium">Primary Target Language</span
+              >
+            </label>
+            <LanguageDropdown
+              selectedLanguage={targetLanguage}
+              favoriteLanguages={config.favorite_languages || []}
+              includeAutoDetect={false}
+              onLanguageSelect={handleTargetLanguageChange}
+              label=""
+            />
+            <div class="label">
+              <span class="label-text-alt text-wrap text-base-content/30">
+                The main language you want to translate to.
+              </span>
+            </div>
+          </div>
+          <div class="form-control w-full">
+            <label class="label" for="alternative-target">
+              <span class="label-text font-medium"
+                >Alternative Target Language</span
+              >
+            </label>
+            <LanguageDropdown
+              selectedLanguage={alternativeLanguage}
+              favoriteLanguages={config.favorite_languages || []}
+              includeAutoDetect={false}
+              onLanguageSelect={handleAlternativeLanguageChange}
+              label=""
+            />
+            <div class="label">
+              <span class="label-text-alt text-wrap text-base-content/30">
+                Used when the detected language matches your primary target.
+              </span>
+            </div>
           </div>
         </div>
       </div>
 
       <!-- Smart Translation Logic Explanation -->
-      <div class="alert alert-info">
-        <div>
-          <h6 class="font-semibold">How Smart Language Selection Works</h6>
-          <p class="text-sm mt-2">
-            GPTranslate automatically chooses the best target language based on
-            what it detects:
-          </p>
-          <ul class="list-disc list-inside text-sm mt-2 space-y-1">
-            <li>
-              <strong>If detected language ≠ primary target:</strong> Uses your primary
-              target language
-            </li>
-            <li>
-              <strong>If detected language = primary target:</strong> Uses your alternative
-              target language
-            </li>
-            <li>
-              <strong>Example:</strong> Detected Spanish + Primary English → Translates
-              to English
-            </li>
-            <li>
-              <strong>Example:</strong> Detected English + Primary English → Translates
-              to your alternative language
-            </li>
-          </ul>
+      <div class="alert alert-soft mt-6">
+        <div class="space-y-2 w-full">
+          <h5 class="flex items-center gap-2 font-semibold">
+            <InformationCircleIcon class="w-5 h-5" />
+            How Smart Language Selection Works
+          </h5>
+          <div class="mx-8 space-y-2">
+            <p class="text-sm">
+              GPTranslate automatically chooses the best target language based
+              on what it detects:
+            </p>
+            <ul class="list-disc list-inside text-sm space-y-1">
+              <li>
+                <strong>If detected language ≠ primary target:</strong> Uses your
+                primary target language
+              </li>
+              <li>
+                <strong>If detected language = primary target:</strong> Uses your
+                alternative target language
+              </li>
+              <li>
+                <strong>Example:</strong> Detected Spanish + Primary English → Translates
+                to English
+              </li>
+              <li>
+                <strong>Example:</strong> Detected English + Primary English → Translates
+                to your alternative language
+              </li>
+            </ul>
+          </div>
         </div>
       </div>
     </div>
   </div>
 
   <!-- Favorite Languages Management -->
-  <div>
-    <div
-      class="mb-2 flex items-center gap-2 text-sm font-medium text-base-content/80"
-    >
-      <StarIcon class="w-4 h-4" />
-      Favourite Languages
-    </div>
-    <FavoriteLanguagesManager
-      favoriteLanguageCodes={config.favorite_languages || []}
-      onFavoritesUpdate={handleFavoritesUpdate}
-    />
-  </div>
+  <FavoriteLanguagesManager
+    favoriteLanguageCodes={config.favorite_languages || []}
+    onFavoritesUpdate={handleFavoritesUpdate}
+  />
 </div>
 
 <!-- Custom CSS goes in /src/styles.css */ -->

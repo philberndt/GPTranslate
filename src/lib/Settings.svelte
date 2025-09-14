@@ -13,8 +13,8 @@
     XMarkIcon,
     WrenchScrewdriverIcon,
     CpuChipIcon,
-    GlobeAltIcon,
-    CogIcon,
+    LanguageIcon,
+    AdjustmentsHorizontalIcon,
     InformationCircleIcon,
   } from "heroicons-svelte/24/outline"
 
@@ -379,7 +379,7 @@
         class="tab text-base {activeTab === 'languages' ? 'tab-active' : ''}"
         onclick={() => setActiveTab("languages")}
       >
-        <GlobeAltIcon class="w-4 h-4 mr-2" />
+        <LanguageIcon class="w-4 h-4 mr-2" />
         Languages
       </button>
       <button
@@ -387,7 +387,7 @@
         class="tab text-base {activeTab === 'behavior' ? 'tab-active' : ''}"
         onclick={() => setActiveTab("behavior")}
       >
-        <CogIcon class="w-4 h-4 mr-2" />
+        <AdjustmentsHorizontalIcon class="w-4 h-4 mr-2" />
         App Behavior
       </button>
       <button

@@ -9,7 +9,7 @@ use crate::translation::TranslationProvider;
 pub fn create_provider(mut config: Config) -> Box<dyn TranslationProvider + Send + Sync> {
     // Ensure Azure deployment consistency before creating services
     config.ensure_azure_deployment_consistency();
-    
+
     match config.api_provider.as_str() {
         "openai" => Box::new(OpenAITranslationService::new(config)),
         "azure_openai" => Box::new(AzureOpenAITranslationService::new(config)),

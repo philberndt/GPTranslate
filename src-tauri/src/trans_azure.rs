@@ -189,19 +189,31 @@ impl AzureOpenAITranslationService {
         // Extract detected language from parsed JSON with better error handling
         let detected_language = if let Some(lang) = parsed["detected_language"].as_str() {
             if !lang.is_empty() && lang.to_lowercase() != "unknown" {
-                log::info!("✅ Successfully extracted detected_language from JSON: {}", lang);
+                log::info!(
+                    "✅ Successfully extracted detected_language from JSON: {}",
+                    lang
+                );
                 lang.to_string()
             } else {
-                log::warn!("⚠️ detected_language field found but is empty or 'unknown': {}", lang);
+                log::warn!(
+                    "⚠️ detected_language field found but is empty or 'unknown': {}",
+                    lang
+                );
                 "unknown".to_string()
             }
         } else {
-            log::error!("❌ No 'detected_language' field found in JSON. Available keys: {:?}", parsed.as_object().map(|obj| obj.keys().collect::<Vec<_>>()));
+            log::error!(
+                "❌ No 'detected_language' field found in JSON. Available keys: {:?}",
+                parsed.as_object().map(|obj| obj.keys().collect::<Vec<_>>())
+            );
             "unknown".to_string()
         };
         let translated_text = if let Some(text) = parsed["translated_text"].as_str() {
             if !text.is_empty() {
-                log::info!("✅ Successfully extracted translated_text from JSON (length: {})", text.len());
+                log::info!(
+                    "✅ Successfully extracted translated_text from JSON (length: {})",
+                    text.len()
+                );
                 // Properly handle escaped newlines that Azure might return
                 text.replace("\\n", "\n")
                     .replace("\\r\\n", "\n")
@@ -212,11 +224,17 @@ impl AzureOpenAITranslationService {
                 "translation failed".to_string()
             }
         } else {
-            log::error!("❌ No 'translated_text' field found in JSON. Available keys: {:?}", parsed.as_object().map(|obj| obj.keys().collect::<Vec<_>>()));
+            log::error!(
+                "❌ No 'translated_text' field found in JSON. Available keys: {:?}",
+                parsed.as_object().map(|obj| obj.keys().collect::<Vec<_>>())
+            );
             // If translated_text field is missing, check if the whole response is just text
             if parsed.is_string() {
                 let text = parsed.as_str().unwrap_or("translation failed");
-                log::info!("📝 Using whole response as translated text (length: {})", text.len());
+                log::info!(
+                    "📝 Using whole response as translated text (length: {})",
+                    text.len()
+                );
                 text.replace("\\n", "\n")
                     .replace("\\r\\n", "\n")
                     .replace("\\r", "\n")
@@ -293,11 +311,14 @@ impl TranslationProvider for AzureOpenAITranslationService {
 
         // Check if this is an alternatives request (custom_prompt contains "alternatives")
         let is_alternatives_request = self.config.custom_prompt.contains("alternatives");
-        
+
         let (user_prompt, system_prompt) = if is_alternatives_request {
             // For alternatives requests, use the custom prompt directly as the system prompt
             log::info!("Using alternatives prompt");
-            (format!("\"{}\"", cleaned_text), self.config.custom_prompt.clone())
+            (
+                format!("\"{}\"", cleaned_text),
+                self.config.custom_prompt.clone(),
+            )
         } else {
             // For regular translations, use the normal logic
             let user_prompt = format!("Text to translate: \"{}\"", cleaned_text);
@@ -351,10 +372,16 @@ impl TranslationProvider for AzureOpenAITranslationService {
             // For reasoning models, use simplified instructions
             if model_name.starts_with("gpt-5") {
                 // GPT-5 specific: even more simplified
-                format!("{}\n\nPlease respond with valid JSON containing 'detected_language' and 'translated_text' fields.", system_prompt)
+                format!(
+                    "{}\n\nPlease respond with valid JSON containing 'detected_language' and 'translated_text' fields.",
+                    system_prompt
+                )
             } else {
                 // Other reasoning models
-                format!("Please respond with valid JSON.\n\n{}\n\nRespond with JSON containing 'detected_language' and 'translated_text' fields.", system_prompt)
+                format!(
+                    "Please respond with valid JSON.\n\n{}\n\nRespond with JSON containing 'detected_language' and 'translated_text' fields.",
+                    system_prompt
+                )
             }
         } else {
             // For non-reasoning models, use detailed instructions
@@ -383,12 +410,16 @@ impl TranslationProvider for AzureOpenAITranslationService {
             if model_name.starts_with("gpt-5") {
                 request_body["max_completion_tokens"] = json!(1000);
                 request_body["reasoning_effort"] = json!("minimal");
-                log::info!("Azure - GPT-5 specific config: max_completion_tokens=1000, reasoning_effort=minimal");
+                log::info!(
+                    "Azure - GPT-5 specific config: max_completion_tokens=1000, reasoning_effort=minimal"
+                );
             } else if model_name.starts_with("gpt-4.1") {
                 // GPT-4.1 should use low reasoning effort
                 request_body["max_completion_tokens"] = json!(800);
                 request_body["reasoning_effort"] = json!("low");
-                log::info!("Azure - GPT-4.1 specific config: max_completion_tokens=800, reasoning_effort=low");
+                log::info!(
+                    "Azure - GPT-4.1 specific config: max_completion_tokens=800, reasoning_effort=low"
+                );
             } else {
                 // Other reasoning models (o1, o3, etc.) - use config or default to low
                 request_body["max_completion_tokens"] = json!(800);
@@ -396,13 +427,13 @@ impl TranslationProvider for AzureOpenAITranslationService {
                 request_body["reasoning_effort"] = json!(effort);
                 log::info!("Azure - Using reasoning effort: {}", effort);
             }
-            
+
             // Add JSON mode for reasoning models to ensure proper JSON response
             request_body["response_format"] = json!({
                 "type": "json_object"
             });
             log::info!("Azure - Added JSON mode for reasoning model");
-            
+
             // Note: Reasoning models don't support temperature, top_p, presence_penalty, frequency_penalty, logprobs, top_logprobs, logit_bias parameters
         } else {
             request_body["max_tokens"] = json!(800);
@@ -428,40 +459,66 @@ impl TranslationProvider for AzureOpenAITranslationService {
 
         // Additional debugging for GPT-5 models
         if model_name.starts_with("gpt-5") {
-            log::error!("GPT-5 DEBUG - Full response structure: {}", serde_json::to_string_pretty(&response).unwrap_or_default());
+            log::error!(
+                "GPT-5 DEBUG - Full response structure: {}",
+                serde_json::to_string_pretty(&response).unwrap_or_default()
+            );
             if let Some(choices) = response["choices"].as_array() {
                 log::error!("GPT-5 DEBUG - Choices length: {}", choices.len());
                 if !choices.is_empty() {
-                    log::error!("GPT-5 DEBUG - First choice: {}", serde_json::to_string_pretty(&choices[0]).unwrap_or_default());
+                    log::error!(
+                        "GPT-5 DEBUG - First choice: {}",
+                        serde_json::to_string_pretty(&choices[0]).unwrap_or_default()
+                    );
                 }
             }
         }
 
         // Better error handling for response structure
-        let choices = response["choices"].as_array()
-            .ok_or_else(|| anyhow::anyhow!("No 'choices' array in response. Full response: {}", serde_json::to_string_pretty(&response).unwrap_or_default()))?;
-            
+        let choices = response["choices"].as_array().ok_or_else(|| {
+            anyhow::anyhow!(
+                "No 'choices' array in response. Full response: {}",
+                serde_json::to_string_pretty(&response).unwrap_or_default()
+            )
+        })?;
+
         if choices.is_empty() {
-            return Err(anyhow::anyhow!("Empty 'choices' array in response. Full response: {}", serde_json::to_string_pretty(&response).unwrap_or_default()));
+            return Err(anyhow::anyhow!(
+                "Empty 'choices' array in response. Full response: {}",
+                serde_json::to_string_pretty(&response).unwrap_or_default()
+            ));
         }
-        
+
         let message = &choices[0]["message"];
         if message.is_null() {
-            return Err(anyhow::anyhow!("No 'message' object in first choice. Full response: {}", serde_json::to_string_pretty(&response).unwrap_or_default()));
+            return Err(anyhow::anyhow!(
+                "No 'message' object in first choice. Full response: {}",
+                serde_json::to_string_pretty(&response).unwrap_or_default()
+            ));
         }
-        
-        let content = message["content"]
-            .as_str()
-            .ok_or_else(|| anyhow::anyhow!("No 'content' field in message or content is not a string. Message: {}", serde_json::to_string_pretty(message).unwrap_or_default()))?;
+
+        let content = message["content"].as_str().ok_or_else(|| {
+            anyhow::anyhow!(
+                "No 'content' field in message or content is not a string. Message: {}",
+                serde_json::to_string_pretty(message).unwrap_or_default()
+            )
+        })?;
 
         log::info!("Azure API Response Content: {}", content);
-        
+
         // Additional debugging for empty content
         if content.is_empty() {
-            log::error!("EMPTY CONTENT DEBUG - Model: {}, Content length: {}", model_name, content.len());
-            log::error!("EMPTY CONTENT DEBUG - Full message object: {}", serde_json::to_string_pretty(message).unwrap_or_default());
+            log::error!(
+                "EMPTY CONTENT DEBUG - Model: {}, Content length: {}",
+                model_name,
+                content.len()
+            );
+            log::error!(
+                "EMPTY CONTENT DEBUG - Full message object: {}",
+                serde_json::to_string_pretty(message).unwrap_or_default()
+            );
         }
-        
+
         // Check if this is an alternatives request
         let is_alternatives_request = self.config.custom_prompt.contains("alternatives");
         if is_alternatives_request {
