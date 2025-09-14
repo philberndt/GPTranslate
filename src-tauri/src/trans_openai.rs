@@ -225,11 +225,14 @@ impl TranslationProvider for OpenAITranslationService {
 
         // Check if this is an alternatives request (custom_prompt contains "alternatives")
         let is_alternatives_request = self.config.custom_prompt.contains("alternatives");
-        
+
         let (user_prompt, system_prompt) = if is_alternatives_request {
             // For alternatives requests, use the custom prompt directly as the system prompt
             log::info!("Using alternatives prompt");
-            (format!("\"{}\"", cleaned_text), self.config.custom_prompt.clone())
+            (
+                format!("\"{}\"", cleaned_text),
+                self.config.custom_prompt.clone(),
+            )
         } else {
             // For regular translations, use the normal logic
             let user_prompt = format!("Text to translate: \"{}\"", cleaned_text);
@@ -263,13 +266,19 @@ impl TranslationProvider for OpenAITranslationService {
         let system_content = if is_alternatives_request {
             // For alternatives requests, use the system prompt directly with minimal formatting
             if is_reasoning_model {
-                format!("Formatting re-enabled - please respond with valid JSON.\n\n{}", system_prompt)
+                format!(
+                    "Formatting re-enabled - please respond with valid JSON.\n\n{}",
+                    system_prompt
+                )
             } else {
                 system_prompt
             }
         } else if is_reasoning_model {
             // For reasoning models, use much simpler instructions with formatting re-enabled
-            format!("Formatting re-enabled - please respond with valid JSON.\n\n{}\n\nRespond with JSON containing 'detected_language' and 'translated_text' fields.", system_prompt)
+            format!(
+                "Formatting re-enabled - please respond with valid JSON.\n\n{}\n\nRespond with JSON containing 'detected_language' and 'translated_text' fields.",
+                system_prompt
+            )
         } else {
             // For non-reasoning models, use detailed instructions
             format!(
@@ -301,13 +310,13 @@ impl TranslationProvider for OpenAITranslationService {
                 "effort": effort
             });
             log::info!("OpenAI - Using reasoning effort: {}", effort);
-            
+
             // Add verbosity parameter for GPT-5 models
             if self.config.model.starts_with("gpt-5") {
                 request_body["verbosity"] = json!("medium");
                 log::info!("OpenAI - Using verbosity: medium for GPT-5 model");
             }
-            
+
             // Note: Reasoning models don't support temperature, top_p, presence_penalty, frequency_penalty, logprobs, top_logprobs, logit_bias parameters
         } else {
             request_body["max_tokens"] = json!(800);
@@ -317,23 +326,36 @@ impl TranslationProvider for OpenAITranslationService {
         log::info!("Using OpenAI model: {}", self.config.model);
 
         let response = self.call_openai(request_body).await?;
-        
+
         // Better error handling for response structure
-        let choices = response["choices"].as_array()
-            .ok_or_else(|| anyhow::anyhow!("No 'choices' array in response. Full response: {}", serde_json::to_string_pretty(&response).unwrap_or_default()))?;
-            
+        let choices = response["choices"].as_array().ok_or_else(|| {
+            anyhow::anyhow!(
+                "No 'choices' array in response. Full response: {}",
+                serde_json::to_string_pretty(&response).unwrap_or_default()
+            )
+        })?;
+
         if choices.is_empty() {
-            return Err(anyhow::anyhow!("Empty 'choices' array in response. Full response: {}", serde_json::to_string_pretty(&response).unwrap_or_default()));
+            return Err(anyhow::anyhow!(
+                "Empty 'choices' array in response. Full response: {}",
+                serde_json::to_string_pretty(&response).unwrap_or_default()
+            ));
         }
-        
+
         let message = &choices[0]["message"];
         if message.is_null() {
-            return Err(anyhow::anyhow!("No 'message' object in first choice. Full response: {}", serde_json::to_string_pretty(&response).unwrap_or_default()));
+            return Err(anyhow::anyhow!(
+                "No 'message' object in first choice. Full response: {}",
+                serde_json::to_string_pretty(&response).unwrap_or_default()
+            ));
         }
-        
-        let content = message["content"]
-            .as_str()
-            .ok_or_else(|| anyhow::anyhow!("No 'content' field in message or content is not a string. Message: {}", serde_json::to_string_pretty(message).unwrap_or_default()))?;
+
+        let content = message["content"].as_str().ok_or_else(|| {
+            anyhow::anyhow!(
+                "No 'content' field in message or content is not a string. Message: {}",
+                serde_json::to_string_pretty(message).unwrap_or_default()
+            )
+        })?;
 
         // Check if this is an alternatives request
         let is_alternatives_request = self.config.custom_prompt.contains("alternatives");

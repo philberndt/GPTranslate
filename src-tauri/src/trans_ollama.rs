@@ -229,7 +229,7 @@ impl TranslationProvider for OllamaTranslationService {
 
         // Check if this is an alternatives request (custom_prompt contains "alternatives")
         let is_alternatives_request = self.config.custom_prompt.contains("alternatives");
-        
+
         let full_prompt = if is_alternatives_request {
             // For alternatives requests, use the custom prompt directly
             log::info!("Using alternatives prompt for Ollama");

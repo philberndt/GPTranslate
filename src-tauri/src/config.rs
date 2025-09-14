@@ -161,22 +161,23 @@ impl Config {
 
     /// Ensures that for Azure OpenAI, the deployment name matches the model name
     pub fn ensure_azure_deployment_consistency(&mut self) {
-        if self.api_provider == "azure_openai" && !self.model.is_empty() {
-            if self.azure_deployment_name != self.model {
-                log::info!(
-                    "Updating Azure deployment name from '{}' to '{}' to match model",
-                    self.azure_deployment_name,
-                    self.model
-                );
-                self.azure_deployment_name = self.model.clone();
-            }
+        if self.api_provider == "azure_openai"
+            && !self.model.is_empty()
+            && self.azure_deployment_name != self.model
+        {
+            log::info!(
+                "Updating Azure deployment name from '{}' to '{}' to match model",
+                self.azure_deployment_name,
+                self.model
+            );
+            self.azure_deployment_name = self.model.clone();
         }
     }
 
     pub fn get_config_dir() -> Result<PathBuf> {
         let home_dir =
             dirs::home_dir().ok_or_else(|| anyhow::anyhow!("Could not find home directory"))?;
-        let config_dir = home_dir.join(".gptranslate");
+        let config_dir = home_dir.join(".config").join("gptranslate");
 
         if !config_dir.exists() {
             std::fs::create_dir_all(&config_dir)?;
@@ -186,7 +187,7 @@ impl Config {
     }
 
     pub fn get_config_path() -> Result<PathBuf> {
-        Ok(Self::get_config_dir()?.join("config.json"))
+        Ok(Self::get_config_dir()?.join("gptranslate.json"))
     }
     pub fn load() -> Result<Self> {
         let config_path = Self::get_config_path()?;

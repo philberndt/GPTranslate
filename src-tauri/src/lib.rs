@@ -211,7 +211,9 @@ async fn get_alternative_translations_debug(
     target_language: String,
     state: State<'_, AppState>,
 ) -> Result<serde_json::Value, String> {
-    match translation::get_alternative_translations_debug(selected_text, target_language, state).await {
+    match translation::get_alternative_translations_debug(selected_text, target_language, state)
+        .await
+    {
         Ok(result) => Ok(result),
         Err(e) => Err(e.to_string()),
     }

@@ -36,7 +36,8 @@
     "lint:fix": "eslint . --ext .js,.ts,.svelte --fix",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "tauri": "tauri"
+    "tauri": "tauri",
+    "test:rs": "cd src-tauri && cargo test"
   },
   "license": "MIT",
   "dependencies": {

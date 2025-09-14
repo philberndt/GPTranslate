@@ -50,11 +50,11 @@
   }
 </script>
 
-<div class="space-y-6 overflow-hidden">
+<div class="ml-10 mr-10 overflow-hidden">
   <div class="card bg-base-100 border border-base-300/50 form-control">
-    <div class="card-body">
+    <div class="card-body space-y-6">
       <h5 class="card-title flex items-center gap-2">API Provider</h5>
-      <div class="grid grid-cols-4 gap-2">
+      <div class="grid grid-cols-4 gap-3 mx-8">
         <div class="form-control">
           <button
             type="button"
@@ -162,7 +162,7 @@
       </div>
     </div>
 
-    <div class="max-w-2xl mx-auto">
+    <div class="space-y-8 mx-8 mb-8">
       {#if config.api_provider === "openai"}
         <div class="form-control w-full">
           <label class="label" for="openai-key">
@@ -173,8 +173,9 @@
               id="openai-key"
               type="password"
               class="input input-bordered bg-base-200 flex-1"
+              style="appearance: none; -webkit-appearance: none; -moz-appearance: textfield;"
               value={config.openai_api_key}
-              placeholder="sk-..."
+              placeholder="sk-proj-1234567890abcdefghijklmnopqrstuvwxyz..."
               onblur={validateApiKey}
               oninput={(e) =>
                 updateConfig(
@@ -296,7 +297,7 @@
           </div>
         </div>
 
-        <div class="grid md:grid-cols-2 gap-4">
+        <div class="grid md:grid-cols-2 gap-6">
           <div class="form-control w-full">
             <label class="label" for="azure-deployment">
               <span class="label-text font-medium">Azure Deployment Name</span>
@@ -486,6 +487,7 @@
               id="ollama-url"
               type="text"
               class="input input-bordered bg-base-200 flex-1"
+              style="appearance: none; -webkit-appearance: none; -moz-appearance: textfield;"
               value={config.ollama_url || "http://localhost:11434"}
               placeholder="http://localhost:11434"
               onblur={validateApiKey}
@@ -495,7 +497,7 @@
                   (e.target as HTMLInputElement).value
                 )}
             />
-            <span class="w-8 h-8 flex items-center justify-center">
+            <div class="w-8 h-8 flex items-center justify-center">
               {#if isValidatingApiKey}
                 <span class="loading loading-spinner loading-sm"></span>
               {:else if apiKeyValid === true}
@@ -505,7 +507,7 @@
               {:else}
                 <span class="text-base-content/50 text-lg">?</span>
               {/if}
-            </span>
+            </div>
           </div>
           <div class="label">
             <span class="label-text-alt text-base-content/70">
