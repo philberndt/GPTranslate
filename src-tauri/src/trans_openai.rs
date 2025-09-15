@@ -37,25 +37,39 @@ impl OpenAITranslationService {
             serde_json::to_string_pretty(&request_body).unwrap_or_default()
         );
 
-        let response = self
-            .client
-            .post(url)
-            .header(
-                "Authorization",
-                format!("Bearer {}", self.config.openai_api_key),
-            )
-            .header("Content-Type", "application/json")
-            .json(&request_body)
-            .send()
-            .await?;
+        let mut attempt_body = request_body.clone();
+        for attempt in 1..=2 {
+            let response = self
+                .client
+                .post(url)
+                .header(
+                    "Authorization",
+                    format!("Bearer {}", self.config.openai_api_key),
+                )
+                .header("Content-Type", "application/json")
+                .json(&attempt_body)
+                .send()
+                .await?;
 
-        if !response.status().is_success() {
+            if response.status().is_success() {
+                return Ok(response.json().await?);
+            }
             let error_text = response.text().await?;
-            log::error!("OpenAI API request failed: {}", error_text);
-            return Err(anyhow::anyhow!("OpenAI API request failed: {}", error_text));
+            log::error!(
+                "OpenAI API request failed (attempt {}): {}",
+                attempt,
+                error_text
+            );
+            if error_text.contains("you must provide a model parameter") && attempt == 1 {
+                // Fallback: reinsert model explicitly (defensive) or use config.model again
+                log::warn!("Retrying OpenAI request with explicit model field reinforcement");
+                attempt_body["model"] = json!(self.config.model);
+                continue;
+            } else {
+                return Err(anyhow::anyhow!("OpenAI API request failed: {}", error_text));
+            }
         }
-
-        Ok(response.json().await?)
+        Err(anyhow::anyhow!("OpenAI API request failed after retries"))
     }
 
     fn parse_response_content(&self, content: &str) -> Result<TranslationResult> {
@@ -167,38 +181,14 @@ impl OpenAITranslationService {
                 }
             }
         };
-        log::info!("Detected language: {}", detected_language);
-        log::info!("Target language: {}", self.config.target_language);
         log::info!(
-            "Alternative target language: {}",
-            self.config.alternative_target_language
+            "Detected language (provider reported): {}",
+            detected_language
         );
-
-        // Determine the actual target language used for translation
-        let detected_lower = detected_language.to_lowercase();
-        let target_lower = self.config.target_language.to_lowercase();
-
-        let actual_target_language = if detected_lower == target_lower {
-            // Alternative language logic was applied
-            log::info!(
-                "OpenAI - Alternative language logic SHOULD apply: detected '{}' matches target '{}', should translate to '{}'",
-                detected_language,
-                self.config.target_language,
-                self.config.alternative_target_language
-            );
-            self.config.alternative_target_language.clone()
-        } else {
-            // Primary target language was used
-            log::info!(
-                "OpenAI - Primary target logic SHOULD apply: detected '{}' != target '{}', should translate to '{}'",
-                detected_language,
-                self.config.target_language,
-                self.config.target_language
-            );
-            self.config.target_language.clone()
-        };
-
-        log::info!("Returning target_language: {}", actual_target_language);
+        log::info!(
+            "Configured (effective) target language: {}",
+            self.config.target_language
+        );
 
         log::info!(
             "Translated text (first 100 chars): {}",
@@ -212,7 +202,7 @@ impl OpenAITranslationService {
         Ok(TranslationResult {
             detected_language,
             translated_text,
-            target_language: actual_target_language,
+            target_language: self.config.target_language.clone(),
         })
     }
 }
@@ -222,6 +212,11 @@ impl TranslationProvider for OpenAITranslationService {
     async fn translate(&self, text: &str) -> Result<TranslationResult> {
         let cleaned_text = clean_text_for_translation(text);
         log::info!("Cleaned text for translation: {}", cleaned_text);
+
+        if self.config.model.trim().is_empty() {
+            log::error!("OpenAITranslationService: model is empty; cannot proceed");
+            return Err(anyhow::anyhow!("Model not configured for OpenAI provider"));
+        }
 
         // Check if this is an alternatives request (custom_prompt contains "alternatives")
         let is_alternatives_request = self.config.custom_prompt.contains("alternatives");
@@ -234,10 +229,16 @@ impl TranslationProvider for OpenAITranslationService {
                 self.config.custom_prompt.clone(),
             )
         } else {
-            // For regular translations, use the normal logic
-            let user_prompt = format!("Text to translate: \"{}\"", cleaned_text);
+            // For regular translations, use the normal logic (target already resolved in config)
+            let user_prompt = format!(
+                "Text to translate into {}: \"{}\"",
+                self.config.target_language, cleaned_text
+            );
             let smart_prompt = create_smart_prompt(&self.config, None);
-            log::info!("Using smart prompt with alternative language logic");
+            log::info!(
+                "Using smart prompt (pre-resolved target '{}')",
+                self.config.target_language
+            );
             (user_prompt, smart_prompt)
         };
 

@@ -49,6 +49,7 @@ url = "2.5.7"
 ollama-rs = "0.3.2"
 async-trait = "0.1.89"
 image = "0.25.8"
+whatlang = "0.16.4"
 
 [target.'cfg(windows)'.dependencies]
 winapi = { version = "0.3.9", features = ["winuser", "wingdi"] }

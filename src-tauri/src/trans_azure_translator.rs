@@ -241,15 +241,17 @@ impl TranslationProvider for AzureTranslatorService {
             let detect_response = self
                 .call_azure_translator(&cleaned_text, "en", None) // Use 'en' as dummy target for detection
                 .await?;
-            
+
             let results = detect_response
                 .as_array()
                 .ok_or_else(|| anyhow::anyhow!("Invalid response format for detection"))?;
-            
+
             if results.is_empty() {
-                return Err(anyhow::anyhow!("Empty response from Azure Translator for detection"));
+                return Err(anyhow::anyhow!(
+                    "Empty response from Azure Translator for detection"
+                ));
             }
-            
+
             let result = &results[0];
             if let Some(detected) = result.get("detectedLanguage") {
                 detected

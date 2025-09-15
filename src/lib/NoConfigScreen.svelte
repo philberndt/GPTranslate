@@ -8,7 +8,6 @@
   let { onOpenSettings }: Props = $props()
 
   function handleGetStarted() {
-    console.log("Get Started button clicked!")
     onOpenSettings()
   }
 </script>

@@ -54,6 +54,12 @@ fn get_history_file_path() -> Result<PathBuf> {
 pub fn load_history() -> Result<TranslationHistory> {
     let history_path = get_history_file_path()?;
 
+    // Check if history exists in new location
+    if !history_path.exists() {
+        // Try to migrate from old location
+        migrate_history_if_needed()?;
+    }
+
     if !history_path.exists() {
         return Ok(TranslationHistory::new());
     }
@@ -63,6 +69,33 @@ pub fn load_history() -> Result<TranslationHistory> {
         serde_json::from_str(&contents).unwrap_or_else(|_| TranslationHistory::new());
 
     Ok(history)
+}
+
+fn migrate_history_if_needed() -> Result<()> {
+    let home_dir =
+        dirs::home_dir().ok_or_else(|| anyhow::anyhow!("Could not find home directory"))?;
+
+    let old_history_path = home_dir.join(".gptranslate").join("history.json");
+    let new_history_path = get_history_file_path()?;
+
+    if old_history_path.exists() && !new_history_path.exists() {
+        // Read from old location
+        let contents = fs::read_to_string(&old_history_path)?;
+
+        // Write to new location
+        fs::write(&new_history_path, contents)?;
+
+        // Optionally remove old file (uncomment if you want to clean up)
+        // fs::remove_file(&old_history_path)?;
+
+        log::info!(
+            "Migrated translation history from {:?} to {:?}",
+            old_history_path,
+            new_history_path
+        );
+    }
+
+    Ok(())
 }
 
 pub fn save_history(history: &TranslationHistory) -> Result<()> {
