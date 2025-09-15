@@ -41,7 +41,7 @@ fn get_history_file_path() -> Result<PathBuf> {
     let home_dir =
         dirs::home_dir().ok_or_else(|| anyhow::anyhow!("Could not find home directory"))?;
 
-    let config_dir = home_dir.join(".gptranslate");
+    let config_dir = home_dir.join(".config").join("gptranslate");
 
     // Create the directory if it doesn't exist
     if !config_dir.exists() {
