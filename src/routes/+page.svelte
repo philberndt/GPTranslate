@@ -40,15 +40,6 @@
 
   // Check if any API provider is configured
   let hasConfiguredProvider = $derived(isAnyProviderConfigured(config))
-  // TEMP: override to disable welcome screen during testing. Set to true to force normal UI.
-  const DISABLE_NO_CONFIG_SCREEN = false
-  const FORCE_SHOW_NO_CONFIG_SCREEN = false // Set to true to test the NoConfigScreen
-  if (DISABLE_NO_CONFIG_SCREEN) {
-    hasConfiguredProvider = true
-  }
-  if (FORCE_SHOW_NO_CONFIG_SCREEN) {
-    hasConfiguredProvider = false
-  }
 
   // Notification system
   let showCopyNotification = $state(false)
@@ -104,10 +95,7 @@
   async function loadConfig() {
     try {
       const newConfig = await invoke("get_config")
-      console.log("📥 Loaded new config:", newConfig)
-      console.log("🔍 Current config reference:", $state.snapshot(config))
       config = newConfig
-      console.log("✅ Config after assignment:", $state.snapshot(config))
       // Apply theme from config
       if (config && config.theme) {
         currentTheme = config.theme
@@ -217,18 +205,15 @@
     try {
       await invoke("save_config", { newConfig: newConfig })
       config = newConfig
-    } catch (e) {
-      console.error("Failed to save primary target language:", e)
+    } catch {
+      // Silently ignore config save errors
     }
   }
 
   // Handle model selection change
-  async function handleModelChange(modelName: string, provider: string) {
-    console.log(`🔄 Model changed to: ${modelName} (${provider})`)
-    console.log("📋 Current config before reload:", $state.snapshot(config))
+  async function handleModelChange(_modelName: string, _provider: string) {
     // Reload config to ensure all components get the updated values
     await loadConfig()
-    console.log("📋 Config after reload:", $state.snapshot(config))
   }
   onMount(() => {
     // Load config
@@ -238,16 +223,8 @@
       // Listen for clipboard text from global shortcut
       await listen("clipboard-text", (event) => {
         originalText = event.payload as string
-        console.log("Received clipboard text")
         if (config?.auto_translate_enabled && config?.auto_translate_on_paste) {
-          console.log(
-            "Auto translate (on paste) is enabled – triggering debounced translation"
-          )
           debouncedTranslateText()
-        } else {
-          console.log(
-            "Auto translate (on paste) disabled – not translating automatically"
-          )
         }
       }) // Listen for reset detected language from global shortcut
       await listen("reset-detected-language", () => {
@@ -260,14 +237,10 @@
           const timeSinceLastTranslation = Date.now() - lastTranslationTime
 
           if (timeSinceLastTranslation < RESET_PROTECTION_DELAY) {
-            console.log(
-              `Ignoring reset request - too soon after translation (${timeSinceLastTranslation}ms)`
-            )
             return
           }
 
           detectedLanguage = ""
-          console.log("Detected language reset via global shortcut")
           resetDebounceTimer = null
         }, 200) // Small debounce to prevent rapid resets
       })
@@ -315,12 +288,6 @@
         text: originalText,
       })) as any
 
-      console.log("Translation result:", result)
-      try {
-        console.log("Translation result keys:", Object.keys(result || {}))
-      } catch {
-        // Ignore errors when logging result keys
-      }
 
       // Support multiple possible backend response shapes
       const translated =
@@ -341,7 +308,6 @@
         String(result.target_language).trim() !== ""
       ) {
         targetLanguage = result.target_language
-        console.log("Set target language to:", result.target_language)
       } else {
         targetLanguage = ""
       }
@@ -354,13 +320,8 @@
         String(result.detected_language).toLowerCase() !== "unknowm"
       ) {
         detectedLanguage = result.detected_language
-        console.log("Set detected language to:", result.detected_language)
       } else {
         detectedLanguage = ""
-        console.log(
-          "Cleared detected language, received:",
-          result?.detected_language
-        )
       }
 
       // Update last translation time to protect against immediate resets
@@ -407,7 +368,6 @@
         event.preventDefault()
         copyToClipboard()
         showCopyNotificationMessage()
-        console.log("Copied translated text to clipboard via Ctrl+C")
       }
     }
   }
@@ -456,7 +416,6 @@
 
   function handleTranslatedTextUpdate(newText: string) {
     translatedText = newText
-    console.log("Translated text updated:", newText)
   }
 </script>
 

@@ -56,7 +56,6 @@
   } | null>(null)
 
   onMount(async () => {
-    console.log("Settings component mounted")
     // Ensure available_models exists and has default structure
     if (!config.available_models) {
       config.available_models = {}
@@ -159,9 +158,6 @@
           deploymentName = pathParts[deploymentIndex + 1]
         } else {
           // If no deployment in path, we can still extract from a full endpoint URL
-          console.log(
-            "No deployment found in path, cognitive services endpoint may need deployment name"
-          )
         }
       }
 
@@ -213,27 +209,19 @@
 
         if (apiVersion) {
           config.azure_api_version = apiVersion
-          console.log(`✓ Extracted API version: ${apiVersion}`)
         }
 
         if (isModelsEndpoint) {
           // For models endpoints, clear deployment name as it's not needed
           config.azure_deployment_name = ""
-          console.log(
-            "✓ Models API endpoint detected - deployment name cleared"
-          )
         } else if (deploymentName) {
           // For cognitive services endpoints, use extracted deployment name
           config.azure_deployment_name = deploymentName
-          console.log(`✓ Extracted deployment name: ${deploymentName}`)
 
           // Automatically add the model if it doesn't exist
           await autoAddAzureModel(deploymentName)
         } else {
           // Cognitive services endpoint but no deployment name in URL
-          console.log(
-            "⚠ Cognitive Services endpoint detected but no deployment name found in URL. You may need to specify it manually."
-          )
         }
 
         // Set endpoint info for UI feedback
@@ -243,11 +231,6 @@
           deploymentDetected: deploymentName || undefined,
           apiVersionDetected: apiVersion || undefined,
         }
-
-        console.log(
-          `✓ Endpoint type: ${isModelsEndpoint ? "Models API" : "Cognitive Services"}`
-        )
-        console.log(`✓ Base URL set to: ${baseUrl}`)
       } catch (e) {
         console.error("Failed to parse Azure endpoint:", e)
         azureEndpointInfo = { isValid: false }
@@ -324,7 +307,6 @@
 
   function resetToDefaults() {
     // Temporarily simplified
-    console.log("Reset to defaults clicked")
   }
 
   function autoAddAzureModel(_deploymentName: string) {

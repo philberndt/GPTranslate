@@ -79,7 +79,6 @@
       justSelected = true
       showPopupNearSelection(range)
       loadAlternatives()
-      console.log(`Selected text for alternatives: "${text}"`)
 
       // Reset justSelected flag after a short delay
       setTimeout(() => {
@@ -164,8 +163,6 @@
 
       // Update the component's translated text through the prop callback
       onTextUpdate(newText)
-
-      console.log(`Replaced "${selectedText}" with "${alternative}"`)
     } catch (error) {
       console.error("Error during text replacement:", error)
     }
@@ -228,7 +225,6 @@
     selectedText = ""
     alternatives = []
     selectionRange = null
-    console.log("Alternative translations popup hidden")
   }
 
   // Handle clicks outside popup

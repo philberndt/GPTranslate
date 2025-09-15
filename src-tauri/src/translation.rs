@@ -9,7 +9,7 @@ use lazy_static::lazy_static;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
-use whatlang::{detect, Lang};
+use whatlang::{Lang, detect};
 
 lazy_static! {
     static ref IN_FLIGHT_REQUESTS: Arc<Mutex<HashMap<String, std::time::Instant>>> =
@@ -135,7 +135,7 @@ fn map_whatlang_lang_to_name(lang: Lang) -> String {
         Hin => "Hindi",
         Nld => "Dutch",
         Swe => "Swedish",
-    Nob => "Norwegian",
+        Nob => "Norwegian",
         Dan => "Danish",
         Fin => "Finnish",
         Pol => "Polish",
@@ -208,14 +208,23 @@ pub async fn translate_text(
         pre_detected_language = Some(user_source);
     } else {
         let trimmed = text.trim();
-        if trimmed.chars().count() >= 3 { // avoid unreliable detection on ultra-short text
+        if trimmed.chars().count() >= 3 {
+            // avoid unreliable detection on ultra-short text
             if let Some(info) = detect(trimmed) {
                 let lang_name = map_whatlang_lang_to_name(info.lang());
-                log::info!("Pre-detected language via whatlang: {} (confidence {:.2})", lang_name, info.confidence());
-                if info.confidence() >= 0.70 { // confidence threshold
+                log::info!(
+                    "Pre-detected language via whatlang: {} (confidence {:.2})",
+                    lang_name,
+                    info.confidence()
+                );
+                if info.confidence() >= 0.70 {
+                    // confidence threshold
                     pre_detected_language = Some(lang_name);
                 } else {
-                    log::info!("Detection confidence below threshold ({:.2}), ignoring", info.confidence());
+                    log::info!(
+                        "Detection confidence below threshold ({:.2}), ignoring",
+                        info.confidence()
+                    );
                 }
             } else {
                 log::info!("Language detection returned None");
@@ -232,13 +241,16 @@ pub async fn translate_text(
             if primary.eq_ignore_ascii_case(&alternative) {
                 log::warn!(
                     "Configuration issue: primary ('{}') and alternative ('{}') target languages are the same. Using Spanish as fallback.",
-                    primary, alternative
+                    primary,
+                    alternative
                 );
                 "Spanish".to_string()
             } else {
                 log::info!(
                     "Smart switch engaged: detected '{}' == primary '{}'; using alternative '{}'",
-                    detected, primary, alternative
+                    detected,
+                    primary,
+                    alternative
                 );
                 alternative.clone()
             }
@@ -246,17 +258,27 @@ pub async fn translate_text(
         Some(detected) => {
             log::info!(
                 "Using primary target '{}'; detected '{}' differs",
-                primary, detected
+                primary,
+                detected
             );
             primary.clone()
         }
         None => {
-            log::info!("No reliable pre-detect result; defaulting to primary target '{}';", primary);
+            log::info!(
+                "No reliable pre-detect result; defaulting to primary target '{}';",
+                primary
+            );
             primary.clone()
         }
     };
 
-    log::info!("Summary smart-switch: primary='{}' alternative='{}' pre_detected='{:#?}' effective='{}'", primary, alternative, pre_detected_language, effective_target);
+    log::info!(
+        "Summary smart-switch: primary='{}' alternative='{}' pre_detected='{:#?}' effective='{}'",
+        primary,
+        alternative,
+        pre_detected_language,
+        effective_target
+    );
 
     // Mutate only the local clone's target_language so provider translates directly to chosen language.
     config_clone.target_language = effective_target.clone();
@@ -273,7 +295,9 @@ pub async fn translate_text(
 
             // Prefer provider's detected language unless unknown, then fallback to pre-detected
             let final_detected = if result.detected_language.eq_ignore_ascii_case("unknown") {
-                pre_detected_language.clone().unwrap_or_else(|| "unknown".to_string())
+                pre_detected_language
+                    .clone()
+                    .unwrap_or_else(|| "unknown".to_string())
             } else {
                 result.detected_language.clone()
             };

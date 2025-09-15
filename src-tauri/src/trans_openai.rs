@@ -55,7 +55,11 @@ impl OpenAITranslationService {
                 return Ok(response.json().await?);
             }
             let error_text = response.text().await?;
-            log::error!("OpenAI API request failed (attempt {}): {}", attempt, error_text);
+            log::error!(
+                "OpenAI API request failed (attempt {}): {}",
+                attempt,
+                error_text
+            );
             if error_text.contains("you must provide a model parameter") && attempt == 1 {
                 // Fallback: reinsert model explicitly (defensive) or use config.model again
                 log::warn!("Retrying OpenAI request with explicit model field reinforcement");
@@ -177,8 +181,14 @@ impl OpenAITranslationService {
                 }
             }
         };
-        log::info!("Detected language (provider reported): {}", detected_language);
-        log::info!("Configured (effective) target language: {}", self.config.target_language);
+        log::info!(
+            "Detected language (provider reported): {}",
+            detected_language
+        );
+        log::info!(
+            "Configured (effective) target language: {}",
+            self.config.target_language
+        );
 
         log::info!(
             "Translated text (first 100 chars): {}",
@@ -225,7 +235,10 @@ impl TranslationProvider for OpenAITranslationService {
                 self.config.target_language, cleaned_text
             );
             let smart_prompt = create_smart_prompt(&self.config, None);
-            log::info!("Using smart prompt (pre-resolved target '{}')", self.config.target_language);
+            log::info!(
+                "Using smart prompt (pre-resolved target '{}')",
+                self.config.target_language
+            );
             (user_prompt, smart_prompt)
         };
 

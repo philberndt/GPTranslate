@@ -284,9 +284,19 @@ impl AzureOpenAITranslationService {
             }
         );
 
-        log::info!("Detected language (provider reported): {}", detected_language);
-        log::info!("Configured (effective) target language: {}", self.config.target_language);
-        Ok(TranslationResult { detected_language, translated_text, target_language: self.config.target_language.clone() })
+        log::info!(
+            "Detected language (provider reported): {}",
+            detected_language
+        );
+        log::info!(
+            "Configured (effective) target language: {}",
+            self.config.target_language
+        );
+        Ok(TranslationResult {
+            detected_language,
+            translated_text,
+            target_language: self.config.target_language.clone(),
+        })
     }
 }
 
@@ -296,9 +306,15 @@ impl TranslationProvider for AzureOpenAITranslationService {
         let cleaned_text = clean_text_for_translation(text);
         log::info!("Cleaned text for translation: {}", cleaned_text);
 
-        if self.config.model.trim().is_empty() && self.config.azure_deployment_name.trim().is_empty() {
-            log::error!("AzureOpenAITranslationService: model/deployment name is empty; cannot proceed");
-            return Err(anyhow::anyhow!("Model / deployment not configured for Azure OpenAI provider"));
+        if self.config.model.trim().is_empty()
+            && self.config.azure_deployment_name.trim().is_empty()
+        {
+            log::error!(
+                "AzureOpenAITranslationService: model/deployment name is empty; cannot proceed"
+            );
+            return Err(anyhow::anyhow!(
+                "Model / deployment not configured for Azure OpenAI provider"
+            ));
         }
 
         // Check if this is an alternatives request (custom_prompt contains "alternatives")
@@ -313,9 +329,15 @@ impl TranslationProvider for AzureOpenAITranslationService {
             )
         } else {
             // For regular translations, use the normal logic
-            let user_prompt = format!("Text to translate into {}: \"{}\"", self.config.target_language, cleaned_text);
+            let user_prompt = format!(
+                "Text to translate into {}: \"{}\"",
+                self.config.target_language, cleaned_text
+            );
             let smart_prompt = create_smart_prompt(&self.config, None);
-            log::info!("Using smart prompt (pre-resolved target '{}')", self.config.target_language);
+            log::info!(
+                "Using smart prompt (pre-resolved target '{}')",
+                self.config.target_language
+            );
             (user_prompt, smart_prompt)
         };
 

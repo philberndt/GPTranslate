@@ -171,8 +171,14 @@ impl OllamaTranslationService {
                 }
             }
         };
-        log::info!("Detected language (provider reported): {}", detected_language);
-        log::info!("Configured (effective) target language: {}", self.config.target_language);
+        log::info!(
+            "Detected language (provider reported): {}",
+            detected_language
+        );
+        log::info!(
+            "Configured (effective) target language: {}",
+            self.config.target_language
+        );
 
         log::info!(
             "Translated text (first 100 chars): {}",
@@ -183,7 +189,11 @@ impl OllamaTranslationService {
             }
         );
 
-        Ok(TranslationResult { detected_language, translated_text, target_language: self.config.target_language.clone() })
+        Ok(TranslationResult {
+            detected_language,
+            translated_text,
+            target_language: self.config.target_language.clone(),
+        })
     }
 }
 
@@ -207,7 +217,10 @@ impl TranslationProvider for OllamaTranslationService {
             format!("{}\n\n\"{}\"", self.config.custom_prompt, cleaned_text)
         } else {
             // For regular translations, use the normal logic
-            let user_prompt = format!("Text to translate into {}: \"{}\"", self.config.target_language, cleaned_text);
+            let user_prompt = format!(
+                "Text to translate into {}: \"{}\"",
+                self.config.target_language, cleaned_text
+            );
             let smart_prompt = create_smart_prompt(&self.config, None);
             format!(
                 "{}\n\nAlways respond with valid JSON containing 'detected_language' and 'translated_text' fields. Preserve line breaks and formatting in the translated text.\n\n{}",

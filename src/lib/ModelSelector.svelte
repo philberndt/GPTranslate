@@ -30,10 +30,6 @@
 
   // Derive selectedModel from config changes
   let selectedModel = $derived.by(() => {
-    console.log(
-      "ModelSelector $derived triggered with config:",
-      $state.snapshot(config)
-    )
     if (!config) return ""
     
     let newSelectedModel = ""
@@ -53,10 +49,6 @@
       ).find((m) => m.is_enabled)
       if (firstEnabled) newSelectedModel = firstEnabled.name
     }
-    console.log(
-      "ModelSelector updating selectedModel to",
-      newSelectedModel
-    )
     return newSelectedModel
   })
 
@@ -97,18 +89,10 @@
     }
   }
   async function selectModel(provider: string, modelName: string) {
-    console.log(
-      `🔄 selectModel called with provider: ${provider}, modelName: ${modelName}`
-    )
-    console.log("📋 Current config:", $state.snapshot(config))
-    console.log("🎯 Current selectedModel:", selectedModel)
 
     try {
       if (config) {
         // Update selectedModel immediately for visual feedback
-        console.log(
-          `👁️ Updating selectedModel from ${selectedModel} to ${modelName}`
-        )
         selectedModel = modelName
 
         // Create a new config object to avoid mutating props
@@ -123,16 +107,11 @@
             ),
         }
 
-        console.log("💾 Saving new config:", newConfig)
         await invoke("save_config", { newConfig: newConfig })
-        console.log("✅ Config saved successfully")
 
         // Call onModelChange to let parent handle config updates
         if (onModelChange) {
-          console.log("📢 Calling onModelChange callback")
           onModelChange(modelName, provider)
-        } else {
-          console.log("⚠️ No onModelChange callback provided")
         }
 
         // closed state no longer needed for native select
