@@ -141,30 +141,9 @@ impl AzureTranslatorService {
             self.config.alternative_target_language
         );
 
-        // Determine the actual target language used for translation
-        // Map language codes to full language names for consistency with other providers
-        let detected_lower = detected_language.to_lowercase();
-        let target_lower = self.config.target_language.to_lowercase();
-
-        let actual_target_language = if self.language_codes_match(&detected_lower, &target_lower) {
-            // Alternative language logic was applied
-            log::info!(
-                "Azure Translator - Alternative language logic SHOULD apply: detected '{}' matches target '{}', should translate to '{}'",
-                detected_language,
-                self.config.target_language,
-                self.config.alternative_target_language
-            );
-            self.config.alternative_target_language.clone()
-        } else {
-            // Primary target language was used
-            log::info!(
-                "Azure Translator - Primary target logic SHOULD apply: detected '{}' != target '{}', should translate to '{}'",
-                detected_language,
-                self.config.target_language,
-                self.config.target_language
-            );
-            self.config.target_language.clone()
-        };
+        // The actual target language is determined by what we requested from the API
+        // and should match the target_lang returned in the response
+        let actual_target_language = self.map_language_code_to_name(&target_lang);
 
         log::info!(
             "Translated text (first 100 chars): {}",
@@ -180,15 +159,6 @@ impl AzureTranslatorService {
             translated_text,
             target_language: actual_target_language,
         })
-    }
-
-    fn language_codes_match(&self, detected: &str, target: &str) -> bool {
-        // Simple comparison for common language codes
-        detected == target
-            || (detected == "en" && (target.starts_with("english") || target == "en"))
-            || (detected == "es" && (target.starts_with("spanish") || target == "es"))
-            || (detected == "fr" && (target.starts_with("french") || target == "fr"))
-            || (detected == "de" && (target.starts_with("german") || target == "de"))
     }
 
     fn map_language_code_to_name(&self, code: &str) -> String {
@@ -256,9 +226,6 @@ impl TranslationProvider for AzureTranslatorService {
         let cleaned_text = clean_text_for_translation(text);
         log::info!("Cleaned text for translation: {}", cleaned_text);
 
-        // Map target language to Azure Translator language code
-        let target_language_code = self.map_language_name_to_code(&self.config.target_language);
-
         // Check if user specified a source language override
         let source_language_code = self
             .config
@@ -266,7 +233,62 @@ impl TranslationProvider for AzureTranslatorService {
             .as_ref()
             .map(|lang| self.map_language_name_to_code(lang));
 
-        log::info!("Target language code: {}", target_language_code);
+        // First, detect the language if not specified by user
+        let detected_language = if source_language_code.is_some() {
+            source_language_code.clone().unwrap()
+        } else {
+            // Make a detection-only request to Azure Translator
+            let detect_response = self
+                .call_azure_translator(&cleaned_text, "en", None) // Use 'en' as dummy target for detection
+                .await?;
+            
+            let results = detect_response
+                .as_array()
+                .ok_or_else(|| anyhow::anyhow!("Invalid response format for detection"))?;
+            
+            if results.is_empty() {
+                return Err(anyhow::anyhow!("Empty response from Azure Translator for detection"));
+            }
+            
+            let result = &results[0];
+            if let Some(detected) = result.get("detectedLanguage") {
+                detected
+                    .get("language")
+                    .and_then(|v| v.as_str())
+                    .unwrap_or("en")
+                    .to_string()
+            } else {
+                "en".to_string()
+            }
+        };
+
+        log::info!("Detected language code: {}", detected_language);
+
+        // Determine the actual target language based on smart switching logic
+        let target_language_code = {
+            let detected_lower = detected_language.to_lowercase();
+            let primary_target_code = self.map_language_name_to_code(&self.config.target_language);
+            let primary_target_lower = primary_target_code.to_lowercase();
+
+            if detected_lower == primary_target_lower {
+                log::info!(
+                    "Smart switching: detected '{}' matches primary target '{}', using alternative target '{}'",
+                    detected_language,
+                    primary_target_code,
+                    self.config.alternative_target_language
+                );
+                self.map_language_name_to_code(&self.config.alternative_target_language)
+            } else {
+                log::info!(
+                    "Normal translation: detected '{}' != primary target '{}', using primary target",
+                    detected_language,
+                    primary_target_code
+                );
+                primary_target_code
+            }
+        };
+
+        log::info!("Final target language code: {}", target_language_code);
         if let Some(ref source_code) = source_language_code {
             log::info!("Source language code (user specified): {}", source_code);
         } else {

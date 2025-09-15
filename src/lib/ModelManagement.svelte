@@ -59,14 +59,14 @@
   <div class="card bg-base-100 border border-base-300/50">
     <div class="card-body space-y-6">
       <h5 class="card-title flex items-center gap-2">
-        <PlusIcon class="w-4 h-4" />
+        <PlusIcon class="w-5 h-5" />
         Add New Model
       </h5>
       <div class="space-y-4 mx-8">
         <div class="grid md:grid-cols-2 gap-2">
           <div class="form-control w-full flex flex-col">
             <label class="label" for="provider-select">
-              <span class="label-text font-medium">Provider</span>
+              <span class="label-text font-medium mb-2">Provider</span>
             </label>
             <select
               id="provider-select"
@@ -80,7 +80,7 @@
           </div>
           <div class="form-control w-full flex flex-col">
             <label class="label" for="model-name">
-              <span class="label-text font-medium">Model Name</span>
+              <span class="label-text font-medium mb-2">Model Name</span>
             </label>
             <input
               id="model-name"
@@ -93,26 +93,28 @@
         </div>
 
         <div class="grid md:grid-cols-2 gap-4">
-          <div class="form-control w-full flex flex-col space-y-2">
+          <div class="form-control w-full flex flex-col">
             <label class="label" for="model-display">
-              <span class="label-text font-medium">Display Name</span>
+              <span class="label-text font-medium mb-2">Display Name</span>
             </label>
             <input
               id="model-display"
               type="text"
-              class="input input-bordered bg-base-200 min-w-0"
+              class="input input-bordered bg-base-200"
               bind:value={newModelDisplayName}
               placeholder="e.g., GPT-4o Mini"
             />
           </div>
-          <div class="form-control w-full flex flex-col space-y-2">
+          <div class="form-control w-full flex flex-col">
             <label class="label" for="model-description">
-              <span class="label-text font-medium">Description (optional)</span>
+              <span class="label-text font-medium mb-2"
+                >Description (optional)</span
+              >
             </label>
             <input
               id="model-description"
               type="text"
-              class="input input-bordered bg-base-200 min-w-0"
+              class="input input-bordered bg-base-200"
               bind:value={newModelDescription}
               placeholder="e.g., Fast and cost-effective model"
             />

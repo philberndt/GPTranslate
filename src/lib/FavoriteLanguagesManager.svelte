@@ -91,7 +91,7 @@
 
 <div class="w-full">
   <div class="divider my-8"></div>
-  <h5 class="card-title flex items-center gap-2 mb-2">
+  <h5 class="card-title flex items-center gap-2 mb-8">
     <StarIcon class="w-5 h-5" />
     Favourite Languages
   </h5>
@@ -103,7 +103,7 @@
     >
       <div class="form-control w-full">
         <label class="label" for="add-favorite">
-          <span class="label-text font-medium">Add Favorite Language</span>
+          <span class="label-text font-medium mb-2">Add Favorite Language</span>
         </label>
         <LanguageDropdown
           selectedLanguage={selectedLanguageForAdd}
@@ -133,7 +133,7 @@
         <span>No favorite languages yet. Add some for quick access!</span>
       </div>
     {:else}
-      <div class="space-y-2 w-full">
+      <div class="space-y-2 ml-12 mr-12">
         {#each favoriteLanguages as language, index (language.code)}
           <div
             class="flex items-center justify-between p-3 rounded-lg border border-base-300/50 bg-base-200/40 w-full"
@@ -185,7 +185,7 @@
           </div>
         {/each}
       </div>
-      <p class="text-xs text-base-content/70 w-full">
+      <p class="text-xs text-base-content/30 w-full text-wrap">
         Favorite languages appear first in language dropdowns. Use arrows to
         reorder.
       </p>

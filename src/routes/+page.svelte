@@ -37,10 +37,19 @@
   // Active view state: 'translate' | 'settings' | 'history'
   let activeView = $state<"translate" | "settings" | "history">("translate")
   let currentTheme = $state("auto")
-  
+
   // Check if any API provider is configured
   let hasConfiguredProvider = $derived(isAnyProviderConfigured(config))
-  
+  // TEMP: override to disable welcome screen during testing. Set to true to force normal UI.
+  const DISABLE_NO_CONFIG_SCREEN = false
+  const FORCE_SHOW_NO_CONFIG_SCREEN = false // Set to true to test the NoConfigScreen
+  if (DISABLE_NO_CONFIG_SCREEN) {
+    hasConfiguredProvider = true
+  }
+  if (FORCE_SHOW_NO_CONFIG_SCREEN) {
+    hasConfiguredProvider = false
+  }
+
   // Notification system
   let showCopyNotification = $state(false)
   let notificationTimer: ReturnType<typeof setTimeout> | null = null // Debouncing variables
@@ -452,10 +461,8 @@
 </script>
 
 <main class="mx-auto p-3 md:p-4 h-screen overflow-hidden bg-base-100">
-  {#if !hasConfiguredProvider}
-    <!-- Show fullscreen no-config message -->
-    <NoConfigScreen onOpenSettings={openSettings} />
-  {:else if activeView === "settings"}
+  {#if activeView === "settings"}
+    <!-- Settings view should be accessible even when no provider configured -->
     <div data-view="settings" class="flex flex-col h-full overflow-hidden">
       <Settings
         config={config || {
@@ -484,6 +491,9 @@
         onThemeChange={changeTheme}
       />
     </div>
+  {:else if !hasConfiguredProvider}
+    <!-- Show fullscreen no-config message -->
+    <NoConfigScreen onOpenSettings={openSettings} />
   {:else if activeView === "translate"}
     <div
       data-view="translate"

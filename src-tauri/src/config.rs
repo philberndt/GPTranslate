@@ -36,10 +36,9 @@ pub struct Config {
     pub minimize_to_tray: bool,
     pub custom_prompt: String,
     pub reasoning_effort: Option<String>, // "minimal", "low", "medium", "high"
-    pub alternatives_fallback_provider: Option<String>, // For azure_translator fallback: "provider:model"
-    // Automatic translation behavior
+    pub alternatives_fallback_provider: Option<String>,
     pub auto_translate_enabled: bool,
-    pub auto_translate_debounce_ms: u32, // 100 - 2000 ms
+    pub auto_translate_debounce_ms: u32,
     pub auto_translate_on_paste: bool,
     pub auto_translate_while_typing: bool,
 }
@@ -64,15 +63,15 @@ impl Default for Config {
             azure_translator_endpoint: "https://api.cognitive.microsofttranslator.com".to_string(),
             azure_translator_api_key: "".to_string(),
             azure_translator_region: "".to_string(),
-            ollama_url: Some("http://localhost:11434".to_string()),
+            ollama_url: Some("".to_string()),
             model: "".to_string(),
             available_models,
             target_language: "English".to_string(),
-            alternative_target_language: "Norwegian".to_string(),
+            alternative_target_language: "Spanish".to_string(),
             favorite_languages: vec!["en".to_string(), "es".to_string(), "fr".to_string(), "de".to_string()],
             user_source_language: None,
-            auto_start: true,
-            hotkey: "Ctrl+Alt+C".to_string(),
+            auto_start: false,
+            hotkey: "Ctrl+Q".to_string(),
             theme: "auto".to_string(),
             minimize_to_tray: true,
             custom_prompt: "Translate the given text from {detected_language} to {target_language} accurately while preserving the meaning, tone, and nuance of the original content.\n\n# Additional Details\n- Ensure the translation retains the context, cultural meaning, tone, formal/informal style, and any idiomatic expressions.\n- Do **not** alter names, technical terms, or specific formatting unless required for grammatical correctness in the target language.\n- If the detected language is the same as the target language, choose the most appropriate alternative language for translation.\n\n# Output Format\nThe translation output should be provided as valid JSON containing 'detected_language' and 'translated_text' fields.\n\n# Notes\n- Ensure punctuation and capitalization match the norms of the target language.\n- When encountering idiomatic expressions, adapt them to equivalent phrases in the target language rather than direct word-for-word translation.\n- For ambiguous content, aim for the most contextually appropriate meaning.\n- Take into consideration the whole text and what it is about.".to_string(),
@@ -87,13 +86,6 @@ impl Default for Config {
 }
 
 impl Config {
-    /// Parse the alternative translations fallback provider setting and resolve it to
-    /// a concrete `(provider, model)` pair using the currently configured models.
-    ///
-    /// Supported formats:
-    /// - "provider:model" (e.g., "openai:gpt-4o-mini", "azure_openai:my-deployment")
-    /// - "provider" (no model): resolves to the first enabled model for that provider,
-    ///   or provider-specific defaults (e.g., `azure_deployment_name`) or current `model`.
     pub fn parse_alternatives_fallback(&self) -> Option<(String, String)> {
         let raw = self.alternatives_fallback_provider.as_deref()?.trim();
         if raw.is_empty() {
