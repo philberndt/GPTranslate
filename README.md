@@ -168,6 +168,7 @@ Azure AI Translator is our **recommended translation provider** for several key 
 - **🌍 Global Coverage**: Microsoft's enterprise-grade infrastructure
 
 **Getting Started with Azure AI Translator:**
+
 1. Create free Azure account: [azure.microsoft.com/free](https://azure.microsoft.com/free)
 2. Create Translator resource: [portal.azure.microsoft.com](https://portal.azure.microsoft.com/#create/Microsoft.CognitiveServicesTextTranslation)
 3. Copy your API key and region to GPTranslate settings
@@ -191,6 +192,7 @@ npm run tauri dev
 ```
 
 **Development Commands:**
+
 - `npm run tauri dev` - Start development server
 - `npm run lint` - Check code quality
 - `npm run format` - Format code
