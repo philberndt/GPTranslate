@@ -171,38 +171,8 @@ impl OllamaTranslationService {
                 }
             }
         };
-        log::info!("Detected language: {}", detected_language);
-        log::info!("Target language: {}", self.config.target_language);
-        log::info!(
-            "Alternative target language: {}",
-            self.config.alternative_target_language
-        );
-
-        // Determine the actual target language used for translation
-        let detected_lower = detected_language.to_lowercase();
-        let target_lower = self.config.target_language.to_lowercase();
-
-        let actual_target_language = if detected_lower == target_lower {
-            // Alternative language logic was applied
-            log::info!(
-                "Ollama - Alternative language logic SHOULD apply: detected '{}' matches target '{}', should translate to '{}'",
-                detected_language,
-                self.config.target_language,
-                self.config.alternative_target_language
-            );
-            self.config.alternative_target_language.clone()
-        } else {
-            // Primary target language was used
-            log::info!(
-                "Ollama - Primary target logic SHOULD apply: detected '{}' != target '{}', should translate to '{}'",
-                detected_language,
-                self.config.target_language,
-                self.config.target_language
-            );
-            self.config.target_language.clone()
-        };
-
-        log::info!("Returning target_language: {}", actual_target_language);
+        log::info!("Detected language (provider reported): {}", detected_language);
+        log::info!("Configured (effective) target language: {}", self.config.target_language);
 
         log::info!(
             "Translated text (first 100 chars): {}",
@@ -213,11 +183,7 @@ impl OllamaTranslationService {
             }
         );
 
-        Ok(TranslationResult {
-            detected_language,
-            translated_text,
-            target_language: actual_target_language,
-        })
+        Ok(TranslationResult { detected_language, translated_text, target_language: self.config.target_language.clone() })
     }
 }
 
@@ -226,6 +192,11 @@ impl TranslationProvider for OllamaTranslationService {
     async fn translate(&self, text: &str) -> Result<TranslationResult> {
         let cleaned_text = clean_text_for_translation(text);
         log::info!("Cleaned text for Ollama translation: {}", cleaned_text);
+
+        if self.config.model.trim().is_empty() {
+            log::error!("OllamaTranslationService: model is empty; cannot proceed");
+            return Err(anyhow::anyhow!("Model not configured for Ollama provider"));
+        }
 
         // Check if this is an alternatives request (custom_prompt contains "alternatives")
         let is_alternatives_request = self.config.custom_prompt.contains("alternatives");
@@ -236,7 +207,7 @@ impl TranslationProvider for OllamaTranslationService {
             format!("{}\n\n\"{}\"", self.config.custom_prompt, cleaned_text)
         } else {
             // For regular translations, use the normal logic
-            let user_prompt = format!("Text to translate: \"{}\"", cleaned_text);
+            let user_prompt = format!("Text to translate into {}: \"{}\"", self.config.target_language, cleaned_text);
             let smart_prompt = create_smart_prompt(&self.config, None);
             format!(
                 "{}\n\nAlways respond with valid JSON containing 'detected_language' and 'translated_text' fields. Preserve line breaks and formatting in the translated text.\n\n{}",

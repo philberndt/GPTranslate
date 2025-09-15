@@ -9,6 +9,7 @@ use lazy_static::lazy_static;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
+use whatlang::{detect, Lang};
 
 lazy_static! {
     static ref IN_FLIGHT_REQUESTS: Arc<Mutex<HashMap<String, std::time::Instant>>> =
@@ -117,6 +118,36 @@ impl TranslationService {
     }
 }
 
+fn map_whatlang_lang_to_name(lang: Lang) -> String {
+    use Lang::*;
+    let name = match lang {
+        Eng => "English",
+        Spa => "Spanish",
+        Fra => "French",
+        Deu => "German",
+        Ita => "Italian",
+        Por => "Portuguese",
+        Rus => "Russian",
+        Jpn => "Japanese",
+        Kor => "Korean",
+        Cmn => "Chinese",
+        Ara => "Arabic",
+        Hin => "Hindi",
+        Nld => "Dutch",
+        Swe => "Swedish",
+    Nob => "Norwegian",
+        Dan => "Danish",
+        Fin => "Finnish",
+        Pol => "Polish",
+        Tur => "Turkish",
+        Ces => "Czech",
+        Hun => "Hungarian",
+        // Languages not explicitly mapped above fall back to debug code
+        other => return format!("{:?}", other),
+    };
+    name.to_string()
+}
+
 pub fn clean_text_for_translation(text: &str) -> String {
     // Improve text cleaning to preserve paragraph structure
     // Instead of filtering out empty lines, preserve them as paragraph breaks
@@ -154,7 +185,7 @@ pub async fn translate_text(
     log::info!("translate_text called with text: {}", text);
 
     let config_guard = config.config.lock().await;
-    let config_clone = config_guard.clone();
+    let mut config_clone = config_guard.clone();
     drop(config_guard);
 
     log::info!(
@@ -166,6 +197,70 @@ pub async fn translate_text(
         config_clone.custom_prompt
     );
 
+    // --- Pre-detect language to choose effective target (smart switch) ---
+    let primary = config_clone.target_language.clone();
+    let alternative = config_clone.alternative_target_language.clone();
+    let mut pre_detected_language: Option<String> = None;
+
+    // Respect explicit user source override: treat it as detected.
+    if let Some(user_source) = config_clone.user_source_language.clone() {
+        log::info!("User source language override present: {}", user_source);
+        pre_detected_language = Some(user_source);
+    } else {
+        let trimmed = text.trim();
+        if trimmed.chars().count() >= 3 { // avoid unreliable detection on ultra-short text
+            if let Some(info) = detect(trimmed) {
+                let lang_name = map_whatlang_lang_to_name(info.lang());
+                log::info!("Pre-detected language via whatlang: {} (confidence {:.2})", lang_name, info.confidence());
+                if info.confidence() >= 0.70 { // confidence threshold
+                    pre_detected_language = Some(lang_name);
+                } else {
+                    log::info!("Detection confidence below threshold ({:.2}), ignoring", info.confidence());
+                }
+            } else {
+                log::info!("Language detection returned None");
+            }
+        } else {
+            log::info!("Skipping detection: text too short (<3 chars)");
+        }
+    }
+
+    // Decide effective target
+    let effective_target = match pre_detected_language.as_ref() {
+        Some(detected) if detected.eq_ignore_ascii_case(&primary) => {
+            // Check if primary and alternative languages are the same (misconfiguration)
+            if primary.eq_ignore_ascii_case(&alternative) {
+                log::warn!(
+                    "Configuration issue: primary ('{}') and alternative ('{}') target languages are the same. Using Spanish as fallback.",
+                    primary, alternative
+                );
+                "Spanish".to_string()
+            } else {
+                log::info!(
+                    "Smart switch engaged: detected '{}' == primary '{}'; using alternative '{}'",
+                    detected, primary, alternative
+                );
+                alternative.clone()
+            }
+        }
+        Some(detected) => {
+            log::info!(
+                "Using primary target '{}'; detected '{}' differs",
+                primary, detected
+            );
+            primary.clone()
+        }
+        None => {
+            log::info!("No reliable pre-detect result; defaulting to primary target '{}';", primary);
+            primary.clone()
+        }
+    };
+
+    log::info!("Summary smart-switch: primary='{}' alternative='{}' pre_detected='{:#?}' effective='{}'", primary, alternative, pre_detected_language, effective_target);
+
+    // Mutate only the local clone's target_language so provider translates directly to chosen language.
+    config_clone.target_language = effective_target.clone();
+
     let service = TranslationService::new(config_clone.clone());
     match service.detect_and_translate(&text).await {
         Ok(result) => {
@@ -176,40 +271,18 @@ pub async fn translate_text(
                 result.translated_text.len()
             );
 
-            // Determine the actual target language that was used for translation
-            let detected_lower = result.detected_language.to_lowercase();
-            let target_lower = config_clone.target_language.to_lowercase();
-
-            log::info!(
-                "Language comparison: detected='{}', target='{}'",
-                detected_lower,
-                target_lower
-            );
-            let expected_target_language = if detected_lower == target_lower {
-                log::info!(
-                    "Detected language '{}' matches target language '{}' - using alternative target language '{}'",
-                    result.detected_language,
-                    config_clone.target_language,
-                    config_clone.alternative_target_language
-                );
-                // If detected language matches target language, we used the alternative
-                config_clone.alternative_target_language.clone()
+            // Prefer provider's detected language unless unknown, then fallback to pre-detected
+            let final_detected = if result.detected_language.eq_ignore_ascii_case("unknown") {
+                pre_detected_language.clone().unwrap_or_else(|| "unknown".to_string())
             } else {
-                log::info!(
-                    "Detected language '{}' does not match target language '{}' - using primary target language '{}'",
-                    result.detected_language,
-                    config_clone.target_language,
-                    config_clone.target_language
-                );
-                // Otherwise, we used the configured target language
-                config_clone.target_language.clone()
+                result.detected_language.clone()
             };
 
             Ok(TranslationResponse {
                 original_text: text,
                 translated_text: result.translated_text,
-                detected_language: result.detected_language,
-                target_language: expected_target_language,
+                detected_language: final_detected,
+                target_language: effective_target,
             })
         }
         Err(e) => {

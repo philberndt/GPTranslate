@@ -578,6 +578,29 @@
         </div>
       </div>
 
+      <!-- Language Configuration Warning -->
+      {#if config && config.target_language === config.alternative_target_language}
+        <div class="alert alert-soft alert-warning shadow-sm">
+          <div class="flex items-center gap-2">
+            <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+            </svg>
+            <div class="flex-1">
+              <div class="text-sm font-medium">Language switching disabled</div>
+              <div class="text-xs opacity-75">Primary and alternative target languages are both set to "{config.target_language}". Set different languages in Settings to enable automatic language switching.</div>
+            </div>
+            <button
+              type="button"
+              class="btn btn-xs btn-ghost"
+              onclick={openSettings}
+              title="Open Settings"
+            >
+              Fix
+            </button>
+          </div>
+        </div>
+      {/if}
+
       <!-- Control Panel -->
       <div class="card bg-base-100 border border-base-300/50 shrink-0">
         <div class="card-body py-1">
