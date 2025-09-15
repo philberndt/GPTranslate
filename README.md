@@ -17,9 +17,9 @@ A **fast**, **lightweight**, and **AI-powered** desktop translation application 
 
 ### 🎯 **Multiple AI Translation Providers**
 
+- **Azure AI Translator** - ⭐ **Recommended** - Microsoft's fast, dedicated translation service with 2M free characters/month
 - **OpenAI GPT Models** - High-quality translations with context awareness
 - **Azure OpenAI** - Enterprise-grade translation with custom deployments
-- **Azure Translator** - Microsoft's dedicated translation service
 - **Ollama** - Local AI models for privacy-focused translation
 
 ### 🧠 **Smart Translation Logic**
@@ -70,14 +70,17 @@ winget install PhilBerndt.GPTranslate
 ## 🔧 Quick Setup
 
 1. **Launch GPTranslate** after installation
-2. **Configure your preferred translation provider**:
+2. **Configure Azure AI Translator** (recommended for speed and cost):
+   - Sign up for free Azure account at [azure.microsoft.com/free](https://azure.microsoft.com/free)
+   - Create Azure AI Translator resource at [portal.azure.microsoft.com](https://portal.azure.microsoft.com/#create/Microsoft.CognitiveServicesTextTranslation)
+   - Add your API key and region in GPTranslate settings
+3. **Alternative providers** (optional):
    - OpenAI: Add your API key
    - Azure OpenAI: Configure endpoint, API key, and deployment
-   - Azure Translator: Add API key and region
    - Ollama: Set up local Ollama server URL
-3. **Select your target languages** (primary and alternative)
-4. **Configure global hotkey** (optional)
-5. **Start translating!**
+4. **Select your target languages** (primary and alternative)
+5. **Configure global hotkey** (optional)
+6. **Start translating!**
 
 ## 💡 How to Use
 
@@ -103,25 +106,28 @@ winget install PhilBerndt.GPTranslate
 
 ### 🎉 Major Enhancements
 
-- **Unified Configuration Directory**: All settings and history now stored in `~/.config/gptranslate`
-- **Enhanced Translation Services**: Improved AI provider integration with better error handling
-- **Smart Language Detection**: More accurate automatic language detection and switching
+- **Unified Configuration Directory**: All settings and history now stored in `~/.config/gptranslate/gptranslate.json` (XDG standard)
+- **Smart Language Pre-Detection**: Advanced language detection with automatic target switching for better accuracy
+- **Enhanced Translation Services**: Improved AI provider integration with better error handling and retry logic
 - **Alternative Translation Support**: Generate multiple translation options for better accuracy
-- **Improved UI Consistency**: Refined interface with better spacing and theme consistency
+- **Improved UI Consistency**: Refined interface with better spacing, theme consistency, and user experience
+- **Tailwind CSS v4**: Updated to latest Tailwind CSS for better performance and modern styling
 
 ### 🔧 Technical Improvements
 
 - **Updated Dependencies**: Latest Tauri 2.x, Svelte 5, and modern web stack
-- **Better Performance**: Optimized translation processing and UI responsiveness
-- **Enhanced Model Management**: Better configuration and management of AI models
+- **Better Performance**: Optimized translation processing and UI responsiveness with whatlang detection
+- **Enhanced Model Management**: Better configuration and management of AI models across providers
 - **Improved Error Handling**: More robust error messages and fallback mechanisms
+- **Duplicate Request Prevention**: Smart request deduplication to prevent unnecessary API calls
 
 ### 🐛 Bug Fixes
 
-- Fixed language switching logic when detected language equals target
+- Fixed language switching logic with pre-detection for more reliable target language selection
 - Improved clipboard handling and global hotkey reliability
 - Better theme detection and application across the interface
-- Resolved issues with translation history deduplication
+- Resolved issues with translation history deduplication and management
+- Enhanced Azure OpenAI endpoint parsing and deployment detection
 
 ## 🏗️ Technical Architecture
 
@@ -139,21 +145,36 @@ winget install PhilBerndt.GPTranslate
 
 ### Key Technologies
 
-- **Language Support**: 100+ languages with comprehensive language detection
+- **Language Support**: 100+ languages with comprehensive language detection via whatlang
 - **System Integration**: Global hotkeys, system tray, auto-start
-- **Security**: Secure API key storage and encrypted configuration
-- **Performance**: Fast translation with intelligent caching
+- **Configuration**: XDG-compliant storage (`~/.config/gptranslate/gptranslate.json`)
+- **Performance**: Fast translation with intelligent caching and request deduplication
 
 ## 🔒 Privacy & Security
 
-- **Local-first approach**: All configuration and history stored locally
-- **Secure credential storage**: API keys encrypted and stored securely
+- **Local-first approach**: All configuration and history stored locally in `~/.config/gptranslate/`
+- **⚠️ Security Notice**: API keys are currently stored in plain text configuration. Secure credential storage is planned for future releases
 - **No telemetry**: No usage data collected or transmitted
 - **Ollama support**: Option for completely offline translation with local models
 
+## 🚀 Why Azure AI Translator?
+
+Azure AI Translator is our **recommended translation provider** for several key reasons:
+
+- **💰 Generous Free Tier**: 2 million characters per month at no cost
+- **⚡ Superior Speed**: Dedicated translation service optimized for performance
+- **🎯 High Accuracy**: Purpose-built for translation with extensive language support
+- **🔧 Easy Setup**: No credit card required for free tier
+- **🌍 Global Coverage**: Microsoft's enterprise-grade infrastructure
+
+**Getting Started with Azure AI Translator:**
+1. Create free Azure account: [azure.microsoft.com/free](https://azure.microsoft.com/free)
+2. Create Translator resource: [portal.azure.microsoft.com](https://portal.azure.microsoft.com/#create/Microsoft.CognitiveServicesTextTranslation)
+3. Copy your API key and region to GPTranslate settings
+
 ## 🤝 Contributing
 
-We welcome contributions! Please see our [Developer Documentation](DEVELOPERS.md) for setup instructions and development guidelines.
+We welcome contributions! Please see our [**Developer Documentation**](DEVELOPERS.md) for comprehensive setup instructions, architecture details, and development guidelines.
 
 ### Quick Development Setup
 
@@ -168,6 +189,14 @@ npm install
 # Start development server
 npm run tauri dev
 ```
+
+**Development Commands:**
+- `npm run tauri dev` - Start development server
+- `npm run lint` - Check code quality
+- `npm run format` - Format code
+- `cargo fmt && cargo clippy` - Rust formatting and linting
+
+For detailed development workflows, testing, and architecture information, see [DEVELOPERS.md](DEVELOPERS.md).
 
 ## 📄 License
 
