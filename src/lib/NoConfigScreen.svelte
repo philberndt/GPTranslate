@@ -1,21 +1,26 @@
 <script lang="ts">
-  import { CogIcon, ExclamationTriangleIcon } from "heroicons-svelte/24/outline"
+  import { FaceSmileIcon, RocketLaunchIcon } from "heroicons-svelte/24/outline"
 
   interface Props {
     onOpenSettings: () => void
   }
 
   let { onOpenSettings }: Props = $props()
+
+  function handleGetStarted() {
+    console.log("Get Started button clicked!")
+    onOpenSettings()
+  }
 </script>
 
-<div class="fixed inset-0 bg-base-200 flex items-center justify-center z-50">
+<div
+  class="fixed inset-0 bg-base-200 flex items-center justify-center z-50"
+  style="background-color: var(--color-app-bg);"
+>
   <div class="text-center space-y-8 max-w-md px-6">
-    <!-- Warning Icon -->
+    <!-- Welcome Icon -->
     <div class="flex justify-center">
-      <ExclamationTriangleIcon 
-        class="w-24 h-24 text-warning" 
-        aria-hidden="true" 
-      />
+      <FaceSmileIcon class="w-24 h-24 text-primary" aria-hidden="true" />
     </div>
 
     <!-- Title -->
@@ -26,27 +31,37 @@
     <!-- Message -->
     <div class="space-y-4">
       <p class="text-lg text-base-content/80">
-        To get started, you need to configure at least one translation API provider.
+        Let's get you set up! We recommend starting with <strong
+          >Azure AI Translator</strong
+        > - it's free for up to 2 million characters per month.
       </p>
-      
+
       <p class="text-base text-base-content/70">
-        Choose from OpenAI, Azure OpenAI, Azure Translator, or Ollama to begin translating text.
+        Or choose from OpenAI, Azure OpenAI, or Ollama based on your needs.
       </p>
     </div>
 
     <!-- Action Button -->
-    <button 
+    <button
       class="btn btn-primary btn-lg gap-2"
-      onclick={onOpenSettings}
+      onclick={handleGetStarted}
       type="button"
+      aria-label="Open settings to configure a translation provider"
     >
-      <CogIcon class="w-6 h-6" />
-      Configure APIs
+      <RocketLaunchIcon class="w-6 h-6" />
+      Get Started
     </button>
 
     <!-- Help Text -->
-    <p class="text-sm text-base-content/60">
-      Don't have an API key? Visit your provider's website to get started.
-    </p>
+    <div class="text-sm text-base-content/60 space-y-2">
+      <p>
+        <strong>New to Azure?</strong>
+        <a
+          href="https://azure.microsoft.com/en-ca/pricing/purchase-options/azure-account?icid=azurefreeaccount"
+          class="link link-accent"
+          target="_blank">Create a free account</a
+        > - no credit card required for the free tier!
+      </p>
+    </div>
   </div>
 </div>
